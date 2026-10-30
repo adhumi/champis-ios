@@ -32,3 +32,5 @@ Préférence explicite d'Adrien : passer les points importants en revue ensemble
 ## En commit
 
 Le message de commit d'une PR qui implémente une décision cite la section de la spec (« Scoring › trigger = meilleur événement »). Une PR qui contredit la spec est refusée, même si le code est meilleur : on change la spec d'abord.
+
+**Jamais de commit poussé sur `main` sans PR** (règle d'Adrien, 30 oct. 2026), dans le monorepo comme dans `champis-ios` : une branche, une PR, la CI verte, puis la fusion. Même pour une ligne de documentation.

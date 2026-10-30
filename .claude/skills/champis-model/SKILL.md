@@ -35,7 +35,7 @@ S(p, e, J) = T(p, e) × M_eff(c(p), e, J, alt(p)) × Φ(e, J, alt(p))
 | Calcul | Module de référence | Portages |
 | --- | --- | --- |
 | trapèze, `T` | `pipeline/champis_pipeline/scoring.py` | — (jamais ailleurs) |
-| `M`, `Φ`, `M_eff`, groupes | `api/champis_api/scoring.py` (importe le trapèze du pipeline) | `web/src/scoring.js`, `champis-ios/Champis/Scoring/` — validés par les vecteurs de test (skill `scoring-parity`) |
+| `M`, `Φ`, `M_eff`, groupes | `api/champis_api/scoring.py` (importe le trapèze du pipeline) | `champis-ios/Packages/ChampisScoring` — validé par les vecteurs de test (skill `scoring-parity`) ; le site prend les valeurs de l'API, sans portage |
 | seuils, palette | `shared/palette.json` | chargé tel quel par tous les clients |
 
 ## Vocabulaire

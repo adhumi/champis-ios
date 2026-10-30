@@ -1,11 +1,13 @@
 ---
 name: scoring-parity
-description: Garantir que le scoring (trapèze, M, Φ, M_eff, groupes, palette) donne le même résultat en Python, en JavaScript (site) et en Swift (app iOS) via des vecteurs de test partagés. À lire avant de porter ou modifier le scoring dans un client.
+description: Garantir que le scoring (trapèze, M, Φ, M_eff, groupes, palette) donne le même résultat en Python (API) et en Swift (app) via des vecteurs de test partagés. À lire avant de porter ou modifier le scoring dans un client.
 ---
 
-# Parité du scoring entre Python, JS et Swift
+# Parité du scoring entre Python et Swift
 
-Le scoring de référence est en Python (`api/champis_api/scoring.py`, trapèze dans `pipeline/champis_pipeline/scoring.py`). Le site et l'app recalculent `M × Φ` localement (changement de jour sans appel réseau, colorisation des tuiles, hors ligne). Ces portages n'ont pas le droit de diverger.
+Le scoring de référence est en Python (`api/champis_api/scoring.py`, trapèze dans `pipeline/champis_pipeline/scoring.py`). L'app recalcule `M × Φ` localement (hors ligne, changement de jour sans réseau). Ce portage n'a pas le droit de diverger.
+
+Le site **ne porte pas** le scoring (décision du 30 oct. 2026) : sans hors ligne web, il affiche `M_eff` et `Φ` tels que l'API les renvoie pour les 11 jours, et ne lit de `shared/` que la palette. La parité ne concerne donc que Python et Swift.
 
 ## Le contrat : `shared/vectors/`
 
@@ -23,15 +25,14 @@ Chaque fichier contient un champ `"generated_by": { "scoring_version": …, "spe
 
 ## Tolérance
 
-`|actual − expected| ≤ 1e-6` sur les scores ; égalité stricte sur `label`, `hex`, `leading`. Flottants en double précision partout (`Double` en Swift, pas `Float` ; `number` en JS). Les tuiles uint8 arrondissent à l'affichage seulement.
+`|actual − expected| ≤ 1e-6` sur les scores ; égalité stricte sur `label`, `hex`, `leading`. Flottants en double précision partout (`Double` en Swift, pas `Float`). Les tuiles uint8 arrondissent à l'affichage seulement.
 
 ## Dans chaque langage
 
 - **Python** : `tests/test_vectors.py` rejoue les vecteurs contre le code qui les a produits (détecte une régénération incohérente).
-- **JS** (`web/src/scoring.js`, ESM sans dépendance) : `web/test/vectors.test.js` avec le runner de test Node natif (`node --test`), lit `../../shared/vectors/`.
-- **Swift** (`champis-ios/Champis/Scoring/`, package `ChampisScoring` sans dépendance) : `ChampisScoringTests` avec Swift Testing, les vecteurs sont copiés dans les ressources du package de test par un script `scripts/sync-vectors.sh` (le dépôt iOS est séparé ; le script note le `species_hash` synchronisé dans `VECTORS_VERSION`).
+- **Swift** (`champis-ios/Packages/ChampisScoring`, paquet local sans dépendance) : `ChampisScoringTests` avec Swift Testing, les vecteurs sont copiés dans les ressources du paquet de test par `scripts/sync-vectors.sh` (le dépôt iOS est séparé ; le script note `scoring_version` et `species_hash` dans `Packages/ChampisScoring/VECTORS_VERSION`).
 
-Les trois suites tournent en CI ; une PR qui change le scoring Python sans régénérer les vecteurs échoue (le test Python détecte le hash), et une PR client qui échoue sur les vecteurs ne se merge pas.
+Les deux suites tournent en CI ; une PR qui change le scoring Python sans régénérer les vecteurs échoue (le test Python détecte le hash), et une PR client qui échoue sur les vecteurs ne se merge pas.
 
 ## Règles d'écriture des portages
 
@@ -44,4 +45,4 @@ Les trois suites tournent en CI ; une PR qui change le scoring Python sans rég�
 
 1. Modifier `SCHEMA.md` et `scoring.py` (skill `champis-model`).
 2. Régénérer les vecteurs, relancer les trois suites.
-3. Porter la modification en JS et Swift dans la même PR ou des PR liées ; tant que l'une échoue, l'API n'est pas déployée (le contrat `/species` inclut `scoring_version` et les clients refusent une version qu'ils ne connaissent pas).
+3. Porter la modification en Swift dans une PR liée ; tant qu'elle échoue, l'API n'est pas déployée (le contrat `/species` inclut `scoring_version` et les clients refusent une version qu'ils ne connaissent pas).
