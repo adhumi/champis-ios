@@ -13,6 +13,12 @@ public struct Trapezoid: Codable, Hashable, Sendable {
         self.max = max
     }
 
+    enum CodingKeys: String, CodingKey {
+        case min, max
+        case optLow = "opt_low"
+        case optHigh = "opt_high"
+    }
+
     /// Même découpage que `champis_pipeline.scoring.trapezoid` : plateau, rampe montante
     /// (`min ≤ x < opt_low`), rampe descendante (`opt_high < x ≤ max`). Une rampe de largeur nulle
     /// est une marche : `x == min` vaut 1.

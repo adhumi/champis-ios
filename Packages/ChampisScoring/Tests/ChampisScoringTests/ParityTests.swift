@@ -109,6 +109,19 @@ private func close(_ a: Double, _ b: Double) -> Bool {
 }
 
 struct ParityTests {
+    @Test("Les clés snake_case des espèces sont lues telles quelles (décalage altitudinal compris)")
+    func speciesKeys() throws {
+        let sp = try species("cantharellus_pallens")
+        let shift = try #require(sp.phenology.altitudeShift)
+        #expect(shift.referenceM == 300 && shift.startDaysPer100m == 4 && shift.endDaysPer100m == -3 && shift.maxDays == 30)
+        #expect(sp.weather.trigger.eventMm > 0 && sp.weather.frost.tminC < 5 && sp.weather.waterBalance.severeMm < 0)
+        #expect(sp.weather.weights.soilMoisture > 0 && sp.weather.tempMean.c.optLow < sp.weather.tempMean.c.optHigh)
+        // 12 novembre 2026 à 1 400 m : la saison, avancée de 30 jours, est finie → 0 (et non le plancher 0,25)
+        #expect(try Phenology.window(sp, day: CivilDate(iso: "2026-11-12"), altM: 1400) == 0)
+        let p = try palette()
+        #expect(p.altEncoding.classM == 300 && p.tileEncoding.scale == 254 && p.nodataHex.hasPrefix("#"))
+    }
+
     @Test("Trapèze : bornes exactes, ±ε, marche et falaise")
     func trapezoid() throws {
         let cases = try vectors("trapezoid", as: TrapezoidCase.self)

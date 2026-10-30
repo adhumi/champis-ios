@@ -20,6 +20,11 @@ public struct Palette: Codable, Hashable, Sendable {
         public let channel: String
         public let classM: Double
         public let nodata: Int
+
+        enum CodingKeys: String, CodingKey {
+            case channel, nodata
+            case classM = "class_m"
+        }
     }
 
     public let version: Int
@@ -28,10 +33,16 @@ public struct Palette: Codable, Hashable, Sendable {
     public let tileEncoding: TileEncoding
     public let altEncoding: AltEncoding
 
+    enum CodingKeys: String, CodingKey {
+        case version, thresholds
+        case nodataHex = "nodata_hex"
+        case tileEncoding = "tile_encoding"
+        case altEncoding = "alt_encoding"
+    }
+
+    /// Clés `snake_case` explicites : pas de conversion automatique (voir `Species`).
     public static func decode(_ data: Data) throws -> Palette {
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return try decoder.decode(Palette.self, from: data)
+        try JSONDecoder().decode(Palette.self, from: data)
     }
 
     /// Classe d'un score : premier seuil (dans l'ordre du fichier) dont `min ≤ value`, sinon le dernier.
