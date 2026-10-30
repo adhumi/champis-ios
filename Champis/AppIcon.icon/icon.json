@@ -6,17 +6,7 @@
         "linear-gradient": [
           "srgb:0.89020,0.93333,0.73333,1.00000",
           "srgb:0.30980,0.61569,0.38824,1.00000"
-        ],
-        "orientation": {
-          "start": {
-            "x": 0.5,
-            "y": 0.0
-          },
-          "stop": {
-            "x": 0.5,
-            "y": 1.0
-          }
-        }
+        ]
       }
     },
     {
@@ -25,27 +15,18 @@
         "linear-gradient": [
           "srgb:0.14118,0.25098,0.17255,1.00000",
           "srgb:0.04314,0.10196,0.06667,1.00000"
-        ],
-        "orientation": {
-          "start": {
-            "x": 0.5,
-            "y": 0.0
-          },
-          "stop": {
-            "x": 0.5,
-            "y": 1.0
-          }
-        }
+        ]
       }
     }
   ],
   "groups": [
     {
-      "name": "Forêt",
+      "name": "Foret",
       "layers": [
         {
-          "name": "forêt fond",
+          "name": "foret-fond",
           "image-name": "foret-fond.svg",
+          "glass": false,
           "fill-specializations": [
             {
               "value": {
@@ -58,12 +39,12 @@
                 "solid": "srgb:0.12157,0.30196,0.20000,1.00000"
               }
             }
-          ],
-          "glass": false
+          ]
         },
         {
-          "name": "forêt devant",
+          "name": "foret-devant",
           "image-name": "foret-devant.svg",
+          "glass": false,
           "fill-specializations": [
             {
               "value": {
@@ -76,8 +57,7 @@
                 "solid": "srgb:0.06275,0.16078,0.10588,1.00000"
               }
             }
-          ],
-          "glass": false
+          ]
         }
       ],
       "lighting": "combined",
@@ -89,15 +69,15 @@
       "translucency": {
         "enabled": false,
         "value": 0.5
-      },
-      "blur-material": null
+      }
     },
     {
-      "name": "Cèpe",
+      "name": "Cepe",
       "layers": [
         {
           "name": "pied",
           "image-name": "pied.svg",
+          "glass": true,
           "fill": {
             "linear-gradient": [
               "srgb:0.96471,0.93333,0.85882,1.00000",
@@ -113,12 +93,12 @@
                 "y": 1.0
               }
             }
-          },
-          "glass": true
+          }
         },
         {
           "name": "chapeau",
           "image-name": "chapeau.svg",
+          "glass": true,
           "fill": {
             "linear-gradient": [
               "srgb:0.60392,0.30980,0.24706,1.00000",
@@ -134,8 +114,7 @@
                 "y": 1.0
               }
             }
-          },
-          "glass": true
+          }
         }
       ],
       "lighting": "individual",
@@ -152,6 +131,9 @@
     }
   ],
   "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
     "squares": "shared"
   }
 }
