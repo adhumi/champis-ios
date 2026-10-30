@@ -113,9 +113,8 @@ struct TileColorizerTests {
         let noWeather = colorizer.values(Self.request(mode: .score, date: "2026-10-30", tiles: layer))
         let otherDay = colorizer.values(Self.request(mode: .score, date: "2026-12-01", tiles: layer, weather: weather))
         let noDate = colorizer.values(Self.request(mode: .score, date: nil, tiles: layer, weather: weather))
-        #expect(noWeather.allSatisfy(\.isNaN))
-        #expect(otherDay.allSatisfy(\.isNaN))
-        #expect(noDate.allSatisfy(\.isNaN))
+        let allTransparent = [noWeather, otherDay, noDate].map { values in values.allSatisfy { $0.isNaN } }
+        #expect(allTransparent == [true, true, true])
     }
 
     @Test("Couche A : classe du pixel ; nodata ou alpha 0 → repli sur la médiane de la cellule")
