@@ -8,9 +8,9 @@ Client iOS / iPadOS / macOS 26 de Champis. Le modèle, les règles d'espèces et
 
 ## Décisions qui s'appliquent ici
 
-- iOS, iPadOS et macOS 26 minimum, Xcode 27.2, Swift 6.4, mode de langage Swift 6, isolation `MainActor` par défaut dans l'app. Pas de `#available`.
+- iOS, iPadOS et macOS 26 minimum, mode de langage Swift 6, isolation `MainActor` par défaut dans l'app. Pas de `#available`.
 - MVVM avec `@Observable`. Un modèle par écran, les vues ne calculent rien.
-- Projet au format `project.xcproj` (JSON). Dossiers synchronisés pour `Champis/` et `ChampisTests/` : ne pas éditer le projet pour ajouter un fichier.
+- Projet `project.pbxproj` créé par Xcode (le `.xcproj` généré hors d'Xcode ne s'ouvrait pas). Dossiers synchronisés pour `Champis/` et `ChampisTests/` : ne pas éditer le projet pour ajouter un fichier ; le paquet local est `Packages/ChampisScoring`.
 - Aucune valeur d'espèce dans le code : tout vient de `/species`. Palette et seuils viennent de `shared/palette.json` via l'API.
 - Scoring recalculé localement par le paquet `ChampisScoring`, validé par les vecteurs `shared/vectors/` (tolérance 1e-6, `Double` partout). `scripts/sync-vectors.sh` est la seule façon de les mettre à jour.
 - Tuiles PMTiles lues par un lecteur maison (requêtes Range, cache disque pour le hors ligne). Les PNG de données se décodent octet par octet, jamais via `UIImage` ou `CGImage` : la gestion des couleurs décale les gris et change la classe d'un pixel.

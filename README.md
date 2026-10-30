@@ -4,13 +4,13 @@ App SwiftUI de [Champis](https://github.com/adhumi/champis) pour iOS, iPadOS et 
 
 ## Prérequis
 
-- Xcode 27.2 ou plus récent (Swift 6.4). Le projet utilise le format `project.xcproj` (JSON) ; il ne s'ouvre pas dans Xcode 26.
-- Un compte développeur pour la signature automatique : renseigner l'équipe dans *Signing & Capabilities* au premier lancement (`DEVELOPMENT_TEAM` n'est pas versionné).
+- Xcode 26.3 ou plus récent. Le projet est un `project.pbxproj` créé par Xcode (dossiers synchronisés) : le `.xcproj` JSON généré hors d'Xcode le 30 oct. 2026 ne s'ouvrait pas et a été remplacé.
+- Cibles : iOS, iPadOS et macOS 26, mode de langage Swift 6. L'équipe de signature est renseignée dans le projet.
 
 ## Structure
 
 ```
-Champis.xcodeproj/          projet (project.xcproj), schéma partagé Champis
+Champis.xcodeproj/          projet (project.pbxproj), schéma partagé Champis
 Champis/                    cible app : SwiftUI, MVVM @Observable, Assets, entitlements
 ChampisTests/               tests de l'app (Swift Testing)
 Packages/ChampisScoring/    paquet local : portage du scoring, vecteurs de parité en ressources de test
@@ -40,11 +40,3 @@ cd Packages/ChampisScoring && swift test
 ## Icône
 
 `Champis/AppIcon.icon` est un document Icon Composer (Xcode 26+) : fond dégradé ciel, deux calques de forêt stylisée (bande claire avec sapins, bande sombre au premier plan), puis un groupe Liquid Glass avec deux calques séparés, `pied` et `chapeau`, teintés cèpe de Bordeaux. Les couleurs et les réglages de verre (reflet, translucidité, ombre) se modifient dans Icon Composer ; les formes sont les SVG de `Assets/`, canevas 1024 points. `Assets.xcassets/AppIcon.appiconset` garde un PNG 1024 plat en repli pour les emplacements qui n'utilisent pas le document.
-
-## Reformater le projet
-
-Le fichier `project.xcproj` a été généré hors d'Xcode, en JSON strict. Xcode le réécrit dans son style canonique à la première modification ; pour le faire sans Xcode :
-
-```sh
-swift run --package-path /chemin/vers/xcode-project-format xcprojformatter --update Champis.xcodeproj
-```

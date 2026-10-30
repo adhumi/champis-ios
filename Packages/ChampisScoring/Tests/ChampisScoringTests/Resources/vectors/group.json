@@ -1,0 +1,47 @@
+{
+ "generated_by": {
+  "scoring_version": "1.0.0",
+  "species_hash": "af34c16e"
+ },
+ "cases": [
+  {
+   "scores": {
+    "boletus_edulis": 0.6,
+    "boletus_aereus": 0.6,
+    "boletus_pinophilus": 0.2
+   },
+   "expected": {
+    "score": 0.6,
+    "leading": "boletus_aereus"
+   }
+  },
+  {
+   "scores": {
+    "boletus_edulis": 0.1,
+    "boletus_reticulatus": 0.45
+   },
+   "expected": {
+    "score": 0.45,
+    "leading": "boletus_reticulatus"
+   }
+  },
+  {
+   "scores": {
+    "cantharellus_cibarius": 0.0,
+    "cantharellus_pallens": 0.0,
+    "cantharellus_alborufescens": 0.0
+   },
+   "expected": {
+    "score": 0.0,
+    "leading": "cantharellus_alborufescens"
+   }
+  },
+  {
+   "scores": {},
+   "expected": {
+    "score": 0.0,
+    "leading": null
+   }
+  }
+ ]
+}
