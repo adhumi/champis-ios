@@ -1,7 +1,12 @@
 {
   "sourceLanguage" : "fr",
   "strings" : {
+    "Champis" : {
 
+    },
+    "Scoring %@" : {
+
+    }
   },
   "version" : "1.0"
 }

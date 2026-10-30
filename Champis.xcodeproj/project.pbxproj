@@ -21,9 +21,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		000000000000000000000220 /* ChampisTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChampisTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000040 /* ChampisScoring */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ChampisScoring; sourceTree = "<group>"; };
 		000000000000000000000120 /* Champis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Champis.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000220 /* ChampisTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChampisTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -264,10 +264,10 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PROJECT_UNIQUE_VALUE = CGQ0LEXM;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};

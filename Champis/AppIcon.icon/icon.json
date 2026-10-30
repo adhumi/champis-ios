@@ -1,157 +1,48 @@
 {
-  "color-space-for-untagged-svg-colors": "srgb",
-  "fill-specializations": [
+  "fill" : {
+    "automatic-gradient" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+  },
+  "groups" : [
     {
-      "value": {
-        "linear-gradient": [
-          "srgb:0.89020,0.93333,0.73333,1.00000",
-          "srgb:0.30980,0.61569,0.38824,1.00000"
-        ],
-        "orientation": {
-          "start": {
-            "x": 0.5,
-            "y": 0.0
-          },
-          "stop": {
-            "x": 0.5,
-            "y": 1.0
-          }
+      "layers" : [
+        {
+          "image-name" : "chapeau.svg",
+          "name" : "chapeau",
+          "opacity" : 1
+        },
+        {
+          "blend-mode" : "normal",
+          "fill" : "none",
+          "image-name" : "pied.svg",
+          "name" : "pied",
+          "opacity" : 0.79
+        },
+        {
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "foret-devant.svg",
+          "name" : "foret-devant"
+        },
+        {
+          "glass" : false,
+          "image-name" : "foret-fond.svg",
+          "name" : "foret-fond"
         }
-      }
-    },
-    {
-      "appearance": "dark",
-      "value": {
-        "linear-gradient": [
-          "srgb:0.14118,0.25098,0.17255,1.00000",
-          "srgb:0.04314,0.10196,0.06667,1.00000"
-        ],
-        "orientation": {
-          "start": {
-            "x": 0.5,
-            "y": 0.0
-          },
-          "stop": {
-            "x": 0.5,
-            "y": 1.0
-          }
-        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
       }
     }
   ],
-  "groups": [
-    {
-      "name": "Forêt",
-      "layers": [
-        {
-          "name": "forêt fond",
-          "image-name": "foret-fond.svg",
-          "fill-specializations": [
-            {
-              "value": {
-                "solid": "srgb:0.23922,0.54118,0.34510,1.00000"
-              }
-            },
-            {
-              "appearance": "dark",
-              "value": {
-                "solid": "srgb:0.12157,0.30196,0.20000,1.00000"
-              }
-            }
-          ],
-          "glass": false
-        },
-        {
-          "name": "forêt devant",
-          "image-name": "foret-devant.svg",
-          "fill-specializations": [
-            {
-              "value": {
-                "solid": "srgb:0.11765,0.30196,0.18824,1.00000"
-              }
-            },
-            {
-              "appearance": "dark",
-              "value": {
-                "solid": "srgb:0.06275,0.16078,0.10588,1.00000"
-              }
-            }
-          ],
-          "glass": false
-        }
-      ],
-      "lighting": "combined",
-      "specular": false,
-      "shadow": {
-        "kind": "none",
-        "opacity": 0.5
-      },
-      "translucency": {
-        "enabled": false,
-        "value": 0.5
-      },
-      "blur-material": null
-    },
-    {
-      "name": "Cèpe",
-      "layers": [
-        {
-          "name": "pied",
-          "image-name": "pied.svg",
-          "fill": {
-            "linear-gradient": [
-              "srgb:0.96471,0.93333,0.85882,1.00000",
-              "srgb:0.86275,0.80392,0.65882,1.00000"
-            ],
-            "orientation": {
-              "start": {
-                "x": 0.5,
-                "y": 0.0
-              },
-              "stop": {
-                "x": 0.5,
-                "y": 1.0
-              }
-            }
-          },
-          "glass": true
-        },
-        {
-          "name": "chapeau",
-          "image-name": "chapeau.svg",
-          "fill": {
-            "linear-gradient": [
-              "srgb:0.60392,0.30980,0.24706,1.00000",
-              "srgb:0.35294,0.13333,0.15686,1.00000"
-            ],
-            "orientation": {
-              "start": {
-                "x": 0.5,
-                "y": 0.0
-              },
-              "stop": {
-                "x": 0.5,
-                "y": 1.0
-              }
-            }
-          },
-          "glass": true
-        }
-      ],
-      "lighting": "individual",
-      "specular": true,
-      "shadow": {
-        "kind": "neutral",
-        "opacity": 0.55
-      },
-      "translucency": {
-        "enabled": true,
-        "value": 0.45
-      },
-      "blur-material": 0.3
-    }
-  ],
-  "supported-platforms": {
-    "squares": "shared"
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
   }
 }
