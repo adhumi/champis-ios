@@ -1,0 +1,287 @@
+{
+  "id": "boletus_edulis",
+  "schema_version": 1,
+  "group": {
+    "id": "cepes",
+    "fr": "Cèpes"
+  },
+  "names": {
+    "fr": "Cèpe de Bordeaux",
+    "la": "Boletus edulis"
+  },
+  "notes": "Espèce la plus généraliste du groupe edulis : hêtre, épicéa/sapin, chênes, châtaignier, bouleau. Collinéen à montagnard, sols acides à neutres. Pour les chênaies chaudes de basse altitude, voir boletus_aereus (même groupe d'affichage). pH : plages élargies pour SoilGrids (qui surestime le pH des humus forestiers) — recalibrage GBIF reporté à l'échelle France (occurrences précises absentes du Doubs). Mélanges : melange_feuillus 0,65 et mixte_* 0,85 depuis le 18/10/2026 (diagnostic Doubs, réf. doubs2026) — un mélange BD Forêt (aucune essence ≥ 75 %) est moins fidèle qu'une hêtraie pure ou une sapinière.",
+  "terrain": {
+    "hosts": {
+      "hetre": 1.0,
+      "sapin_epicea": 0.95,
+      "chenes_decidus": 0.8,
+      "chataignier": 0.7,
+      "mixte_feuillus_dom": 0.85,
+      "mixte_coniferes_dom": 0.85,
+      "melange_feuillus": 0.65,
+      "melange_coniferes": 0.6,
+      "feuillus_indet": 0.6,
+      "coniferes_indet": 0.5,
+      "mixte_indet": 0.6,
+      "pin_sylvestre": 0.75,
+      "pin_crochets_cembro": 0.55,
+      "pin_maritime": 0.65,
+      "melange_pins": 0.4,
+      "autre_feuillu": 0.5,
+      "pin_laricio_noir": 0.4,
+      "autre_pin": 0.3,
+      "meleze": 0.3,
+      "chenes_sempervirents": 0.1,
+      "douglas": 0.25,
+      "autre_conifere": 0.1,
+      "pin_alep": 0.05,
+      "lande": 0.05,
+      "sans_couvert": 0.05,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.8
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.5,
+      "sans_couvert": 0.05,
+      "plantation": 0.0,
+      "non_foret": 0.2
+    },
+    "ph": {
+      "min": 3.3,
+      "opt_low": 4.0,
+      "opt_high": 6.5,
+      "max": 8.0
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 150,
+      "opt_high": 1500,
+      "max": 2100
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.85,
+      "W": 0.85,
+      "SE": 0.75,
+      "SW": 0.7,
+      "S": 0.65,
+      "flat": 0.9
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 20,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.2,
+      "ph": 0.3,
+      "altitude": 0.25,
+      "aspect": 0.17,
+      "slope": 0.08
+    },
+    "refs": {
+      "hosts": [
+        "beugelsdijk2008",
+        "doubs2026",
+        "bielefeld2025",
+        "amycoforest2013",
+        "hall1998"
+      ],
+      "cover": [
+        "egli2010",
+        "salerni2004"
+      ],
+      "ph": [
+        "olaizola2023",
+        "santolamazza2023",
+        "stankeviciene2007",
+        "taye2016"
+      ],
+      "altitude": [
+        "amycoforest2013",
+        "gbif2026",
+        "treindl2019"
+      ],
+      "aspect": [
+        "bonet2008"
+      ],
+      "slope": [
+        "bonet2008"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "07-15",
+      "end": "12-15"
+    },
+    "peak": {
+      "start": "09-01",
+      "end": "10-31"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 300,
+      "start_days_per_100m": -3,
+      "end_days_per_100m": -3,
+      "max_days": 30
+    },
+    "refs": [
+      "gbif2026",
+      "amycoforest2013",
+      "andrew2018",
+      "bielefeld2025"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 5,
+        "opt_low": 10,
+        "opt_high": 16,
+        "max": 22
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 150,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 6,
+        "opt_low": 10,
+        "opt_high": 20,
+        "max": 32
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -2,
+      "nights": 2,
+      "window_days": 7,
+      "factor": 0.2
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 12
+    },
+    "weights": {
+      "temp": 0.3,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.2
+    },
+    "refs": {
+      "temp_mean": [
+        "bielefeld2025",
+        "straatsma2001",
+        "karavani2018"
+      ],
+      "rain": [
+        "bielefeld2025",
+        "salerni2002"
+      ],
+      "trigger": [
+        "salerni2023",
+        "straatsma2001",
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "olano2020",
+        "karavani2018"
+      ],
+      "frost": [
+        "bielefeld2025",
+        "kauserud2012"
+      ],
+      "heat": [
+        "salerni2023",
+        "terrain_fr"
+      ],
+      "memory": [
+        "olano2020",
+        "buntgen2015",
+        "tahvanainen2016"
+      ],
+      "persistence": [
+        "terrain_fr",
+        "vcu2024"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "bielefeld2025"
+      ]
+    }
+  },
+  "references": {
+    "bielefeld2025": "Brejon Lamartinière & Hoffman 2025, Predicting porcini, bioRxiv 10.64898/2025.12.12.693895 — modèle journalier B. edulis, hêtraies, 2015-2024 : T moy 20 j optimum ≈13 °C, pluie moyenne 26 j linéaire",
+    "beugelsdijk2008": "Beugelsdijk et al. 2008, Persoonia 20:1-7 — phylogénie du groupe edulis et hôtes documentés",
+    "hall1998": "Hall et al. 1998, Economic Botany 52:44-56 — B. edulis ECM strict, Fagaceae/Pinaceae/Betulaceae",
+    "amycoforest2013": "Guide de mycosylviculture Amycoforest (CRPF, 2013) — hôtes, altitudes, saisons par espèce en France",
+    "egli2010": "Egli et al. 2010, Ann. For. Sci. — éclaircie modérée favorable, B. edulis apparu après éclaircie",
+    "salerni2004": "Salerni & Perini 2004 — sapinières 30 vs 60 ans ; éclaircie forte et retrait de litière défavorables",
+    "olaizola2023": "Olaizola et al. 2023, Bioagro — croissance in vitro pH 2,5-7,5, nulle à 8,5",
+    "santolamazza2023": "Santolamazza-Carbone et al. 2023, Front. Soil Sci. — châtaigneraies productives pH 4,7-5,0",
+    "stankeviciene2007": "Stankevičienė & Kasparavičius 2007, Acta Mycol. — pinèdes lituaniennes pH KCl 3,4-3,8",
+    "taye2016": "Taye et al. 2016, Fungal Ecology (et thèse MedFor) — corrélation négative pH / rendement (Martínez-Peña 2012)",
+    "gbif2026": "GBIF, API occurrence/search, France, facettes mois et altitude, lu le 16/10/2026 — pic sept.-oct., 800-1200 m",
+    "treindl2019": "Treindl & Leuchtmann 2019, ETH — record altitudinal 2 440 m avec Salix herbacea",
+    "bonet2008": "Bonet et al. 2008, Ann. For. Sci. 65:206 — expositions nord et altitude positives, pente forte négative (Pyrénées)",
+    "andrew2018": "Andrew et al. 2018, Ecology — l'altitude avance la fructification automnale jusqu'à 30 j",
+    "straatsma2001": "Straatsma, Ayer & Egli 2001, Mycol. Res. — ~3 semaines après la pluie ; pic quand la moyenne hebdo passe sous 14 °C",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pluie et humidité du sol à 1 mois, T max sept.-oct. négatives",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents, meilleur corrélat (chênaies toscanes)",
+    "salerni2023": "Salerni et al. 2023, Italian Mycology — pluies ≥ 20 mm/j, effet maximal au 12e jour ; hausses brusques de T max inhibent",
+    "olano2020": "Olano et al. 2020, Agric. For. Meteorol. — humidité du sol juillet-nov. r = 0,72 ; pluie de septembre ; NDVI n-1",
+    "buntgen2015": "Büntgen et al. 2015, Fungal Ecology — pluies juillet-sept. positives, retard d'une semaine après 2004 (Pinar Grande)",
+    "tahvanainen2016": "Tahvanainen 2016, Dissertationes Forestales — modèle finlandais : pluie d'août positive, T août négative",
+    "agreda2015": "Ágreda et al. 2015, GCB — le bilan hydrique (P-ETP) prédit mieux que la pluie brute ; base du facteur water_balance",
+    "kauserud2012": "Kauserud et al. 2012, PNAS 109:14488 — recul des premières gelées = allongement de saison",
+    "vcu2024": "Thèse VCU 2024, Pinar Grande 1995-2023 — saison de Boletus 32 ± 13 jours",
+    "doubs2026": "Diagnostic champis-pipeline explain, Doubs, 18/10/2026 — 90 % de la forêt en excellent, facteurs d'environnement saturés (pH, altitude, couvert ≥ 0,9 sur 94 % des pixels), T = poids de l'hôte ; mélanges indéterminés abaissés pour retrouver une gradation (cible spec : ≤ 60 % excellent, 3 classes > 10 %) ; confiance moyenne",
+    "terrain_fr": "Sources de terrain françaises (Wikipédia FR, Mycocharentes) — > 50 mm/décade, premiers sporophores 6-15 j, pousse ~12 j ; confiance faible"
+  }
+}

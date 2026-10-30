@@ -22,6 +22,14 @@ mkdir -p "$dst"
 rm -f "$dst"/*.json
 cp "$src"/*.json "$dst/"
 
+# Les tests rejouent les vecteurs avec les paramètres d'espèces et la palette du même commit :
+# copiés comme ressources de test seulement, l'app les reçoit de /species.
+res="$here/Packages/ChampisScoring/Tests/ChampisScoringTests/Resources"
+mkdir -p "$res/species"
+rm -f "$res/species"/*.json
+cp "$monorepo"/species/*.json "$res/species/"
+cp "$monorepo/shared/palette.json" "$res/palette.json"
+
 python3 - "$src/m.json" > "$pkg/VECTORS_VERSION" <<'PYTHON'
 import json, sys
 g = json.load(open(sys.argv[1]))["generated_by"]

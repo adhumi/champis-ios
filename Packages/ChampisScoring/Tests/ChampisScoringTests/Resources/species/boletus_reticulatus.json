@@ -1,0 +1,264 @@
+{
+  "id": "boletus_reticulatus",
+  "schema_version": 1,
+  "group": {
+    "id": "cepes",
+    "fr": "Cèpes"
+  },
+  "names": {
+    "fr": "Cèpe d'été (cèpe réticulé)",
+    "la": "Boletus reticulatus (= B. aestivalis)"
+  },
+  "notes": "Cèpe précoce et thermophile des chênaies et hêtraies de plaine et de colline (< 600 m), sols neutres à acides, stations assez sèches. Premier cèpe de l'année (juin-juillet), second pic en septembre-octobre. Identification souvent confondue avec B. edulis dans GBIF.",
+  "terrain": {
+    "hosts": {
+      "hetre": 0.9,
+      "sapin_epicea": 0.1,
+      "chenes_decidus": 1.0,
+      "chataignier": 0.9,
+      "mixte_feuillus_dom": 0.7,
+      "mixte_coniferes_dom": 0.3,
+      "melange_feuillus": 0.9,
+      "melange_coniferes": 0.1,
+      "feuillus_indet": 0.7,
+      "coniferes_indet": 0.1,
+      "mixte_indet": 0.4,
+      "pin_sylvestre": 0.1,
+      "pin_crochets_cembro": 0.05,
+      "pin_maritime": 0.1,
+      "melange_pins": 0.1,
+      "autre_feuillu": 0.5,
+      "pin_laricio_noir": 0.1,
+      "autre_pin": 0.1,
+      "meleze": 0.05,
+      "chenes_sempervirents": 0.3,
+      "douglas": 0.05,
+      "autre_conifere": 0.1,
+      "pin_alep": 0.05,
+      "lande": 0.1,
+      "sans_couvert": 0.1,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.1
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.8,
+      "sans_couvert": 0.1,
+      "plantation": 0.0,
+      "non_foret": 0.2
+    },
+    "ph": {
+      "min": 3.8,
+      "opt_low": 4.5,
+      "opt_high": 7.0,
+      "max": 8.0
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 600,
+      "max": 1200
+    },
+    "aspect": {
+      "N": 0.85,
+      "NE": 0.9,
+      "NW": 0.9,
+      "E": 1.0,
+      "W": 1.0,
+      "SE": 0.95,
+      "SW": 0.95,
+      "S": 0.85,
+      "flat": 1.0
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 20,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.2,
+      "ph": 0.25,
+      "altitude": 0.3,
+      "aspect": 0.15,
+      "slope": 0.1
+    },
+    "refs": {
+      "hosts": [
+        "beugelsdijk2008",
+        "coolia2005",
+        "amycoforest2013"
+      ],
+      "cover": [
+        "amycoforest2013"
+      ],
+      "ph": [
+        "beugelsdijk2008",
+        "amycoforest2013"
+      ],
+      "altitude": [
+        "amycoforest2013",
+        "gbif2026"
+      ],
+      "aspect": [
+        "coolia2005"
+      ],
+      "slope": [
+        "bonet2008"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "05-20",
+      "end": "11-15"
+    },
+    "peak": {
+      "start": "06-10",
+      "end": "10-20"
+    },
+    "ramp_days": 20,
+    "altitude_shift": {
+      "reference_m": 200,
+      "start_days_per_100m": 2,
+      "end_days_per_100m": -2,
+      "max_days": 20
+    },
+    "refs": [
+      "gbif2026",
+      "wikipedia_fr_reticulatus",
+      "amycoforest2013"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 9,
+        "opt_low": 14,
+        "opt_high": 20,
+        "max": 26
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 25,
+        "opt_low": 50,
+        "opt_high": 130,
+        "max": 500
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 5,
+        "opt_low": 8,
+        "opt_high": 15,
+        "max": 25
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -1,
+      "nights": 1,
+      "window_days": 7,
+      "factor": 0.1
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 32,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 10
+    },
+    "weights": {
+      "temp": 0.3,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.2
+    },
+    "refs": {
+      "temp_mean": [
+        "bielefeld2025",
+        "wikipedia_fr_reticulatus"
+      ],
+      "rain": [
+        "bielefeld2025",
+        "salerni2002"
+      ],
+      "trigger": [
+        "salerni2023",
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "olano2020",
+        "karavani2018"
+      ],
+      "frost": [
+        "kauserud2012"
+      ],
+      "heat": [
+        "salerni2023"
+      ],
+      "memory": [
+        "olano2020",
+        "buntgen2015",
+        "tahvanainen2016"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "bielefeld2025"
+      ]
+    }
+  },
+  "references": {
+    "bielefeld2025": "Brejon Lamartinière & Hoffman 2025, Predicting porcini, bioRxiv 10.64898/2025.12.12.693895 — modèle journalier B. edulis, hêtraies, 2015-2024 : T moy 20 j optimum ≈13 °C, pluie moyenne 26 j linéaire",
+    "beugelsdijk2008": "Beugelsdijk et al. 2008, Persoonia 20:1-7 — phylogénie du groupe edulis et hôtes documentés",
+    "amycoforest2013": "Guide de mycosylviculture Amycoforest (CRPF, 2013) — aestivalis < 600 m, sol neutre à acide",
+    "gbif2026": "GBIF, API, France, lu le 16/10/2026 — B. reticulatus FR 1 315 occ. : juin 238, juil. 182, août 193, sept. 209, oct. 153",
+    "bonet2008": "Bonet et al. 2008, Ann. For. Sci. 65:206 — expositions nord et altitude positives, pente forte négative (Pyrénées)",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pluie et humidité du sol à 1 mois, T max sept.-oct. négatives",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents, meilleur corrélat (chênaies toscanes)",
+    "salerni2023": "Salerni et al. 2023, Italian Mycology — pluies ≥ 20 mm/j, effet maximal au 12e jour ; hausses brusques de T max inhibent",
+    "olano2020": "Olano et al. 2020, Agric. For. Meteorol. — humidité du sol juillet-nov. r = 0,72 ; pluie de septembre ; NDVI n-1",
+    "buntgen2015": "Büntgen et al. 2015, Fungal Ecology — pluies juillet-sept. positives, retard d'une semaine après 2004 (Pinar Grande)",
+    "tahvanainen2016": "Tahvanainen 2016, Dissertationes Forestales — modèle finlandais : pluie d'août positive, T août négative",
+    "agreda2015": "Ágreda et al. 2015, GCB — le bilan hydrique (P-ETP) prédit mieux que la pluie brute ; base du facteur water_balance",
+    "kauserud2012": "Kauserud et al. 2012, PNAS 109:14488 — recul des premières gelées = allongement de saison",
+    "terrain_fr": "Sources de terrain françaises (Wikipédia FR, Mycocharentes) — > 50 mm/décade, premiers sporophores 6-15 j, pousse ~12 j ; confiance faible",
+    "coolia2005": "Coolia 2005 (48:2) — B. reticulatus strictement sous chênes, amplitude de sol très large (sable sec à argile riche), stations assez sèches",
+    "wikipedia_fr_reticulatus": "Wikipédia FR, Boletus reticulatus (citant Eyssartier & Roux) — mai/juin → novembre, pic juillet et second pic octobre ; thermophile"
+  }
+}

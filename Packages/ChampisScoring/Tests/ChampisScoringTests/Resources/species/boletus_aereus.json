@@ -1,0 +1,266 @@
+{
+  "id": "boletus_aereus",
+  "schema_version": 1,
+  "group": {
+    "id": "cepes",
+    "fr": "Cèpes"
+  },
+  "names": {
+    "fr": "Cèpe bronzé (tête-de-nègre)",
+    "la": "Boletus aereus"
+  },
+  "notes": "BONUS, à valider. Cèpe thermophile et héliophile des chênaies et châtaigneraies de basse altitude (< 600 m), lisières et clairières ; la France est au cœur de son aire. Pertinent pour le Vaucluse (chênaies pubescentes, Luberon). Sources moins nombreuses que pour B. edulis. Pin d'Alep pondéré 0,3 pour le sous-étage de chêne vert/pubescent que BD Forêt ne décrit pas.",
+  "terrain": {
+    "hosts": {
+      "chenes_decidus": 1.0,
+      "chataignier": 1.0,
+      "chenes_sempervirents": 0.8,
+      "melange_feuillus": 0.8,
+      "feuillus_indet": 0.7,
+      "mixte_feuillus_dom": 0.6,
+      "hetre": 0.5,
+      "mixte_indet": 0.4,
+      "autre_feuillu": 0.3,
+      "lande": 0.3,
+      "mixte_coniferes_dom": 0.3,
+      "pin_maritime": 0.05,
+      "pin_sylvestre": 0.05,
+      "pin_alep": 0.3,
+      "coniferes_indet": 0.1,
+      "sans_couvert": 0.1,
+      "melange_pins": 0.05,
+      "melange_coniferes": 0.05,
+      "sapin_epicea": 0.05,
+      "pin_laricio_noir": 0.05,
+      "pin_crochets_cembro": 0.0,
+      "autre_pin": 0.05,
+      "meleze": 0.0,
+      "douglas": 0.0,
+      "autre_conifere": 0.05,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.05
+    },
+    "cover": {
+      "fermee": 0.9,
+      "ouverte": 1.0,
+      "sans_couvert": 0.1,
+      "plantation": 0.0,
+      "non_foret": 0.3
+    },
+    "ph": {
+      "min": 3.8,
+      "opt_low": 4.5,
+      "opt_high": 6.8,
+      "max": 7.8
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 50,
+      "opt_high": 600,
+      "max": 1200
+    },
+    "aspect": {
+      "S": 1.0,
+      "SE": 0.95,
+      "SW": 0.95,
+      "E": 0.85,
+      "W": 0.85,
+      "NE": 0.7,
+      "NW": 0.7,
+      "N": 0.6,
+      "flat": 0.9
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 20,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.2,
+      "ph": 0.2,
+      "altitude": 0.35,
+      "aspect": 0.17,
+      "slope": 0.08
+    },
+    "refs": {
+      "hosts": [
+        "beugelsdijk2008",
+        "piemonte",
+        "wikipedia_fr_aereus",
+        "amycoforest2013"
+      ],
+      "cover": [
+        "piemonte",
+        "wikipedia_fr_aereus"
+      ],
+      "ph": [
+        "beugelsdijk2008",
+        "wikipedia_fr_aereus",
+        "amycoforest2013"
+      ],
+      "altitude": [
+        "amycoforest2013",
+        "piemonte",
+        "wikipedia_fr_aereus"
+      ],
+      "aspect": [
+        "piemonte"
+      ],
+      "slope": [
+        "bonet2008"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "06-15",
+      "end": "11-15"
+    },
+    "peak": {
+      "start": "09-01",
+      "end": "10-20"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 200,
+      "start_days_per_100m": 0,
+      "end_days_per_100m": -1,
+      "max_days": 15
+    },
+    "refs": [
+      "gbif2026",
+      "piemonte",
+      "mycocharentes"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 10,
+        "opt_low": 15,
+        "opt_high": 21,
+        "max": 27
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 25,
+        "opt_low": 50,
+        "opt_high": 130,
+        "max": 500
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 5,
+        "opt_low": 7,
+        "opt_high": 12,
+        "max": 20
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -2,
+      "nights": 2,
+      "window_days": 7,
+      "factor": 0.2
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 32,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 40,
+        "opt_low": 120,
+        "opt_high": 350,
+        "max": 700
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 10
+    },
+    "weights": {
+      "temp": 0.3,
+      "rain": 0.3,
+      "trigger": 0.25,
+      "soil_moisture": 0.15
+    },
+    "refs": {
+      "temp_mean": [
+        "wikipedia_fr_aereus",
+        "piemonte",
+        "bielefeld2025"
+      ],
+      "rain": [
+        "salerni2002",
+        "bielefeld2025"
+      ],
+      "trigger": [
+        "wikipedia_fr_aereus",
+        "salerni2023"
+      ],
+      "soil_moisture": [
+        "karavani2018"
+      ],
+      "frost": [
+        "piemonte"
+      ],
+      "heat": [
+        "salerni2023"
+      ],
+      "memory": [
+        "buntgen2015",
+        "olano2020"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "bielefeld2025"
+      ]
+    }
+  },
+  "references": {
+    "beugelsdijk2008": "Beugelsdijk et al. 2008, Persoonia 20:1-7 — B. aereus : chênes, châtaignier, hêtre, arbousier, cistes ; limons parfois un peu calcaires",
+    "piemonte": "Regione Piemonte, fiche Boletus — B. aereus 200-1 000 m, chênaies et châtaigneraies, tolère les premières gelées, meilleur sept.-oct.",
+    "wikipedia_fr_aereus": "Wikipédia FR, Boletus aereus (citant Eyssartier & Roux) — sols acides drainés pH 4-6, jusqu'à ~1 100 m, 7-10 j après fortes pluies suivant une période chaude",
+    "amycoforest2013": "Guide de mycosylviculture Amycoforest (CRPF, 2013) — aereus < 600 m, sol neutre à acide",
+    "mycocharentes": "Fiches Mycocharentes — aereus meilleur en sept.-oct., absent des zones très calcaires",
+    "gbif2026": "GBIF, API, France, lu le 16/10/2026 — B. aereus FR 764 occ. : août 115, sept. 164, oct. 178, nov. 27",
+    "bonet2008": "Bonet et al. 2008, Ann. For. Sci. — pente forte négative",
+    "bielefeld2025": "Brejon Lamartinière & Hoffman 2025, bioRxiv — forme du modèle (T 20 j, pluie ~4 semaines), décalé de +4 à +5 °C pour l'espèce thermophile",
+    "salerni2002": "Salerni et al. 2002 — cumul 30 j (chênaies toscanes)",
+    "salerni2023": "Salerni et al. 2023 — pluies ≥ 20 mm/j, effet max au 12e jour ; T max brusque inhibe",
+    "karavani2018": "Karavani et al. 2018 — humidité du sol à 1 mois",
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
+    "buntgen2015": "Büntgen et al. 2015, Fungal Ecology — pluies juillet-sept. positives (Espagne)",
+    "olano2020": "Olano et al. 2020 — humidité du sol juillet-nov.",
+    "terrain_fr": "Sources de terrain françaises — pousse ~10-12 j ; confiance faible"
+  }
+}

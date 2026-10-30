@@ -14,7 +14,11 @@ let package = Package(
         .testTarget(
             name: "ChampisScoringTests",
             dependencies: ["ChampisScoring"],
-            resources: [.copy("Resources/vectors")]
+            resources: [
+                .copy("Resources/vectors"),
+                .copy("Resources/species"),
+                .copy("Resources/palette.json"),
+            ]
         ),
     ],
     swiftLanguageModes: [.v6]

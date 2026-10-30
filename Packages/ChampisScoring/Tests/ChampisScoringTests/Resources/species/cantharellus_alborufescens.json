@@ -1,0 +1,257 @@
+{
+  "id": "cantharellus_alborufescens",
+  "schema_version": 1,
+  "group": {
+    "id": "girolles",
+    "fr": "Girolles"
+  },
+  "names": {
+    "fr": "Girolle blanchissante (girolle des chênes verts)",
+    "la": "Cantharellus alborufescens"
+  },
+  "notes": "Girolle strictement calcicole des chênaies méditerranéennes sempervirentes (chêne vert surtout, chêne pubescent), 100-500 m, fructification tardive octobre-décembre. Syn. C. henrici, C. ilicis, C. lilacinopruinatus. Couvre le trou laissé par C. cibarius (absente du climat méditerranéen) dans le Luberon et les garrigues boisées.",
+  "terrain": {
+    "hosts": {
+      "hetre": 0.2,
+      "sapin_epicea": 0.05,
+      "chenes_decidus": 0.7,
+      "chataignier": 0.2,
+      "mixte_feuillus_dom": 0.5,
+      "mixte_coniferes_dom": 0.3,
+      "melange_feuillus": 0.6,
+      "melange_coniferes": 0.05,
+      "feuillus_indet": 0.5,
+      "coniferes_indet": 0.1,
+      "mixte_indet": 0.3,
+      "pin_sylvestre": 0.1,
+      "pin_crochets_cembro": 0.05,
+      "pin_maritime": 0.05,
+      "melange_pins": 0.1,
+      "autre_feuillu": 0.2,
+      "pin_laricio_noir": 0.1,
+      "autre_pin": 0.1,
+      "meleze": 0.05,
+      "chenes_sempervirents": 1.0,
+      "douglas": 0.05,
+      "autre_conifere": 0.1,
+      "pin_alep": 0.3,
+      "lande": 0.3,
+      "sans_couvert": 0.1,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.05
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.8,
+      "sans_couvert": 0.1,
+      "plantation": 0.0,
+      "non_foret": 0.3
+    },
+    "ph": {
+      "min": 6.0,
+      "opt_low": 6.8,
+      "opt_high": 8.2,
+      "max": 8.6
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 50,
+      "opt_high": 500,
+      "max": 900
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.8,
+      "SW": 0.8,
+      "S": 0.7,
+      "flat": 0.95
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.15,
+      "ph": 0.4,
+      "altitude": 0.25,
+      "aspect": 0.14,
+      "slope": 0.06
+    },
+    "refs": {
+      "hosts": [
+        "olariaga2017",
+        "tanchaud_alborufescens"
+      ],
+      "cover": [
+        "olariaga2017"
+      ],
+      "ph": [
+        "olariaga2017",
+        "tanchaud_alborufescens"
+      ],
+      "altitude": [
+        "olariaga2017"
+      ],
+      "aspect": [
+        "populaire_scandinave"
+      ],
+      "slope": [
+        "populaire_scandinave"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "09-20",
+      "end": "12-31"
+    },
+    "peak": {
+      "start": "10-15",
+      "end": "11-30"
+    },
+    "ramp_days": 25,
+    "altitude_shift": {
+      "reference_m": 200,
+      "start_days_per_100m": 0,
+      "end_days_per_100m": -3,
+      "max_days": 20
+    },
+    "refs": [
+      "olariaga2017",
+      "tanchaud_alborufescens"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 21,
+      "c": {
+        "min": 5,
+        "opt_low": 9,
+        "opt_high": 17,
+        "max": 23
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 130,
+        "max": 300
+      }
+    },
+    "trigger": {
+      "event_mm": 15,
+      "event_days": 3,
+      "lag_days": {
+        "min": 10,
+        "opt_low": 14,
+        "opt_high": 28,
+        "max": 40
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -3,
+      "nights": 2,
+      "window_days": 7,
+      "factor": 0.3
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 900
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 30
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.25
+    },
+    "refs": {
+      "temp_mean": [
+        "straatsma_egli2001",
+        "bielefeld2025"
+      ],
+      "rain": [
+        "salerni2002",
+        "pietka2012"
+      ],
+      "trigger": [
+        "pietka2012",
+        "karavani2018"
+      ],
+      "soil_moisture": [
+        "karavani2018",
+        "danell1994"
+      ],
+      "frost": [
+        "danell1994"
+      ],
+      "heat": [
+        "straatsma_egli2001"
+      ],
+      "memory": [
+        "tahvanainen2019",
+        "straatsma_egli2001"
+      ],
+      "persistence": [
+        "pilz2003"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "bielefeld2025"
+      ]
+    }
+  },
+  "references": {
+    "olariaga2017": "Olariaga et al. 2017, Fungal Diversity — C. alborufescens : chênes méditerranéens sempervirents (Q. ilex surtout), collections à 100-500 m, calcicole",
+    "straatsma_egli2001": "Straatsma & Egli 2001, NBT — T de juillet négative, pluie de juin positive",
+    "bielefeld2025": "Brejon Lamartinière & Hoffman 2025, bioRxiv — forme du modèle",
+    "salerni2002": "Salerni et al. 2002 — cumul 30 j",
+    "pietka2012": "Piętka et al. 2012 — délai ~1 mois après pluie abondante",
+    "karavani2018": "Karavani et al. 2018 — pluie et humidité du sol à 1 mois",
+    "danell1994": "Danell 1994, Mycorrhiza 5 — inondation, sécheresse, gel",
+    "termorshuizen2003": "Termorshuizen 2003, Coolia — septembre sec sans fructification",
+    "tahvanainen2019": "Tahvanainen et al. 2019, Forests — pluie juin+juillet",
+    "pilz2003": "Pilz et al. 2003, GTR-576 — persistance moyenne 44 j (genre)",
+    "populaire_scandinave": "Sources populaires scandinaves — confiance faible",
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
+    "tanchaud_alborufescens": "Fiche Tanchaud (Mycocharentes, 2024), C. cf. alborufescens — sur sol calcaire, surtout sous chênes sempervirents, oct.-nov."
+  }
+}

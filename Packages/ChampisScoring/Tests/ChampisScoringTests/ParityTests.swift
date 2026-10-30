@@ -1,0 +1,200 @@
+import Foundation
+import Testing
+@testable import ChampisScoring
+
+/// Rejoue `shared/vectors/*.json` (générés par Python, jamais écrits à la main) contre le portage
+/// Swift : tolérance 1e-6 sur les scores, égalité stricte sur `label`, `hex`, `leading`
+/// (skill `scoring-parity`).
+private let tolerance = 1e-6
+
+private struct TrapezoidJSON: Decodable {
+    let min: Double
+    let optLow: Double
+    let optHigh: Double
+    let max: Double
+    enum CodingKeys: String, CodingKey { case min, optLow = "opt_low", optHigh = "opt_high", max }
+    var trapezoid: Trapezoid { Trapezoid(min: min, optLow: optLow, optHigh: optHigh, max: max) }
+}
+
+private struct TrapezoidCase: Decodable {
+    let x: Double
+    let t: TrapezoidJSON
+    let expected: Double
+}
+
+private struct PhiCase: Decodable {
+    let species: String
+    let date: String
+    let altM: Double
+    let expected: Double
+    enum CodingKeys: String, CodingKey { case species, date, altM = "alt_m", expected }
+}
+
+private struct SeriesJSON: Decodable {
+    let dates: [String]
+    let tMean: [Double]
+    let tMin: [Double]
+    let tMax: [Double]
+    let rain: [Double]
+    let snow: [Double]
+    let et0: [Double]
+    let soilMoisturePct: [Double]
+    enum CodingKeys: String, CodingKey {
+        case dates, rain, snow, et0
+        case tMean = "t_mean", tMin = "t_min", tMax = "t_max", soilMoisturePct = "soil_moisture_pct"
+    }
+}
+
+private struct MCase: Decodable {
+    let species: String
+    let scenario: String
+    let day: String
+    let altM: Double
+    let cellElevationM: Double
+    let series: SeriesJSON
+    let expected: [String: Double]  // temp, rain, trigger, soil_moisture, frost, water_balance, heat, memory, M, M_eff
+    enum CodingKeys: String, CodingKey {
+        case species, scenario, day, series, expected
+        case altM = "alt_m", cellElevationM = "cell_elevation_m"
+    }
+}
+
+private struct GroupCase: Decodable {
+    let scores: [String: Double]
+    let expected: GroupExpected
+    struct GroupExpected: Decodable {
+        let score: Double
+        let leading: String?
+    }
+}
+
+private struct PaletteCase: Decodable {
+    let score: Double
+    let expected: PaletteExpected
+    struct PaletteExpected: Decodable {
+        let label: String
+        let hex: String
+    }
+}
+
+private struct VectorFile<Case: Decodable>: Decodable {
+    let cases: [Case]
+}
+
+private func resource(_ name: String, ext: String, subdirectory: String? = nil) throws -> Data {
+    let url = try #require(
+        Bundle.module.url(forResource: name, withExtension: ext, subdirectory: subdirectory),
+        "ressource \(name).\(ext) absente : lancer scripts/sync-vectors.sh"
+    )
+    return try Data(contentsOf: url)
+}
+
+/// Les vecteurs sont lus sans conversion de clés : les identifiants d'espèces (`boletus_edulis`)
+/// et les noms de facteurs (`soil_moisture`, `M_eff`) sont des données, pas des propriétés.
+private func vectors<Case: Decodable>(_ name: String, as type: Case.Type) throws -> [Case] {
+    let data = try resource(name, ext: "json", subdirectory: "vectors")
+    return try JSONDecoder().decode(VectorFile<Case>.self, from: data).cases
+}
+
+private func species(_ id: String) throws -> Species {
+    try Species.decode(resource(id, ext: "json", subdirectory: "species"))
+}
+
+private func palette() throws -> Palette {
+    try Palette.decode(resource("palette", ext: "json"))
+}
+
+private func close(_ a: Double, _ b: Double) -> Bool {
+    abs(a - b) <= tolerance
+}
+
+struct ParityTests {
+    @Test("Trapèze : bornes exactes, ±ε, marche et falaise")
+    func trapezoid() throws {
+        let cases = try vectors("trapezoid", as: TrapezoidCase.self)
+        #expect(cases.count >= 20)
+        for c in cases {
+            #expect(close(c.t.trapezoid.value(c.x), c.expected), "x=\(c.x) t=\(c.t.trapezoid)")
+        }
+    }
+
+    @Test("Φ : toutes les espèces, trois altitudes, toute l'année, 29 février")
+    func phi() throws {
+        let cases = try vectors("phi", as: PhiCase.self)
+        #expect(cases.count > 1000)
+        var cache: [String: Species] = [:]
+        for c in cases {
+            if cache[c.species] == nil { cache[c.species] = try species(c.species) }
+            let phi = try Phenology.window(cache[c.species]!, day: CivilDate(iso: c.date), altM: c.altM)
+            #expect(close(phi, c.expected), "\(c.species) \(c.date) \(c.altM) m")
+        }
+    }
+
+    @Test("M, M_eff et chaque facteur : scénarios météo de référence")
+    func weatherIndex() throws {
+        let cases = try vectors("m", as: MCase.self)
+        #expect(cases.count >= 60)
+        for c in cases {
+            let sp = try species(c.species)
+            let s = try DailySeries(
+                dates: c.series.dates.map { try CivilDate(iso: $0) },
+                tMean: c.series.tMean, tMin: c.series.tMin, tMax: c.series.tMax,
+                rain: c.series.rain, snow: c.series.snow, et0: c.series.et0,
+                soilMoisturePct: c.series.soilMoisturePct, cellElevationM: c.cellElevationM
+            )
+            let f = try WeatherIndex.weatherIndex(sp, s, day: CivilDate(iso: c.day), altM: c.altM)
+            for (name, expected) in c.expected {
+                let actual = try #require(f[name], "facteur inconnu \(name)")
+                #expect(close(actual, expected), "\(c.species) \(c.scenario) \(c.day) \(c.altM) m : \(name)")
+            }
+        }
+    }
+
+    @Test("Groupe : max des espèces, première par ordre alphabétique à égalité")
+    func group() throws {
+        for c in try vectors("group", as: GroupCase.self) {
+            let g = GroupScore(scores: c.scores)
+            #expect(close(g.score, c.expected.score))
+            #expect(g.leading == c.expected.leading)
+        }
+    }
+
+    @Test("Palette : seuils exacts 0,15 / 0,35 / 0,55 / 0,75")
+    func paletteClasses() throws {
+        let p = try palette()
+        for c in try vectors("palette", as: PaletteCase.self) {
+            let cls = p.classify(c.score)
+            #expect(cls.label == c.expected.label && cls.hex == c.expected.hex, "score \(c.score)")
+        }
+    }
+
+    @Test("Dates civiles : ordinal, jour de l'année, arithmétique, années bissextiles")
+    func civilDates() throws {
+        let d = try CivilDate(iso: "2026-10-30")
+        #expect(d.dayOfYear == 303 && d.adding(days: 63).description == "2027-01-01")
+        #expect(try CivilDate(iso: "2024-03-01").days(since: CivilDate(iso: "2024-02-28")) == 2)
+        #expect(CivilDate(ordinal: d.ordinal) == d)
+        #expect(CivilDate.dayOfYear(month: 2, day: 29, year: 2026) == 59)  // 29 février → 28
+        #expect(roundHalfUp(2.5) == 3 && roundHalfUp(-2.5) == -2 && roundHalfUp(2.49) == 2)
+        #expect(altitudeClass(0) == 150 && altitudeClass(299) == 150 && altitudeClass(300) == 450)
+        #expect(throws: ScoringError.self) { try CivilDate(iso: "2026-02-30") }
+    }
+
+    @Test("Une série trop courte est une erreur, jamais une approximation")
+    func shortSeriesThrows() throws {
+        let sp = try species("boletus_edulis")
+        let start = try CivilDate(iso: "2026-10-01")
+        let n = 20
+        let s = try DailySeries(
+            dates: (0..<n).map { start.adding(days: $0) },
+            tMean: Array(repeating: 13, count: n), tMin: Array(repeating: 8, count: n),
+            tMax: Array(repeating: 18, count: n), rain: Array(repeating: 2.5, count: n),
+            snow: Array(repeating: 0, count: n), et0: Array(repeating: 1.5, count: n),
+            soilMoisturePct: Array(repeating: 0.6, count: n), cellElevationM: 700
+        )
+        #expect(throws: ScoringError.self) {
+            try WeatherIndex.weatherIndex(sp, s, day: start.adding(days: n - 1), altM: 700)
+        }
+        #expect(sp.requiredSeriesDays == 130)
+    }
+}
