@@ -40,13 +40,17 @@ public enum TileID {
         return (z, Int(x), Int(y))
     }
 
+    /// La référence (pmtiles, Python et JS) écrit `n - 1 - x`, où `n` est le pas courant et `x` la
+    /// coordonnée entière, qui peut dépasser `n` : le résultat devient négatif et seuls ses bits bas
+    /// servent ensuite. En `UInt64`, la soustraction déborderait (trap) ; le XOR par `n - 1` inverse
+    /// exactement les mêmes bits bas sans toucher aux bits hauts, et vaut `n - 1 - x` quand `x < n`.
     static func rotate(_ n: UInt64, _ x: UInt64, _ y: UInt64, _ rx: UInt64, _ ry: UInt64) -> (UInt64, UInt64) {
         var x = x
         var y = y
         if ry == 0 {
             if rx != 0 {
-                x = n - 1 - x
-                y = n - 1 - y
+                x = (n - 1) ^ x
+                y = (n - 1) ^ y
             }
             swap(&x, &y)
         }

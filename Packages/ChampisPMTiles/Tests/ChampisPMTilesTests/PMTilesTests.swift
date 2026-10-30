@@ -62,6 +62,7 @@ struct HilbertTests {
             let back = TileID.toZXY(h.tileId)
             #expect(back.z == h.z && back.x == h.x && back.y == h.y)
         }
+        // 15/16877/11750 et 6/33/22 passent par la rotation avec x > pas courant (ex-dépassement UInt64)
         #expect(TileID.fromZXY(z: 0, x: 0, y: 0) == 0)
         #expect(TileID.fromZXY(z: 1, x: 0, y: 0) == 1 && TileID.fromZXY(z: 2, x: 0, y: 0) == 5)
     }
@@ -154,6 +155,7 @@ struct ReaderTests {
             #expect(try await reader.tile(z: a[0], x: a[1], y: a[2]) == nil)
         }
         #expect(try await reader.tile(z: 3, x: 0, y: 0) == nil)  // sous min_zoom : pas de requête
+        #expect(try await reader.tile(z: 6, x: 64, y: 0) == nil)  // hors niveau : nil, pas de trap
     }
 
     @Test("Une tuile = une lecture de plage ; en-tête et racine lus une seule fois")

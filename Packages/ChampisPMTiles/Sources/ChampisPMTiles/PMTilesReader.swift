@@ -64,6 +64,7 @@ public final class PMTilesReader: Sendable {
     public func tile(z: Int, x: Int, y: Int) async throws -> Data? {
         let h = try await readHeader()
         guard z >= h.minZoom, z <= h.maxZoom else { return nil }
+        guard x >= 0, y >= 0, x < (1 << z), y < (1 << z) else { return nil }  // hors niveau : jamais de trap
         let id = TileID.fromZXY(z: z, x: x, y: y)
         var entries = try await rootDirectory()
         for _ in 0...4 {  // la spécification borne la profondeur à quelques niveaux
