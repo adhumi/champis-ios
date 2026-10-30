@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		000000000000000320000000 /* ChampisScoring in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000310000000 /* ChampisScoring */; };
 		000000000000000420000000 /* ChampisPMTiles in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000410000000 /* ChampisPMTiles */; };
+		000000000000000330000000 /* ChampisScoring in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000311000000 /* ChampisScoring */; };
+		000000000000000430000000 /* ChampisPMTiles in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000411000000 /* ChampisPMTiles */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,6 +67,8 @@
 		000000000000000230000000 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				000000000000000330000000 /* ChampisScoring in Frameworks */,
+				000000000000000430000000 /* ChampisPMTiles in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -140,6 +144,10 @@
 				000000000000000000000030 /* ChampisTests */,
 			);
 			name = ChampisTests;
+			packageProductDependencies = (
+				000000000000000311000000 /* ChampisScoring */,
+				000000000000000411000000 /* ChampisPMTiles */,
+			);
 			productName = ChampisTests;
 			productReference = 000000000000000000000220 /* ChampisTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -522,6 +530,14 @@
 			productName = ChampisScoring;
 		};
 		000000000000000410000000 /* ChampisPMTiles */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ChampisPMTiles;
+		};
+		000000000000000311000000 /* ChampisScoring */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ChampisScoring;
+		};
+		000000000000000411000000 /* ChampisPMTiles */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ChampisPMTiles;
 		};

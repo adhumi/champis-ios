@@ -1,6 +1,6 @@
 ---
 name: swiftui-mapkit
-description: Carte Champis dans l'app (SwiftUI Map + MKTileOverlay maison) - tuiles PMTiles T et A, colorisation par la palette, score du jour S = T × M_eff × Φ par pixel, groupes, curseur de jour, fiche au toucher, vue France. À lire avant tout code dans Champis/Map ou qui touche un overlay, une tuile ou l'affichage d'un score.
+description: Carte Champis dans l'app (MKMapView dans SwiftUI + MKTileOverlay maison) - tuiles PMTiles T et A, colorisation par la palette, score du jour S = T × M_eff × Φ par pixel, groupes, curseur de jour, fiche au toucher, vue France. À lire avant tout code dans Champis/Map ou qui touche un overlay, une tuile ou l'affichage d'un score.
 ---
 
 # Carte SwiftUI + MapKit
@@ -30,12 +30,14 @@ La carte est la raison d'être de l'app. Elle affiche le potentiel terrain `T` o
 
 ## Architecture
 
-- `MapModel` (`@Observable`, MainActor) : espèce ou groupe courant, jour courant, mode T/S, cellules météo chargées, état `stale`/indisponible, position sélectionnée. Les vues ne calculent rien.
+- **`MKMapView` dans un `UIViewRepresentable` / `NSViewRepresentable`** (`MapContainer`), pas la `Map` SwiftUI : celle-ci n'accepte pas d'`MKTileOverlay` (constat du 30 oct. 2026, noté dans la spec › App iOS). Le toucher passe par un gesture recognizer → `convert(_:toCoordinateFrom:)`.
+- `MapModel` (`@Observable`, MainActor) : espèce ou groupe courant, jour courant, mode T/S, cellules météo chargées (`WeatherField`), état `stale`/indisponible, position sélectionnée, `renderGeneration` incrémenté à chaque réglage poussé au rendu. Les vues ne calculent rien.
+- Client `ChampisAPI` (`Champis/API`) : `/species`, `/tiles`, `/weather/bbox`, décodage hors MainActor (`@concurrent`). L'adresse de l'API est un réglage de l'app (`@AppStorage("apiBaseURL")`, défaut `https://champis.adhumi.fr`).
 - Chargement et décodage des tuiles **hors du MainActor** : un acteur `TileStore` qui lit les PMTiles (requêtes Range, cache disque, voir skill `offline`) et renvoie des matrices `UInt8`. L'isolation `MainActor` par défaut du projet impose de marquer ce code `nonisolated` ou de le mettre dans un acteur.
-- `ScoreTileOverlay: MKTileOverlay` + `MKTileOverlayRenderer` : pour une tuile z/x/y, prend `T` (et `A`) depuis `TileStore`, les cellules météo depuis `MapModel`, produit une image RGBA colorisée. XYZ natif des deux côtés, pas de conversion TMS. `canReplaceMapContent = false`, `minimumZ = 6`, `maximumZ = 15`, 256 px.
-- La colorisation est une fonction pure testable : `(t: UInt8, altClass: UInt8?, cell: WeatherCell?, day) -> RGBA`. Elle a ses tests, indépendants de MapKit.
+- `ScoreTileOverlay: MKTileOverlay` + `MKTileOverlayRenderer` : `loadTile` délègue à `TileRenderer` (classe `Sendable`, `Mutex`) qui prend `T` (et `A`) depuis `TileStore`, les réglages (`RenderSettings` : couche, mode, jour, `WeatherField`, palette) poussés par `MapModel`, colorise et encode en PNG (ImageIO ; l'encodage de sortie n'est pas le décodage des données). Cache des PNG rendus vidé à chaque réglage ; `reloadData()` côté renderer. XYZ natif des deux côtés, pas de conversion TMS. `canReplaceMapContent = false`, `minimumZ = 6`, `maximumZ = 15`, 256 px.
+- La colorisation est une fonction pure testable, `TileColorizer` : `values(Request) -> [Double]` (nan = transparent) puis `render` → RGBA. Cellule météo par bloc de 16 × 16 px (comme la carte web), classe d'altitude par pixel. Ses tests (`ChampisTests/TileColorizerTests`) sont indépendants de MapKit.
 - Fond Apple standard ou satellite, opacité de l'overlay réglable.
-- `Map` SwiftUI avec `MapReader` pour le toucher → coordonnée → pixel (T, classe, cellule) → fiche.
+- Toucher → coordonnée (`MapSelection` dans le modèle) → pixel (T, classe, cellule) → fiche (PR suivante).
 
 ## Fiche au toucher (v1 réduite, décision du 30 oct. 2026)
 
