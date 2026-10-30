@@ -39,7 +39,7 @@ cd Packages/ChampisScoring && swift test
 
 ## Icône
 
-`Champis/Assets.xcassets/AppIcon.appiconset` est vide : y déposer le PNG 1024 du cèpe stylisé (iOS, image unique) et les tailles macOS, ou remplacer par un document Icon Composer.
+`Champis/AppIcon.icon` est un document Icon Composer (Xcode 26+) : fond dégradé ciel, deux calques de forêt stylisée (bande claire avec sapins, bande sombre au premier plan), puis un groupe Liquid Glass avec deux calques séparés, `pied` et `chapeau`, teintés cèpe de Bordeaux. Les couleurs et les réglages de verre (reflet, translucidité, ombre) se modifient dans Icon Composer ; les formes sont les SVG de `Assets/`, canevas 1024 points. `Assets.xcassets/AppIcon.appiconset` garde un PNG 1024 plat en repli pour les emplacements qui n'utilisent pas le document.
 
 ## Reformater le projet
 
