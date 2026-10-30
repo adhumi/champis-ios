@@ -1,6 +1,10 @@
 # Champis — app Apple (SwiftUI)
 
-Client iOS / iPadOS / macOS 26 de Champis. Le modèle, les règles d'espèces, la spec et les skills vivent dans le monorepo `adhumi/champis` (doc « Spec — Champis », skills `.claude/skills/*`) : lis `champis-model` et `scoring-parity` là-bas avant tout code qui calcule ou affiche un score. Toute décision structurante passe par la spec avant le code (`spec-sync`).
+Client iOS / iPadOS / macOS 26 de Champis. Le modèle, les règles d'espèces et la spec vivent dans le monorepo `adhumi/champis` (doc « Spec — Champis »). Les skills sont dans `.claude/skills/` (provenance dans `SOURCES.md`) :
+
+- `champis-model`, `scoring-parity`, `spec-sync` : copies du monorepo, synchronisées par `scripts/sync-skills.sh`, à ne pas modifier ici. Lis `champis-model` et `scoring-parity` avant tout code qui calcule ou affiche un score. Toute décision structurante passe par la spec avant le code (`spec-sync`).
+- `swiftui-mapkit`, `offline`, `field-feedback` : skills maison de la phase 4, à lire avant de toucher la carte, le hors ligne, les observations ou les coins.
+- `swiftui-pro`, `swift-concurrency-pro`, `swift-testing-pro`, `ios-accessibility`, `background-execution` : skills communautaires copiés en dossier (MIT), à appliquer à toute revue ou écriture de code Swift.
 
 ## Décisions qui s'appliquent ici
 
