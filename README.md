@@ -14,6 +14,7 @@ Champis.xcodeproj/          projet (project.pbxproj), schéma partagé Champis
 Champis/                    cible app : SwiftUI, MVVM @Observable, Assets, entitlements
 ChampisTests/               tests de l'app (Swift Testing)
 Packages/ChampisScoring/    paquet local : portage du scoring, vecteurs de parité en ressources de test
+Packages/ChampisPMTiles/    paquet local : lecteur PMTiles (fichier ou Range HTTP) et décodeur PNG de données
 scripts/sync-vectors.sh     copie shared/vectors/ du monorepo dans le paquet, note VECTORS_VERSION
 ```
 
@@ -29,9 +30,13 @@ scripts/sync-vectors.sh ../champis      # puis relancer les tests
 
 `Packages/ChampisScoring/VECTORS_VERSION` note la génération synchronisée (`scoring_version`, `species_hash`). L'app refuse une `scoring_version` renvoyée par `/species` qu'elle ne connaît pas. Règles d'écriture : skill `scoring-parity` du monorepo.
 
+## Tuiles
+
+`ChampisPMTiles` lit les PMTiles v3 publiés par le pipeline, en local (fichier téléchargé) ou à distance par requêtes `Range`, et décode les PNG de données octet par octet (jamais via `UIImage`, dont la gestion des couleurs décale les gris). Ses tests rejouent un fichier produit par la bibliothèque `pmtiles` du pipeline et des PNG de chaque filtre (`Tests/ChampisPMTilesTests/Resources`).
+
 ## Tests
 
-Schéma `Champis` → ⌘U : exécute `ChampisTests` et `ChampisScoringTests`. En ligne de commande, pour le paquet seul :
+Schéma `Champis` → ⌘U : exécute `ChampisTests`, `ChampisScoringTests` et `ChampisPMTilesTests`. En ligne de commande, pour le paquet seul :
 
 ```sh
 cd Packages/ChampisScoring && swift test
