@@ -43,9 +43,11 @@ La carte est la raison d'être de l'app. Elle affiche le potentiel terrain `T` o
 
 T, classe d'altitude du pixel, cellule météo, `M_eff`, `Φ`, facteurs météo via `GET /weather?cell=&species=` (`temp`, `rain`, `trigger`, `soil_moisture`, `frost`, `water_balance`, `heat`, `memory`), et l'espèce qui porte le score du groupe. Les facteurs terrain (essence, pH, exposition) ne sont pas dans les tuiles : pas de fiche terrain détaillée tant que la spec ne décide pas de couches supplémentaires.
 
+Implémentation : `PointInspector.inspect` (fonction pure async, testée avec un PMTiles en mémoire) lit `T` de chaque espèce de la couche et la classe `A` au zoom 15, prend la cellule la plus proche et garde la meilleure espèce ; trois issues : `noData` (hors forêt), `noWeather` (du terrain mais pas de ligne météo), `scored`. `PointSheet` affiche ; les facteurs arrivent ensuite par `MapModel.loadFactors`. Jamais de valeur inventée : sans ligne météo, la fiche le dit.
+
 ## Vue France
 
-En dessous d'un zoom seuil, la carte passe aux départements colorés par l'indice `I = Σ T × M_eff × Φ / Σ T` (section Scoring de la spec), servi par `/departements`, avec la même palette. Groupe = max des indices d'espèces. Les limites départementales viennent d'un GeoJSON embarqué ou servi par l'API : à poser dans la spec avant de coder.
+En dessous du zoom 9 (`MapModel.deptZoom`, comme le site), en mode score, la carte passe aux départements colorés par l'indice `I = Σ T × M_eff × Φ / Σ T` (section Scoring de la spec), servi par `/departements`, avec la même palette. Groupe = max des indices d'espèces (`leading` dans la fiche). Les limites viennent du GeoJSON servi par l'API (`/web/departements.geojson`, le même que le site), décodé par `MKGeoJSONDecoder` en `MKPolygon`/`MKMultiPolygon` ajoutés à la carte ; le coordinateur recolore les renderers à chaque `renderGeneration` et masque l'overlay de tuiles (alpha 0) en vue France. Département sans indice : transparent. Le toucher cherche le polygone par `MKOverlayPathRenderer.path`.
 
 ## Accessibilité et performance
 

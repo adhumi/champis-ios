@@ -13,8 +13,8 @@ nonisolated struct BBox: Hashable, Sendable {
     }
 }
 
-/// Client de champis-api (`/species`, `/tiles`, `/weather/bbox`). Sans état ; les réponses sont
-/// décodées hors du MainActor.
+/// Client de champis-api (`/species`, `/tiles`, `/weather`, `/weather/bbox`, `/departements`). Sans
+/// état ; les réponses sont décodées hors du MainActor.
 nonisolated struct ChampisAPI: Sendable {
     nonisolated enum Failure: Error, LocalizedError, Equatable {
         case badURL
@@ -57,6 +57,22 @@ nonisolated struct ChampisAPI: Sendable {
         return try await get("weather/bbox", query: query)
     }
 
+    /// Détail d'une cellule pour la fiche : mêmes lignes que `/weather/bbox`, avec `factors`.
+    func weatherDetail(cell: String, species: [String]) async throws -> CellWeather {
+        let query = [URLQueryItem(name: "cell", value: cell)] + species.map { URLQueryItem(name: "species", value: $0) }
+        return try await get("weather", query: query)
+    }
+
+    /// Indice par département (vue France), 11 jours, pour les espèces données.
+    func departements(species: [String]) async throws -> DepartementsResponse {
+        try await get("departements", query: species.map { URLQueryItem(name: "species", value: $0) })
+    }
+
+    /// Limites des départements (GeoJSON Admin Express simplifié, servi avec le site sous `/web/`).
+    func departementsGeoJSON() async throws -> Data {
+        try await getData("web/departements.geojson")
+    }
+
     /// URL absolue d'un fichier du manifeste (relative à l'API en mode proxy).
     func tileURL(_ entry: TilesManifest.Entry) -> URL? {
         URL(string: entry.url, relativeTo: baseURL)?.absoluteURL
@@ -64,6 +80,11 @@ nonisolated struct ChampisAPI: Sendable {
 
     @concurrent
     private func get<T: Decodable & Sendable>(_ path: String, query: [URLQueryItem] = []) async throws -> T {
+        try JSONDecoder().decode(T.self, from: try await getData(path, query: query))
+    }
+
+    @concurrent
+    private func getData(_ path: String, query: [URLQueryItem] = []) async throws -> Data {
         guard var components = URLComponents(url: baseURL.appending(path: path), resolvingAgainstBaseURL: false) else {
             throw Failure.badURL
         }
@@ -78,7 +99,7 @@ nonisolated struct ChampisAPI: Sendable {
         guard (200..<300).contains(status) else {
             throw Failure.http(status: status, detail: Self.detail(in: data))
         }
-        return try JSONDecoder().decode(T.self, from: data)
+        return data
     }
 
     /// `{"detail": "…"}` de FastAPI, sinon le corps brut (tronqué).

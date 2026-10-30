@@ -66,6 +66,16 @@ actor TileStore {
         }
     }
 
+    /// Lecteurs fournis directement (tests, et demain les fichiers hors ligne).
+    func install(terrain: [String: PMTilesReader], alt: PMTilesReader?) {
+        terrainReaders = terrain
+        terrainNames = Dictionary(uniqueKeysWithValues: terrain.keys.map { ($0, "T:" + $0) })
+        altReader = alt
+        altName = "A"
+        cache = [:]
+        order = []
+    }
+
     /// Tuile `T` d'une espèce, décodée ; `nil` si l'espèce n'a pas de fichier ou la tuile n'existe pas.
     func terrainTile(species: String, z: Int, x: Int, y: Int) async throws -> DecodedPNG? {
         guard let reader = terrainReaders[species], let name = terrainNames[species] else { return nil }

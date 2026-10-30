@@ -1,8 +1,9 @@
 import ChampisScoring
 import SwiftUI
 
-/// Écran carte : overlay colorisé sur fond Apple, sélecteur d'espèce ou de groupe, mode terrain ou
-/// score du jour, curseur de jour J−3 → J+7, légende, avertissement sur le cadre légal.
+/// Écran carte : overlay colorisé sur fond Apple (ou départements en vue France), sélecteur d'espèce
+/// ou de groupe, mode terrain ou score du jour, curseur de jour J−3 → J+7, légende, fiche au
+/// toucher, avertissement sur le cadre légal.
 struct MapScreen: View {
     static let defaultAPIBaseURL = "https://champis.adhumi.fr"
 
@@ -47,6 +48,12 @@ struct MapScreen: View {
         .sheet(isPresented: $showSettings) {
             SettingsView(model: model, apiBaseURL: $apiBaseURL, showLegalNotice: $showLegalNotice)
         }
+        .sheet(item: pointBinding) { info in
+            PointSheet(info: info, model: model)
+        }
+        .sheet(item: deptBinding) { info in
+            DeptSheet(info: info, model: model)
+        }
         .alert(LegalNotice.title, isPresented: $showLegalNotice) {
             Button("J'ai compris") { legalNoticeAcknowledged = true }
         } message: {
@@ -65,7 +72,7 @@ struct MapScreen: View {
                 .pickerStyle(.menu)
                 .disabled(model.layers.isEmpty)
                 Spacer()
-                if model.isLoading {
+                if model.isLoading || model.isInspecting {
                     ProgressView().controlSize(.small)
                 }
             }
@@ -103,14 +110,18 @@ struct MapScreen: View {
                     Text("J+7").font(.caption)
                 }
                 .accessibilityValue(model.dayLabel)
-                if let status = model.weatherStatus {
+                if model.isFranceView {
+                    Text(model.deptStatus ?? "Vue France : indice par département, zoomez pour les parcelles")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                } else if let status = model.weatherStatus {
                     Text(status)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
             }
             LegendView(thresholds: model.legend)
-            if let error = model.loadError {
+            if let error = model.loadError ?? model.inspectError {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
                     .foregroundStyle(.red)
@@ -130,6 +141,14 @@ struct MapScreen: View {
 
     private var dayBinding: Binding<Double> {
         Binding(get: { Double(model.dayOffset) }, set: { model.setDay(Int($0.rounded())) })
+    }
+
+    private var pointBinding: Binding<PointInfo?> {
+        Binding(get: { model.pointInfo }, set: { if $0 == nil { model.clearSelection() } })
+    }
+
+    private var deptBinding: Binding<DeptInfo?> {
+        Binding(get: { model.deptInfo }, set: { if $0 == nil { model.clearDeptInfo() } })
     }
 
     static func url(from text: String) -> URL {
