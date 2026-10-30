@@ -18,6 +18,7 @@ Client iOS / iPadOS / macOS 26 de Champis. Le modèle, les règles d'espèces et
 
 ## Outillage
 
+- Jamais de commit poussé sur `main` sans PR : branche, PR, Xcode Cloud vert, fusion (règle du 30 oct. 2026).
 - Tests : Swift Testing (`@Test`, `#expect`), jamais XCTest. Schéma `Champis` partagé, utilisé par Xcode Cloud.
 - `cd Packages/ChampisScoring && swift test` pour le paquet seul.
 - Ne pas versionner `xcuserdata/`, `DerivedData/`, `.build/`.
