@@ -97,20 +97,25 @@ struct TileColorizerTests {
         let tile = Self.tile([(0, 254, 255), (3, 127, 255)])
         let layer = [TileColorizer.SpeciesTile(species: "boletus_edulis", png: tile)]
 
+        let weather = try Self.weather()
+
         // Sans couche A : altitude médiane 620 m → classe 450 → M_eff × Φ = 0,9
-        let values = colorizer.values(Self.request(mode: .score, date: "2026-10-30", tiles: layer, weather: try Self.weather()))
+        let values = colorizer.values(Self.request(mode: .score, date: "2026-10-30", tiles: layer, weather: weather))
         #expect(abs(values[0] - 0.9) < 1e-9)
         #expect(abs(values[3] - 0.45) < 1e-9)
         #expect(values[1].isNaN)
 
         // J+1 : 0,6 pour les deux classes
-        let tomorrow = colorizer.values(Self.request(mode: .score, date: "2026-10-31", tiles: layer, weather: try Self.weather()))
+        let tomorrow = colorizer.values(Self.request(mode: .score, date: "2026-10-31", tiles: layer, weather: weather))
         #expect(abs(tomorrow[0] - 0.6) < 1e-9)
 
         // Pas de météo du tout, ou pas ce jour-là : jamais un 0,5 inventé
-        #expect(colorizer.values(Self.request(mode: .score, date: "2026-10-30", tiles: layer)).allSatisfy(\.isNaN))
-        #expect(colorizer.values(Self.request(mode: .score, date: "2026-12-01", tiles: layer, weather: try Self.weather())).allSatisfy(\.isNaN))
-        #expect(colorizer.values(Self.request(mode: .score, date: nil, tiles: layer, weather: try Self.weather())).allSatisfy(\.isNaN))
+        let noWeather = colorizer.values(Self.request(mode: .score, date: "2026-10-30", tiles: layer))
+        let otherDay = colorizer.values(Self.request(mode: .score, date: "2026-12-01", tiles: layer, weather: weather))
+        let noDate = colorizer.values(Self.request(mode: .score, date: nil, tiles: layer, weather: weather))
+        #expect(noWeather.allSatisfy(\.isNaN))
+        #expect(otherDay.allSatisfy(\.isNaN))
+        #expect(noDate.allSatisfy(\.isNaN))
     }
 
     @Test("Couche A : classe du pixel ; nodata ou alpha 0 → repli sur la médiane de la cellule")
@@ -153,7 +158,8 @@ struct TileColorizerTests {
     func encode() throws {
         let colorizer = TileColorizer(palette: try Self.palette())
         let request = Self.request(mode: .terrain, date: nil, tiles: [.init(species: "boletus_edulis", png: Self.tile([(0, 254, 255)]))])
-        let png = try #require(TileImage.png(rgba: try #require(colorizer.render(request)), size: Self.size))
+        let rgba = try #require(colorizer.render(request))
+        let png = try #require(TileImage.png(rgba: rgba, size: Self.size))
         #expect(Array(png.prefix(8)) == [137, 80, 78, 71, 13, 10, 26, 10])
         let decoded = try PNGDecoder.decode(png)
         #expect(decoded.width == Self.size && decoded.height == Self.size && decoded.channels == 4)
