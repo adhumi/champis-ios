@@ -52,6 +52,17 @@
                ReferencedContainer = "container:Packages/ChampisScoring">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "ChampisPMTilesTests"
+               BuildableName = "ChampisPMTilesTests"
+               BlueprintName = "ChampisPMTilesTests"
+               ReferencedContainer = "container:Packages/ChampisPMTiles">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		000000000000000320000000 /* ChampisScoring in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000310000000 /* ChampisScoring */; };
+		000000000000000420000000 /* ChampisPMTiles in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000410000000 /* ChampisPMTiles */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -22,6 +23,7 @@
 
 /* Begin PBXFileReference section */
 		000000000000000000000040 /* ChampisScoring */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ChampisScoring; sourceTree = "<group>"; };
+		000000000000000000000060 /* ChampisPMTiles */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ChampisPMTiles; sourceTree = "<group>"; };
 		000000000000000000000120 /* Champis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Champis.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000220 /* ChampisTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChampisTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -57,6 +59,7 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				000000000000000320000000 /* ChampisScoring in Frameworks */,
+				000000000000000420000000 /* ChampisPMTiles in Frameworks */,
 			);
 		};
 		000000000000000230000000 /* Frameworks */ = {
@@ -90,6 +93,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000040 /* ChampisScoring */,
+				000000000000000000000060 /* ChampisPMTiles */,
 			);
 			path = Packages;
 			sourceTree = "<group>";
@@ -113,6 +117,7 @@
 			name = Champis;
 			packageProductDependencies = (
 				000000000000000310000000 /* ChampisScoring */,
+				000000000000000410000000 /* ChampisPMTiles */,
 			);
 			productName = Champis;
 			productReference = 000000000000000000000120 /* Champis.app */;
@@ -169,6 +174,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				000000000000000300000000 /* XCLocalSwiftPackageReference "Packages/ChampisScoring" */,
+				000000000000000400000000 /* XCLocalSwiftPackageReference "Packages/ChampisPMTiles" */,
 			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 000000000000000000000020 /* Products */;
@@ -504,12 +510,20 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/ChampisScoring;
 		};
+		000000000000000400000000 /* XCLocalSwiftPackageReference "Packages/ChampisPMTiles" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/ChampisPMTiles;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		000000000000000310000000 /* ChampisScoring */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ChampisScoring;
+		};
+		000000000000000410000000 /* ChampisPMTiles */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ChampisPMTiles;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
