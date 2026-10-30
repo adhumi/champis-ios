@@ -21,7 +21,7 @@ Les dossiers `Champis/` et `ChampisTests/` sont des dossiers synchronisés : ajo
 
 ## Scoring et parité
 
-Le scoring de référence est en Python dans le monorepo. `ChampisScoring` le recalcule en Swift à partir des mêmes vecteurs (`shared/vectors/`), copiés ici par :
+Le scoring de référence est en Python dans le monorepo. `ChampisScoring` le porte en Swift (trapèze, Φ, M, M_eff, groupes, palette ; dates civiles sans fuseau, même ordre d'opérations) et le valide contre les mêmes vecteurs (`shared/vectors/`), avec les fichiers espèces et la palette du même commit en ressources de test, copiés ici par :
 
 ```sh
 scripts/sync-vectors.sh ../champis      # puis relancer les tests

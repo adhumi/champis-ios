@@ -1,0 +1,269 @@
+{
+  "id": "cantharellus_pallens",
+  "schema_version": 1,
+  "group": {
+    "id": "girolles",
+    "fr": "Girolles"
+  },
+  "names": {
+    "fr": "Girolle pâle (girolle pruineuse)",
+    "la": "Cantharellus pallens"
+  },
+  "notes": "BONUS, à valider. Fichier « proxy » des girolles de feuillus sur sols riches à calcaires (C. pallens au sens large + C. ferruginascens), plus précoces et plus thermophiles que C. cibarius s.s. Attention (Olariaga et al. 2017) : C. pallens s.s. est acidophile en région méditerranéenne ; la girolle des chênaies vertes calcaires du Sud est C. alborufescens (oct.-déc.), qui n'a pas encore de fichier. Syn. C. subpruinosus.",
+  "terrain": {
+    "hosts": {
+      "chenes_decidus": 1.0,
+      "hetre": 0.9,
+      "melange_feuillus": 0.8,
+      "mixte_feuillus_dom": 0.8,
+      "feuillus_indet": 0.7,
+      "chenes_sempervirents": 0.6,
+      "chataignier": 0.6,
+      "autre_feuillu": 0.6,
+      "sapin_epicea": 0.5,
+      "mixte_coniferes_dom": 0.5,
+      "mixte_indet": 0.5,
+      "melange_coniferes": 0.3,
+      "coniferes_indet": 0.3,
+      "pin_sylvestre": 0.1,
+      "pin_laricio_noir": 0.1,
+      "pin_maritime": 0.1,
+      "pin_alep": 0.1,
+      "melange_pins": 0.1,
+      "autre_pin": 0.1,
+      "pin_crochets_cembro": 0.1,
+      "meleze": 0.1,
+      "douglas": 0.1,
+      "autre_conifere": 0.05,
+      "peupleraie": 0.1,
+      "lande": 0.1,
+      "sans_couvert": 0.1,
+      "robinier": 0.0,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.3
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.7,
+      "sans_couvert": 0.1,
+      "plantation": 0.1,
+      "non_foret": 0.1
+    },
+    "ph": {
+      "min": 4.5,
+      "opt_low": 5.5,
+      "opt_high": 7.5,
+      "max": 8.3
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 100,
+      "opt_high": 900,
+      "max": 1500
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.8,
+      "SW": 0.8,
+      "S": 0.7,
+      "flat": 0.9
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.18,
+      "ph": 0.45,
+      "altitude": 0.18,
+      "aspect": 0.13,
+      "slope": 0.06
+    },
+    "refs": {
+      "hosts": [
+        "olariaga2017",
+        "arnolds1998",
+        "bertolini2014"
+      ],
+      "cover": [
+        "pilz2006",
+        "amycoforest2013"
+      ],
+      "ph": [
+        "arnolds1998",
+        "arnolds2011",
+        "olariaga2017",
+        "bertolini2014"
+      ],
+      "altitude": [
+        "gbif2026",
+        "bertolini2014"
+      ],
+      "aspect": [
+        "populaire_scandinave"
+      ],
+      "slope": [
+        "populaire_scandinave"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "05-15",
+      "end": "11-15"
+    },
+    "peak": {
+      "start": "06-15",
+      "end": "09-15"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 300,
+      "start_days_per_100m": 4,
+      "end_days_per_100m": -3,
+      "max_days": 30
+    },
+    "refs": [
+      "gbif2026",
+      "tanchaud",
+      "olariaga2017"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 21,
+      "c": {
+        "min": 8,
+        "opt_low": 13,
+        "opt_high": 20,
+        "max": 26
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 130,
+        "max": 300
+      }
+    },
+    "trigger": {
+      "event_mm": 15,
+      "event_days": 3,
+      "lag_days": {
+        "min": 10,
+        "opt_low": 14,
+        "opt_high": 28,
+        "max": 40
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -2,
+      "nights": 2,
+      "window_days": 7,
+      "factor": 0.2
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 32,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 900
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 30
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.25
+    },
+    "refs": {
+      "temp_mean": [
+        "straatsma_egli2001",
+        "bielefeld2025"
+      ],
+      "rain": [
+        "salerni2002",
+        "pietka2012"
+      ],
+      "trigger": [
+        "pietka2012",
+        "karavani2018"
+      ],
+      "soil_moisture": [
+        "karavani2018",
+        "danell1994"
+      ],
+      "frost": [
+        "danell1994"
+      ],
+      "heat": [
+        "straatsma_egli2001"
+      ],
+      "memory": [
+        "tahvanainen2019",
+        "straatsma_egli2001"
+      ],
+      "persistence": [
+        "pilz2003"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "bielefeld2025"
+      ]
+    }
+  },
+  "references": {
+    "olariaga2017": "Olariaga et al. 2017, Fungal Diversity — C. pallens : chênes caducifoliés et sempervirents, hêtre, noisetier, épicéa ; du Maroc à la Suède",
+    "arnolds1998": "Arnolds 1998, Coolia — C. pallens neutrophile à subneutrophile, argiles fluviatiles basiques riches",
+    "arnolds2011": "Arnolds, Bremer & Chrispijn 2011, Coolia — C. pallens sur sols limoneux calcaires",
+    "bertolini2014": "Bertolini 2014, Riv. Micol. — Toscane : plaine à ~500 m, sols basiques",
+    "pilz2006": "Pilz, Molina & Mayo 2006, J. Forestry — éclaircie forte réduit la production 3-5 ans",
+    "amycoforest2013": "Guide de mycosylviculture Amycoforest (CRPF, 2013)",
+    "gbif2026": "GBIF, API, France, lu le 16/10/2026 — C. pallens FR 542 occ., juin-août dominants",
+    "tanchaud": "Fiches Tanchaud, Mycocharentes — C. pallens mai-octobre",
+    "straatsma_egli2001": "Straatsma & Egli 2001, NBT — T de juillet négative, pluie de juin positive",
+    "bielefeld2025": "Brejon Lamartinière & Hoffman 2025, bioRxiv — forme du modèle",
+    "salerni2002": "Salerni et al. 2002 — cumul 30 j",
+    "pietka2012": "Piętka et al. 2012 — délai ~1 mois après pluie abondante",
+    "karavani2018": "Karavani et al. 2018 — pluie et humidité du sol à 1 mois",
+    "danell1994": "Danell 1994, Mycorrhiza 5 — inondation, sécheresse, gel",
+    "termorshuizen2003": "Termorshuizen 2003, Coolia — septembre sec sans fructification",
+    "tahvanainen2019": "Tahvanainen et al. 2019, Forests — pluie juin+juillet",
+    "pilz2003": "Pilz et al. 2003, GTR-576 — persistance moyenne 44 j (genre)",
+    "populaire_scandinave": "Sources populaires scandinaves — confiance faible",
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance"
+  }
+}

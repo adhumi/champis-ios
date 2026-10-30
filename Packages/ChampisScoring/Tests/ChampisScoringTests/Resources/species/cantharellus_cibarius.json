@@ -1,0 +1,287 @@
+{
+  "id": "cantharellus_cibarius",
+  "schema_version": 1,
+  "group": {
+    "id": "girolles",
+    "fr": "Girolles"
+  },
+  "names": {
+    "fr": "Girolle",
+    "la": "Cantharellus cibarius"
+  },
+  "notes": "Girolle au sens strict (Olariaga et al. 2017) : acidophile, nitrophobe, tous hôtes ECM (chênes, hêtre, châtaignier, bouleau, épicéa, pins), absente du climat méditerranéen. Pour les feuillus calcaires et les stations chaudes, voir cantharellus_pallens (même groupe d'affichage). Particularité : sporophores persistants ~6 semaines. pH : plages élargies pour SoilGrids (surestime le pH des humus forestiers) — à recalibrer en phase 1 sur GBIF. Les occurrences GBIF « C. cibarius » françaises mélangent sans doute pallens, ferruginascens et amethysteus.",
+  "terrain": {
+    "hosts": {
+      "chenes_decidus": 1.0,
+      "hetre": 0.9,
+      "chataignier": 0.9,
+      "sapin_epicea": 0.9,
+      "pin_sylvestre": 0.9,
+      "mixte_feuillus_dom": 0.9,
+      "mixte_coniferes_dom": 0.9,
+      "pin_maritime": 0.8,
+      "melange_feuillus": 0.8,
+      "melange_pins": 0.7,
+      "melange_coniferes": 0.7,
+      "feuillus_indet": 0.7,
+      "coniferes_indet": 0.7,
+      "mixte_indet": 0.7,
+      "autre_feuillu": 0.7,
+      "pin_crochets_cembro": 0.6,
+      "pin_laricio_noir": 0.5,
+      "autre_pin": 0.5,
+      "meleze": 0.3,
+      "douglas": 0.3,
+      "chenes_sempervirents": 0.1,
+      "autre_conifere": 0.1,
+      "peupleraie": 0.1,
+      "lande": 0.1,
+      "sans_couvert": 0.1,
+      "pin_alep": 0.05,
+      "robinier": 0.0,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.8
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.7,
+      "sans_couvert": 0.1,
+      "plantation": 0.1,
+      "non_foret": 0.1
+    },
+    "ph": {
+      "min": 3.3,
+      "opt_low": 4.2,
+      "opt_high": 6.2,
+      "max": 7.4
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 100,
+      "opt_high": 1400,
+      "max": 1900
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.8,
+      "SW": 0.8,
+      "S": 0.7,
+      "flat": 0.9
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.18,
+      "ph": 0.45,
+      "altitude": 0.18,
+      "aspect": 0.13,
+      "slope": 0.06
+    },
+    "refs": {
+      "hosts": [
+        "olariaga2017",
+        "pilz2003",
+        "pietka2012",
+        "firstnature",
+        "danell1994"
+      ],
+      "cover": [
+        "pilz2006",
+        "amycoforest2013",
+        "sorokina2020"
+      ],
+      "ph": [
+        "pilz2003",
+        "danell1994",
+        "stankeviciene2007",
+        "arnolds1998",
+        "vanstrien2018"
+      ],
+      "altitude": [
+        "gbif2026",
+        "amycoforest2013"
+      ],
+      "aspect": [
+        "populaire_scandinave"
+      ],
+      "slope": [
+        "populaire_scandinave"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "06-01",
+      "end": "11-20"
+    },
+    "peak": {
+      "start": "08-15",
+      "end": "10-15"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 400,
+      "start_days_per_100m": 4,
+      "end_days_per_100m": -3,
+      "max_days": 30
+    },
+    "refs": [
+      "gbif2026",
+      "tanchaud",
+      "mcinerny2019",
+      "amycoforest2013",
+      "andrew2018"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 21,
+      "c": {
+        "min": 6,
+        "opt_low": 11,
+        "opt_high": 18,
+        "max": 24
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 130,
+        "max": 300
+      }
+    },
+    "trigger": {
+      "event_mm": 15,
+      "event_days": 3,
+      "lag_days": {
+        "min": 10,
+        "opt_low": 14,
+        "opt_high": 28,
+        "max": 40
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -2,
+      "nights": 2,
+      "window_days": 7,
+      "factor": 0.2
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 30,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 80,
+        "opt_low": 180,
+        "opt_high": 450,
+        "max": 900
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 30
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.25
+    },
+    "refs": {
+      "temp_mean": [
+        "straatsma_egli2001",
+        "bielefeld2025",
+        "pilz2003"
+      ],
+      "rain": [
+        "salerni2002",
+        "bielefeld2025",
+        "pietka2012"
+      ],
+      "trigger": [
+        "pietka2012",
+        "karavani2018",
+        "bielefeld2025",
+        "populaire_scandinave"
+      ],
+      "soil_moisture": [
+        "karavani2018",
+        "danell1994"
+      ],
+      "frost": [
+        "danell1994"
+      ],
+      "heat": [
+        "straatsma_egli2001",
+        "vonbonsdorff2015"
+      ],
+      "memory": [
+        "tahvanainen2019",
+        "straatsma_egli2001",
+        "danell1994"
+      ],
+      "persistence": [
+        "pilz2003"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "bielefeld2025"
+      ]
+    }
+  },
+  "references": {
+    "olariaga2017": "Olariaga et al. 2017, Fungal Diversity — révision multigène de Cantharellus en Europe, hôtes et sols par espèce",
+    "pilz2003": "Pilz, Norvell, Danell & Molina 2003, USDA GTR-576 — synthèse : pH 4,0-5,5, 14 genres d'hôtes, persistance moyenne 44 j (Largent & Sime 1995, Norvell 1995), optimum 20 °C en culture",
+    "pilz2006": "Pilz, Molina & Mayo 2006, J. Forestry — éclaircie forte réduit la production 3-5 ans",
+    "pietka2012": "Piętka et al. 2012, Leśne Prace Badawcze — hôtes, pinèdes/pessières moussues, corrélation pluie r = 0,72 avec ~1 mois de délai",
+    "danell1994": "Danell 1994, Mycorrhiza 5 — colonisation épicéa/pin sylvestre, sensibilité à l'inondation, sécheresse ou gel arrêtent la fructification",
+    "firstnature": "First Nature (fiche C. cibarius) — chêne, châtaignier, noisetier, bouleau, bords de sentier, sol acide",
+    "sorokina2020": "Sorokina & Luginina 2020, Samara J. Sci. — pinèdes à mousses, couvert 0,2-0,7, espèce sciaphile",
+    "stankeviciene2007": "Stankevičienė & Kasparavičius 2007, Acta Mycol. — pinède 50 ans, mousses 80 %, pH KCl 3,4-3,8, saison de juin aux premières neiges",
+    "arnolds1998": "Arnolds 1998, Coolia — C. cibarius acidophile sur sables pauvres ; C. pallens neutrophile sur argiles riches",
+    "vanstrien2018": "van Strien et al. 2018, J. Appl. Ecol. — nitrophobie : déclin puis remontée avec la baisse des dépôts azotés",
+    "amycoforest2013": "Guide de mycosylviculture Amycoforest (CRPF, 2013) — plaine mai-nov., montagne juil.-sept., coupe rase = -10 ans",
+    "gbif2026": "GBIF, API, France, lu le 16/10/2026 — juin 217, juil. 278, août 308, sept. 380, oct. 303, nov. 118 ; artefacts 01/01 et 01/04 (PatriNat) exclus",
+    "tanchaud": "Fiches Tanchaud, Mycocharentes — C. cibarius dès juin puis automne",
+    "mcinerny2019": "McInerny 2019, Glasgow Naturalist — 9 ans de suivi : premières en juin, pic août-sept., fin début nov.",
+    "andrew2018": "Andrew et al. 2018, Ecology — l'altitude avance la fructification automnale jusqu'à 30 j",
+    "straatsma_egli2001": "Straatsma & Egli 2001, NBT — production corrélée négativement à T de juillet, positivement à la pluie de juin",
+    "bielefeld2025": "Brejon Lamartinière & Hoffman 2025, bioRxiv — transposé de B. edulis : T 20 j optimum 13 °C, pluie 26 j",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. — pluie significative à 1 mois, humidité du sol 1 mois après",
+    "termorshuizen2003": "Termorshuizen 2003, Coolia — absence de fructification en septembre sec, saison 20 mai-20 oct.",
+    "gevry2006": "Gévry et al. 2006 (Gaspésie) — juillet pluvieux = abondance, août sec termine brutalement",
+    "vonbonsdorff2015": "von Bonsdorff, Finlande 2015 (RCI) — juin frais et pluvieux idéal, juillet caniculaire interrompt",
+    "tahvanainen2019": "Tahvanainen, Miina & Kurttila 2019, Forests — offre nationale = f(pluie juin+juillet), r juillet = 0,53",
+    "populaire_scandinave": "Kantarellkartet (Oslo), Hurbra.se — 1-3 semaines après pluie significative, versants nord ; confiance faible",
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance"
+  }
+}
