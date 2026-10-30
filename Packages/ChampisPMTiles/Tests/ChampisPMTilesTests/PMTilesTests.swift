@@ -42,7 +42,7 @@ private struct Fixture: Decodable {
 }
 
 private func resourceURL(_ name: String) throws -> URL {
-    try #require(Bundle.module.url(forResource: name, withExtension: nil, subdirectory: "Resources"),
+    try #require(Bundle.module.url(forResource: name, withExtension: nil),
                  "ressource \(name) absente")
 }
 

@@ -14,7 +14,13 @@ let package = Package(
         .testTarget(
             name: "ChampisPMTilesTests",
             dependencies: ["ChampisPMTiles"],
-            resources: [.copy("Resources")]
+            // Fichiers copiés un à un : un dossier « Resources » à la racine d'un bundle plat
+            // (iOS) fait échouer codesign (« bundle format unrecognized »).
+            resources: [
+                .copy("Resources/fixture.pmtiles"),
+                .copy("Resources/fixture.json"),
+                .copy("Resources/pngs.json"),
+            ]
         ),
     ],
     swiftLanguageModes: [.v6]
