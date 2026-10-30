@@ -127,7 +127,8 @@ struct ReaderTests {
         #expect(abs(h.bounds.minLon - 5.5) < 1e-6)
         let root = try await reader.rootDirectory()
         #expect(root.count == f.tiles.count && root.allSatisfy { !$0.isLeafDirectory })
-        let meta = try JSONSerialization.jsonObject(with: try await reader.metadata()) as? [String: Any]
+        let metadata = try await reader.metadata()
+        let meta = try JSONSerialization.jsonObject(with: metadata) as? [String: Any]
         #expect(meta?["name"] as? String == "fixture champis")
     }
 

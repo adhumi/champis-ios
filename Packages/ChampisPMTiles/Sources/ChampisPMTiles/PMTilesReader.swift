@@ -1,14 +1,23 @@
 import Foundation
+import Synchronization
 
 /// Lecteur PMTiles v3 : en-tête et répertoire racine lus une fois, répertoires feuilles mis en
 /// cache, une requête de données par tuile. `tile(z:x:y:)` renvoie `nil` pour une tuile absente
 /// (hors emprise, hors forêt), jamais une tuile vide inventée.
-public actor PMTilesReader {
+///
+/// Classe `Sendable` sans isolation d'acteur : les caches sont derrière un `Mutex`, et les résultats
+/// (`Data`, en-tête, entrées) sortent librement vers la carte, qui tourne sur le MainActor.
+public final class PMTilesReader: Sendable {
     public let source: any TileSource
-    private var header: PMTilesHeader?
-    private var root: [DirectoryEntry]?
-    private var leaves: [UInt64: [DirectoryEntry]] = [:]
     private let maxCachedLeaves: Int
+
+    private struct Cache {
+        var header: PMTilesHeader?
+        var root: [DirectoryEntry]?
+        var leaves: [UInt64: [DirectoryEntry]] = [:]
+    }
+
+    private let cache = Mutex(Cache())
 
     public init(source: any TileSource, maxCachedLeaves: Int = 64) {
         self.source = source
@@ -16,18 +25,18 @@ public actor PMTilesReader {
     }
 
     public func readHeader() async throws -> PMTilesHeader {
-        if let header { return header }
+        if let h = cache.withLock({ $0.header }) { return h }
         let h = try PMTilesHeader(try await source.read(offset: 0, length: PMTilesHeader.size))
-        header = h
+        cache.withLock { $0.header = h }
         return h
     }
 
     public func rootDirectory() async throws -> [DirectoryEntry] {
-        if let root { return root }
+        if let root = cache.withLock({ $0.root }) { return root }
         let h = try await readHeader()
         let raw = try await source.read(offset: h.rootOffset, length: Int(h.rootLength))
         let entries = try Directory.deserialize(try Inflate.decompress(raw, h.internalCompression))
-        root = entries
+        cache.withLock { $0.root = entries }
         return entries
     }
 
@@ -40,11 +49,14 @@ public actor PMTilesReader {
     }
 
     private func leaf(at offset: UInt64, length: UInt32, header h: PMTilesHeader) async throws -> [DirectoryEntry] {
-        if let cached = leaves[offset] { return cached }
+        if let cached = cache.withLock({ $0.leaves[offset] }) { return cached }
         let raw = try await source.read(offset: h.leafDirectoryOffset + offset, length: Int(length))
         let entries = try Directory.deserialize(try Inflate.decompress(raw, h.internalCompression))
-        if leaves.count >= maxCachedLeaves { leaves.removeAll(keepingCapacity: true) }
-        leaves[offset] = entries
+        let limit = maxCachedLeaves
+        cache.withLock {
+            if $0.leaves.count >= limit { $0.leaves.removeAll(keepingCapacity: true) }
+            $0.leaves[offset] = entries
+        }
         return entries
     }
 
