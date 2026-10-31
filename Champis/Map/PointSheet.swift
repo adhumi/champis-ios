@@ -25,6 +25,9 @@ struct PointSheet: View {
     let info: PointInfo
     let model: MapModel
     @Environment(\.dismiss) private var dismiss
+    @State private var observationRequest: ObservationFormRequest?
+    @State private var namingCoin = false
+    @State private var coinName = ""
 
     var body: some View {
         NavigationStack {
@@ -39,6 +42,7 @@ struct PointSheet: View {
                 case .scored(let scored):
                     scoredSections(scored)
                 }
+                fieldSection
             }
             .navigationTitle(title)
             .toolbar {
@@ -46,11 +50,73 @@ struct PointSheet: View {
                     Button("OK") { dismiss() }
                 }
             }
+            .sheet(item: $observationRequest) { request in
+                ObservationForm(
+                    field: model.field, species: model.speciesOptions, initialSpecies: request.species,
+                    at: request.point, found: request.found
+                )
+            }
+            .alert("Nom du coin", isPresented: $namingCoin) {
+                TextField("Nom", text: $coinName)
+                Button("Ajouter") { addCoin() }
+                Button("Annuler", role: .cancel) {}
+            } message: {
+                Text("Le coin reste privé. Une notification viendra quand son score sera bon ou excellent.")
+            }
         }
         .task { await model.loadFactors(for: info) }
         #if os(iOS)
         .presentationDetents([.medium, .large])
         #endif
+    }
+
+    /// Retour terrain depuis le point : « rien trouvé » aussi accessible que « trouvé » ; un coin
+    /// garde la cible de la couche, la classe d'altitude et le T de chaque espèce du pixel.
+    private var fieldSection: some View {
+        Section {
+            Button {
+                observationRequest = ObservationFormRequest(found: true, species: info.scored?.species, point: point)
+            } label: {
+                Label("Trouvé ici", systemImage: "checkmark.circle")
+            }
+            Button {
+                observationRequest = ObservationFormRequest(found: false, species: info.scored?.species, point: point)
+            } label: {
+                Label("Rien trouvé ici", systemImage: "xmark.circle")
+            }
+            if info.scored != nil {
+                Button {
+                    coinName = ""
+                    namingCoin = true
+                } label: {
+                    Label("Ajouter à mes coins", systemImage: "star")
+                }
+            }
+        } header: {
+            Text("Retour terrain")
+        }
+    }
+
+    private var point: MapSelection {
+        MapSelection(latitude: info.latitude, longitude: info.longitude)
+    }
+
+    private func addCoin() {
+        guard let scored = info.scored else { return }
+        let name = coinName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        let target = model.selectedLayer.map { MapModel.apiTarget($0.key) } ?? scored.species
+        let classM = Int(model.palette?.altEncoding.classM ?? 300)
+        let altClass = scored.altClass.map { $0 * classM + classM / 2 } ?? scored.altKey.flatMap { Int($0) } ?? 0
+        let terrains = scored.terrains.isEmpty ? [scored.species: scored.terrain] : scored.terrains
+        let field = model.field
+        let location = point
+        Task {
+            await field.addCoin(
+                name: name, latitude: location.latitude, longitude: location.longitude, target: target,
+                altClass: altClass, t: terrains
+            )
+        }
     }
 
     private var title: String {

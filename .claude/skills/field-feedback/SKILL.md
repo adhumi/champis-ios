@@ -47,6 +47,12 @@ Limite assumée : qui perd son trousseau perd ses épingles et ses coins ; le se
 
 Position et date d'une personne sont des données personnelles. Rappels : jamais de partage entre utilisateurs, jamais d'affichage agrégé sur la carte, suppression complète depuis l'app, pas de collecte en arrière-plan, pas de trajets. L'avertissement sur le cadre légal de la cueillette (forêt privée, arrêtés préfectoraux) accompagne la carte, pas le retour terrain.
 
+## Implémentation (31 oct. 2026)
+
+- `Champis/Field` : `FieldModels` (formes exactes de l'API, clés `snake_case`), `Identity` (`KeychainIdentityStore` synchronisé iCloud, repli `DefaultsIdentityStore`, `MemoryIdentityStore` pour les tests), `LocalStore` (acteur, `observations.json` avec la file `pending` et `coins.json`, écriture atomique), `LocationProvider` (`CLLocationUpdate.liveUpdates`, première mesure avec délai), `FieldModel` (`@Observable` : enregistrer, envoyer par lots de 200, reprendre du serveur, tout effacer, coins en liste complète, scores de `GET /coins`), `FieldViews` (`ObservationForm`, `CoinsView`). `ChampisAPI+Field` porte l'en-tête `X-Champis-User`.
+- Entrées : menu « Retour terrain » de la carte (position touchée ou GPS), boutons de la fiche du point (« Trouvé ici », « Rien trouvé ici », « Ajouter à mes coins » avec la cible de la couche, la classe d'altitude et le T de chaque espèce du pixel). Épingles : vertes trouvé, grises rien trouvé, orange coins.
+- La permission de notification est demandée au premier coin ; l'enregistrement APNs (jeton dans `PUT /coins`) attend la capacité Push sur l'App ID.
+
 ## Tests
 
 Swift Testing. File locale : enregistrement hors ligne, envoi par lots au retour du réseau (via `URLProtocol` de test), idempotence sur renvoi, purge après `DELETE`. Coins : `PUT` en liste complète à chaque changement, jeton APNs mis à jour, aucune tâche d'arrière-plan planifiée (vérifiable : aucun identifiant `BGTaskScheduler` dans l'app). Interface : « rien trouvé » accessible en un geste, libellés VoiceOver (skill `ios-accessibility`).

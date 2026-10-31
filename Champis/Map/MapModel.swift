@@ -94,6 +94,8 @@ final class MapModel {
     private(set) var tileCacheSize: Int64?
 
     let overlay: ScoreTileOverlay
+    /// Observations et coins (skill `field-feedback`).
+    let field: FieldModel
     @ObservationIgnored private let locationManager = CLLocationManager()
     @ObservationIgnored private let renderer: TileRenderer
     @ObservationIgnored private let store: TileStore
@@ -104,11 +106,21 @@ final class MapModel {
     @ObservationIgnored private var inspectTask: Task<Void, Never>?
     @ObservationIgnored private var isLoadingBoundaries = false
 
-    init(apiBaseURL: URL, diskCache: DiskTileCache? = nil) {
-        api = ChampisAPI(baseURL: apiBaseURL)
+    init(
+        apiBaseURL: URL, diskCache: DiskTileCache? = nil, fieldDirectory: URL? = nil,
+        identityStores: [any IdentityStore]? = nil
+    ) {
+        let api = ChampisAPI(baseURL: apiBaseURL)
+        self.api = api
         store = TileStore(disk: diskCache)
         renderer = TileRenderer(store: store)
         overlay = ScoreTileOverlay(renderer: renderer)
+        let directory = fieldDirectory ?? (try? LocalStore.defaultDirectory())
+            ?? FileManager.default.temporaryDirectory.appending(path: "champis-field", directoryHint: .isDirectory)
+        field = FieldModel(
+            api: api, store: LocalStore(directory: directory),
+            identityStores: identityStores ?? [KeychainIdentityStore(), DefaultsIdentityStore()]
+        )
     }
 
     var palette: Palette? { catalog?.palette }
@@ -137,6 +149,26 @@ final class MapModel {
 
     func speciesName(_ id: String) -> String {
         catalog?.species[id]?.names?.fr ?? id
+    }
+
+    /// Espèces du catalogue pour un sélecteur, par nom français.
+    var speciesOptions: [SpeciesOption] {
+        (catalog?.species ?? [:])
+            .map { SpeciesOption(id: $0.key, name: $0.value.names?.fr ?? $0.key) }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    /// Libellé d'une cible de coin (identifiant d'espèce ou de groupe tel que l'API l'attend).
+    func layerTitle(forTarget target: String) -> String {
+        layers.first { Self.apiTarget($0.key) == target }?.title ?? speciesName(target)
+    }
+
+    /// Identifiant d'espèce ou de groupe, sans préfixe : ce que `PUT /coins` attend dans `target`.
+    static func apiTarget(_ key: LayerKey) -> String {
+        switch key {
+        case .species(let id): id
+        case .group(let id): id
+        }
     }
 
     func classify(_ value: Double) -> Palette.Threshold? {
@@ -173,6 +205,7 @@ final class MapModel {
             deptFeatures = []
         }
         await load()
+        await field.start(api: api)
     }
 
     func load() async {
