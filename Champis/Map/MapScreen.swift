@@ -5,7 +5,7 @@ import SwiftUI
 /// ou de groupe, mode terrain ou score du jour, curseur de jour J−3 → J+7, légende, fiche au
 /// toucher, avertissement sur le cadre légal.
 struct MapScreen: View {
-    static let defaultAPIBaseURL = "https://champis.adhumi.fr"
+    static let defaultAPIBaseURL = "https://champis-production.up.railway.app"
 
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
     @AppStorage("legalNoticeAcknowledged") private var legalNoticeAcknowledged = false
