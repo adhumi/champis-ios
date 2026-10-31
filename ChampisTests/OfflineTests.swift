@@ -136,17 +136,13 @@ struct OfflineModelTests {
         let t = TileMath.tile(lon: PointInspectorTests.longitude, lat: PointInspectorTests.latitude, z: 15)
         let pmtiles = PointInspectorTests.pmtiles(tiles: [(t.x, t.y, try PointInspectorTests.tile([(0, 254)]))])
 
-        StubURLProtocol.requests = []
-        StubURLProtocol.binary = { _, path in path.hasPrefix("/tiles/") ? pmtiles : nil }
-        defer { StubURLProtocol.binary = nil }
-        StubURLProtocol.handler = { _, path, _ in
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host, binary: { _, path in path.hasPrefix("/tiles/") ? pmtiles : nil }) { _, path, _ in
             path == "/weather/bbox" ? (200, Fixtures.weatherJSON) : (404, #"{"detail": "inconnu"}"#)
         }
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [StubURLProtocol.self]
-        let api = ChampisAPI(baseURL: URL(string: "https://api.test")!, session: URLSession(configuration: configuration))
+        let api = StubURLProtocol.api(host: host)
         let store = OfflineStore(root: root)
-        let downloads = DownloadManager(configuration: configuration)
+        let downloads = DownloadManager(configuration: StubURLProtocol.configuration())
         let model = OfflineModel(api: api, store: store, downloads: downloads)
         var published: [[OfflineLocalFile]] = []
         model.onLocalFilesChanged = { files in published.append(files) }
@@ -164,7 +160,7 @@ struct OfflineModelTests {
         #expect(department.complete, "\(department.error ?? "") \(model.status ?? "")")
         #expect(department.files.count == 2)
         #expect(department.weatherToday == "2026-10-30")
-        #expect(StubURLProtocol.requests.filter { $0.path == "/weather/bbox" }.count >= 1)
+        #expect(StubURLProtocol.requests(host: host).filter { $0.path == "/weather/bbox" }.count >= 1)
         #expect(published.last?.count == 2)
         #expect(try await store.weather(code: "25").isEmpty == false)
 
