@@ -1,3 +1,4 @@
+import ChampisScoring
 import SwiftUI
 
 /// Espèce proposée dans un sélecteur.
