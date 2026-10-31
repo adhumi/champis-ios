@@ -5,12 +5,6 @@ import Testing
 /// Serveur champis-api factice. Les tests tournent en parallèle : chaque test prend son propre hôte
 /// (`StubURLProtocol.host()`), et gestionnaires comme requêtes sont rangés par hôte.
 final class StubURLProtocol: URLProtocol, @unchecked Sendable {
-<<<<<<< HEAD
-    nonisolated(unsafe) static var handler: (@Sendable (String, String, Data?) -> (Int, String))?
-    /// Réponse binaire (PMTiles) si non nil, consultée avant `handler`.
-    nonisolated(unsafe) static var binary: (@Sendable (String, String) -> Data?)?
-    nonisolated(unsafe) static var requests: [(method: String, path: String, user: String?, body: Data?)] = []
-=======
     typealias Handler = @Sendable (String, String, Data?) -> (Int, String)
     typealias Binary = @Sendable (String, String) -> Data?
     typealias Request = (method: String, path: String, user: String?, body: Data?)
@@ -48,7 +42,6 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         defer { lock.unlock() }
         return log[host] ?? []
     }
->>>>>>> claude/ios-fix-observation
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -58,16 +51,6 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         let method = request.httpMethod ?? "GET"
         let path = request.url?.path ?? ""
         let body = request.httpBody ?? Self.read(request.httpBodyStream)
-<<<<<<< HEAD
-        StubURLProtocol.requests.append((method, path, request.value(forHTTPHeaderField: "X-Champis-User"), body))
-        let status: Int
-        let payload: Data
-        let contentType: String
-        if let data = StubURLProtocol.binary?(method, path) {
-            (status, payload, contentType) = (200, data, "application/octet-stream")
-        } else {
-            let (code, json) = StubURLProtocol.handler?(method, path, body) ?? (404, #"{"detail": "inconnu"}"#)
-=======
         Self.lock.lock()
         Self.log[host, default: []].append((method, path, request.value(forHTTPHeaderField: "X-Champis-User"), body))
         let handler = Self.handlers[host]
@@ -81,7 +64,6 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
             (status, payload, contentType) = (200, data, "application/octet-stream")
         } else {
             let (code, json) = handler?(method, path, body) ?? (404, #"{"detail": "inconnu"}"#)
->>>>>>> claude/ios-fix-observation
             (status, payload, contentType) = (code, Data(json.utf8), "application/json")
         }
         let response = HTTPURLResponse(
