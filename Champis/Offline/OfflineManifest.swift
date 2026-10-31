@@ -45,7 +45,7 @@ nonisolated struct OfflineLocalFile: Hashable, Sendable {
     let url: URL
 }
 
-extension BBox {
+nonisolated extension BBox {
     /// Découpe en sous-emprises d'au plus `maxSpan` degrés de côté : `GET /weather/bbox` refuse plus
     /// de 40 cellules de 5 km, un département en compte des centaines.
     func split(maxSpan: Double) -> [BBox] {

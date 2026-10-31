@@ -91,7 +91,7 @@ final class OfflineModel {
     // MARK: Choix
 
     /// Départements du manifeste ayant un jeu propre (`dept`), avec les noms connus.
-    static func downloadable(from manifest: TilesManifest, names: [String: String]) -> [DownloadableDepartment] {
+    nonisolated static func downloadable(from manifest: TilesManifest, names: [String: String]) -> [DownloadableDepartment] {
         var byCode: [String: (terrain: [String: TilesManifest.Entry], altitude: TilesManifest.Entry?)] = [:]
         for entry in manifest.tiles {
             guard let dept = entry.dept else { continue }
