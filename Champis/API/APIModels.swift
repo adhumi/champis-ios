@@ -67,11 +67,14 @@ nonisolated struct WeatherRow: Decodable, Hashable, Sendable {
     let m: Double
     let mEff: Double
     let phi: Double
+    /// Détail des facteurs (`GET /weather` seulement) : `temp`, `rain`, `trigger`, `soil_moisture`,
+    /// `frost`, `water_balance`, `heat`, `memory`, chacun dans [0, 1].
+    let factors: [String: Double]?
 
     enum CodingKeys: String, CodingKey {
         case m = "M"
         case mEff = "M_eff"
-        case phi
+        case phi, factors
     }
 
     /// Facteur appliqué à T : `M_eff × Φ`.
@@ -94,6 +97,35 @@ nonisolated struct CellWeather: Decodable, Sendable {
     let cell: WeatherCellInfo
     let stale: Bool
     let species: [String: [WeatherDay]]
+}
+
+/// Indice d'un département pour un jour : `value` nil quand la météo manque ; `leading` = espèce qui
+/// porte le score d'un groupe (règle 9) ; `coverage` = part de Σ T couverte par la météo.
+nonisolated struct DeptDay: Decodable, Hashable, Sendable {
+    let date: String
+    let value: Double?
+    let leading: String?
+    let coverage: Double
+}
+
+nonisolated struct DeptEntry: Decodable, Sendable {
+    let species: [String: [DeptDay]]
+    let groups: [String: [DeptDay]]
+}
+
+/// Réponse de `GET /departements` : indice `I = Σ T × M_eff × Φ / Σ T` par département, espèce ou
+/// groupe et jour, calculé par la pré-chauffe (vue France).
+nonisolated struct DepartementsResponse: Decodable, Sendable {
+    let today: String
+    let computedAt: String
+    let scoringVersion: String?
+    let departements: [String: DeptEntry]
+
+    enum CodingKeys: String, CodingKey {
+        case today, departements
+        case computedAt = "computed_at"
+        case scoringVersion = "scoring_version"
+    }
 }
 
 /// Réponse de `GET /weather/bbox` : les 11 jours J−3 → J+7 de chaque cellule de l'emprise.

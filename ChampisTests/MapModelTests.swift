@@ -35,6 +35,29 @@ struct MapModelTests {
         #expect(model.selection == MapSelection(latitude: 47, longitude: 6))
         model.clearSelection()
         #expect(model.selection == nil)
+        #expect(model.pointInfo == nil)
+    }
+
+    @Test("Vue France : mode score sous le zoom seuil ; départements sans indice transparents")
+    func franceView() {
+        let model = MapModel(apiBaseURL: URL(string: "https://champis.example")!)
+        let bbox = BBox(minLon: -5, minLat: 42, maxLon: 9, maxLat: 51)
+        #expect(!model.isFranceView)
+        model.visibleRegionChanged(bbox, zoom: 7)
+        #expect(model.isFranceView)
+        model.visibleRegionChanged(bbox, zoom: 12)
+        #expect(!model.isFranceView)
+        model.visibleRegionChanged(bbox, zoom: 7)
+        model.setMode(.terrain)
+        #expect(!model.isFranceView)
+        #expect(model.deptColor(code: "25") == nil)
+        model.selectDepartement(code: nil, name: nil)
+        #expect(model.deptInfo?.code == nil)
+        model.selectDepartement(code: "25", name: "Doubs")
+        #expect(model.deptInfo?.name == "Doubs")
+        #expect(model.deptInfo?.row == nil)
+        model.clearDeptInfo()
+        #expect(model.deptInfo == nil)
     }
 
     @Test("Date affichée : à partir du today de l'API")

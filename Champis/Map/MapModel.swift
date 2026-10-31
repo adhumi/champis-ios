@@ -1,5 +1,6 @@
 import ChampisPMTiles
 import ChampisScoring
+import CoreLocation
 import Foundation
 import MapKit
 import Observation
@@ -19,20 +20,33 @@ nonisolated enum Basemap: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// Point touché sur la carte (fiche à venir).
+/// Point touché sur la carte.
 nonisolated struct MapSelection: Hashable, Sendable {
     let latitude: Double
     let longitude: Double
 }
 
+/// Département touché en vue France ; `code` nil = hors département.
+nonisolated struct DeptInfo: Identifiable, Sendable {
+    let id = UUID()
+    let code: String?
+    let name: String?
+    let date: String?
+    let row: DeptDay?
+    let layerTitle: String?
+}
+
 /// Modèle de l'écran carte (MVVM, `@Observable`, MainActor). Les vues ne calculent rien : espèce
-/// ou groupe courant, jour, mode T/S, météo chargée, état de chargement. Les tuiles se lisent et se
-/// colorisent hors du MainActor (`TileStore`, `TileRenderer`) ; le modèle leur pousse ses réglages.
+/// ou groupe courant, jour, mode T/S, météo chargée, indice par département, fiche du point touché,
+/// état de chargement. Les tuiles se lisent et se colorisent hors du MainActor (`TileStore`,
+/// `TileRenderer`) ; le modèle leur pousse ses réglages.
 @Observable
 final class MapModel {
     static let dayRange = -3...7
     /// Marge autour de l'emprise visible pour la météo (une cellule, comme la carte web).
     static let weatherPaddingDegrees = 0.1
+    /// En dessous de ce zoom, en mode score, la carte passe aux départements (comme le site).
+    static let deptZoom = 9.0
     /// Centre de la France, vue d'ensemble, tant qu'on n'a pas de position.
     static let initialRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 46.8, longitude: 2.4),
@@ -55,30 +69,62 @@ final class MapModel {
     private(set) var isLoading = false
     private(set) var isLoadingWeather = false
     private(set) var loadError: String?
-    private(set) var selection: MapSelection?
-    /// Incrémenté à chaque réglage poussé au rendu : la vue carte redessine ses tuiles.
+    /// Zoom Web Mercator de la vue ; `nil` tant que la carte n'a pas donné sa première région.
+    private(set) var zoom: Double?
+    /// Incrémenté à chaque réglage poussé au rendu : la vue carte redessine tuiles et départements.
     private(set) var renderGeneration = 0
 
+    // Vue France
+    private(set) var deptIndex: DeptIndex?
+    private(set) var deptStatus: String?
+    private(set) var deptFeatures: [MKGeoJSONFeature] = []
+    private(set) var deptInfo: DeptInfo?
+
+    // Fiche au toucher
+    private(set) var selection: MapSelection?
+    private(set) var pointInfo: PointInfo?
+    private(set) var isInspecting = false
+    private(set) var inspectError: String?
+    private(set) var pointFactors: [String: Double]?
+    private(set) var factorsStatus: String?
+
+    // Position et cache
+    /// Incrémenté quand l'utilisateur demande à centrer la carte sur lui.
+    private(set) var followRequest = 0
+    private(set) var tileCacheSize: Int64?
+
     let overlay: ScoreTileOverlay
+    @ObservationIgnored private let locationManager = CLLocationManager()
     @ObservationIgnored private let renderer: TileRenderer
     @ObservationIgnored private let store: TileStore
     @ObservationIgnored private(set) var api: ChampisAPI
     @ObservationIgnored private var visibleBBox: BBox?
     @ObservationIgnored private var weatherTask: Task<Void, Never>?
+    @ObservationIgnored private var deptTask: Task<Void, Never>?
+    @ObservationIgnored private var inspectTask: Task<Void, Never>?
+    @ObservationIgnored private var isLoadingBoundaries = false
 
-    init(apiBaseURL: URL) {
+    init(apiBaseURL: URL, diskCache: DiskTileCache? = nil) {
         api = ChampisAPI(baseURL: apiBaseURL)
-        store = TileStore()
+        store = TileStore(disk: diskCache)
         renderer = TileRenderer(store: store)
         overlay = ScoreTileOverlay(renderer: renderer)
     }
 
     var palette: Palette? { catalog?.palette }
     var legend: [Palette.Threshold] { catalog?.palette.thresholds ?? [] }
+    /// Mode score sous le zoom seuil : départements colorés par l'indice au lieu des tuiles.
+    var isFranceView: Bool {
+        guard let zoom else { return false }
+        return mode == .score && zoom < Self.deptZoom
+    }
 
-    /// Jour affiché (ISO), à partir du `today` de l'API ; `nil` tant qu'aucune météo n'est connue.
+    /// `today` de l'API, par la météo ou l'indice par département, selon ce qui est arrivé.
+    var today: String? { weather.today ?? deptIndex?.today }
+
+    /// Jour affiché (ISO) ; `nil` tant que l'API n'a rien dit.
     var dayDate: String? {
-        guard let today = weather.today, let date = try? CivilDate(iso: today) else { return nil }
+        guard let today, let date = try? CivilDate(iso: today) else { return nil }
         return date.adding(days: dayOffset).description
     }
 
@@ -87,6 +133,14 @@ final class MapModel {
         let relative = k == 0 ? "Aujourd'hui" : (k > 0 ? "J+\(k)" : "J−\(-k)")
         guard let date = dayDate else { return relative }
         return "\(relative) · \(Self.format(iso: date))"
+    }
+
+    func speciesName(_ id: String) -> String {
+        catalog?.species[id]?.names?.fr ?? id
+    }
+
+    func classify(_ value: Double) -> Palette.Threshold? {
+        palette?.classify(value)
     }
 
     /// `2026-10-30` → `jeu. 30 oct.` (locale de l'appareil).
@@ -100,6 +154,13 @@ final class MapModel {
         return date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
     }
 
+    /// Horodatage ISO 8601 de l'API → date et heure locales courtes.
+    static func format(timestamp: String) -> String {
+        let parser = ISO8601DateFormatter()
+        guard let date = parser.date(from: timestamp) else { return timestamp }
+        return date.formatted(date: .abbreviated, time: .shortened)
+    }
+
     // MARK: - Chargement
 
     /// Démarre (ou redémarre, si l'adresse de l'API a changé) : espèces, palette, manifeste des tuiles.
@@ -108,6 +169,8 @@ final class MapModel {
             api = ChampisAPI(baseURL: apiBaseURL)
             weather = WeatherField()
             weatherStatus = nil
+            deptIndex = nil
+            deptFeatures = []
         }
         await load()
     }
@@ -130,7 +193,7 @@ final class MapModel {
                 selectedLayer = layers.first
             }
             pushSettings()
-            refreshWeather()
+            refreshData()
         } catch {
             loadError = error.localizedDescription
         }
@@ -141,7 +204,7 @@ final class MapModel {
     func select(layerKey: LayerKey?) {
         selectedLayer = layers.first { $0.key == layerKey }
         pushSettings()
-        refreshWeather()
+        refreshData()
     }
 
     func setDay(_ offset: Int) {
@@ -152,20 +215,28 @@ final class MapModel {
     func setMode(_ mode: MapMode) {
         self.mode = mode
         pushSettings()
-        refreshWeather()
+        refreshData()
     }
 
-    func visibleRegionChanged(_ bbox: BBox) {
+    func visibleRegionChanged(_ bbox: BBox, zoom: Double) {
         visibleBBox = bbox
-        refreshWeather(debounce: true)
+        let wasFranceView = isFranceView
+        self.zoom = zoom
+        if isFranceView != wasFranceView {
+            pushSettings()
+        }
+        refreshData(debounce: true)
     }
 
-    func select(latitude: Double, longitude: Double) {
-        selection = MapSelection(latitude: latitude, longitude: longitude)
-    }
-
-    func clearSelection() {
-        selection = nil
+    /// Selon la vue : l'indice par département (vue France) ou la météo de l'emprise.
+    private func refreshData(debounce: Bool = false) {
+        if isFranceView {
+            weatherTask?.cancel()
+            refreshDeptIndex()
+        } else {
+            deptTask?.cancel()
+            refreshWeather(debounce: debounce)
+        }
     }
 
     // MARK: - Météo
@@ -223,14 +294,179 @@ final class MapModel {
         return parts.joined(separator: " · ")
     }
 
-    private func pushSettings() {
-        renderer.update(RenderSettings(
+    // MARK: - Vue France
+
+    /// `GET /departements` pour la couche : 11 jours d'un coup, le curseur ne recharge rien. Les
+    /// limites (GeoJSON servi avec le site) se chargent une fois.
+    private func refreshDeptIndex() {
+        guard isFranceView, let layer = selectedLayer, catalog != nil else { return }
+        if deptFeatures.isEmpty {
+            loadBoundaries()
+        }
+        if let deptIndex, deptIndex.layerKey == layer.key {
+            return
+        }
+        deptTask?.cancel()
+        let api = api
+        deptTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let response = try await api.departements(species: layer.members)
+                guard !Task.isCancelled else { return }
+                deptIndex = DeptIndex(response: response, layer: layer)
+                deptStatus = "Indice par département calculé le \(Self.format(timestamp: response.computedAt))"
+                pushSettings()
+            } catch let failure as ChampisAPI.Failure {
+                guard !Task.isCancelled else { return }
+                deptStatus = "Vue France indisponible : \(failure.localizedDescription)"
+            } catch is CancellationError {
+                return
+            } catch {
+                guard !Task.isCancelled else { return }
+                deptStatus = "Vue France indisponible : \(error.localizedDescription)"
+            }
+        }
+    }
+
+    private func loadBoundaries() {
+        guard !isLoadingBoundaries else { return }
+        isLoadingBoundaries = true
+        let api = api
+        Task { [weak self] in
+            guard let self else { return }
+            defer { isLoadingBoundaries = false }
+            do {
+                let data = try await api.departementsGeoJSON()
+                let objects = try MKGeoJSONDecoder().decode(data)
+                deptFeatures = objects.compactMap { $0 as? MKGeoJSONFeature }
+            } catch {
+                deptStatus = "Limites des départements indisponibles : \(error.localizedDescription)"
+            }
+        }
+    }
+
+    /// Couleur d'un département pour la couche et le jour courants ; `nil` = transparent (pas
+    /// d'indice : jamais une valeur inventée).
+    func deptColor(code: String) -> RGBA? {
+        guard let deptIndex, let date = dayDate, let palette,
+              let value = deptIndex.value(code: code, date: date)
+        else { return nil }
+        return RGBA(hex: palette.classify(value).hex)
+    }
+
+    func selectDepartement(code: String?, name: String?) {
+        let date = dayDate
+        var row: DeptDay?
+        if let code, let date {
+            row = deptIndex?.row(code: code, date: date)
+        }
+        deptInfo = DeptInfo(code: code, name: name, date: date, row: row, layerTitle: selectedLayer?.title)
+    }
+
+    func clearDeptInfo() {
+        deptInfo = nil
+    }
+
+    // MARK: - Fiche au toucher
+
+    func select(latitude: Double, longitude: Double) {
+        selection = MapSelection(latitude: latitude, longitude: longitude)
+        inspectTask?.cancel()
+        pointFactors = nil
+        factorsStatus = nil
+        inspectError = nil
+        let settings = currentSettings()
+        let store = store
+        isInspecting = true
+        inspectTask = Task { [weak self] in
+            guard let self else { return }
+            defer { isInspecting = false }
+            do {
+                let info = try await PointInspector.inspect(
+                    latitude: latitude, longitude: longitude, settings: settings, store: store
+                )
+                guard !Task.isCancelled else { return }
+                pointInfo = info
+            } catch is CancellationError {
+                return
+            } catch {
+                guard !Task.isCancelled else { return }
+                inspectError = "Lecture du point impossible : \(error.localizedDescription)"
+            }
+        }
+    }
+
+    /// Facteurs météo du point (`GET /weather?cell=&species=`), pour la fiche.
+    func loadFactors(for info: PointInfo) async {
+        guard case .scored(let scored) = info.outcome, let cell = scored.cell, let date = info.date,
+              let altKey = scored.altKey
+        else { return }
+        factorsStatus = nil
+        do {
+            let detail = try await api.weatherDetail(cell: cell.id, species: [scored.species])
+            let row = detail.species[scored.species]?.first { $0.date == date }?.byAlt[altKey]
+            pointFactors = row?.factors
+            if pointFactors == nil {
+                factorsStatus = "Facteurs indisponibles pour ce jour."
+            }
+        } catch {
+            factorsStatus = "Facteurs indisponibles : \(error.localizedDescription)"
+        }
+    }
+
+    func clearSelection() {
+        inspectTask?.cancel()
+        selection = nil
+        pointInfo = nil
+        pointFactors = nil
+        factorsStatus = nil
+    }
+
+    // MARK: - Position et cache
+
+    /// Position « pendant l'utilisation » seulement (skill `offline`) : demandée au premier appui,
+    /// jamais au lancement ; aucun trajet n'est enregistré.
+    func locateMe() {
+        if locationManager.authorizationStatus == .notDetermined {
+            locationManager.requestWhenInUseAuthorization()
+        }
+        followRequest += 1
+    }
+
+    var locationDenied: Bool {
+        switch locationManager.authorizationStatus {
+        case .denied, .restricted: true
+        default: false
+        }
+    }
+
+    func refreshTileCacheSize() async {
+        tileCacheSize = await store.diskSize()
+    }
+
+    func clearTileCache() async {
+        do {
+            try await store.clearDisk()
+        } catch {
+            loadError = "Cache impossible à vider : \(error.localizedDescription)"
+        }
+        await refreshTileCacheSize()
+    }
+
+    // MARK: - Rendu
+
+    private func currentSettings() -> RenderSettings {
+        RenderSettings(
             layer: selectedLayer,
             mode: mode,
             date: dayDate,
             weather: weather,
             colorizer: catalog.map { TileColorizer(palette: $0.palette) }
-        ))
+        )
+    }
+
+    private func pushSettings() {
+        renderer.update(currentSettings())
         renderGeneration += 1
     }
 }

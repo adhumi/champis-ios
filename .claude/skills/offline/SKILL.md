@@ -25,7 +25,7 @@ Décidé : écrit maison, sans dépendance, ~300 lignes. Il implémente la spec 
 
 - Une seule interface `TileSource` : `tile(z, x, y) async throws -> Data?`. Deux implémentations : `RemotePMTiles` (requêtes `Range` HTTP, cache disque des répertoires et des tuiles lues) et `LocalPMTiles` (fichier téléchargé, lecture par `FileHandle`).
 - Les requêtes `Range` passent par l'API en mode proxy (`GET /tiles/{name}`, décision du 19 oct. 2026) ou par URL présignée selon le manifeste `/tiles` (`mode`). Le client ne choisit pas : il suit le manifeste.
-- Cache disque : `Application Support/Champis/tiles/<nom du fichier>/`, exclu de la sauvegarde iCloud (`isExcludedFromBackup`), clé = hash du fichier PMTiles (le nom contient déjà le hash des départements et la version du scoring). Changement de hash dans le manifeste = nouveau dossier, l'ancien est purgé.
+- Cache disque : `Application Support/Champis/tiles/<nom du fichier>/<z>/<x>_<y>.png`, exclu de la sauvegarde iCloud (`isExcludedFromBackup`), clé = nom du fichier PMTiles (il contient déjà le hash des départements et la version du scoring). Changement de hash dans le manifeste = nouveau dossier, l'ancien est purgé. Écrit le 31 oct. 2026 : `DiskTileCache`, branché dans `TileStore` (lecture disque avant la source, écriture après ; une tuile absente est un fichier vide), taille et vidage dans les réglages. Les répertoires PMTiles (en-tête, racine, feuilles) restent en mémoire : deux requêtes au lancement.
 - Les PNG sont décodés octet par octet, jamais via `UIImage` (skill `swiftui-mapkit`).
 
 ## Téléchargement

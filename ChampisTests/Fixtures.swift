@@ -112,6 +112,37 @@ nonisolated enum Fixtures {
     }
     """
 
+    /// `GET /departements` : deux départements, un groupe (max + leading) et ses espèces.
+    static let departementsJSON = """
+    {
+      "today": "2026-10-30",
+      "computed_at": "2026-10-30T03:12:00+00:00",
+      "scoring_version": "1.0.0",
+      "species_hash": "af34c16e",
+      "departements": {
+        "25": {
+          "species": {
+            "boletus_edulis": [
+              { "date": "2026-10-30", "value": 0.62, "coverage": 0.9 },
+              { "date": "2026-10-31", "value": null, "coverage": 0.0 }
+            ],
+            "boletus_aereus": [ { "date": "2026-10-30", "value": 0.3, "coverage": 0.9 } ]
+          },
+          "groups": {
+            "cepes": [
+              { "date": "2026-10-30", "value": 0.62, "leading": "boletus_edulis", "coverage": 0.9 },
+              { "date": "2026-10-31", "value": null, "leading": null, "coverage": 0.0 }
+            ]
+          }
+        },
+        "39": {
+          "species": { "boletus_edulis": [ { "date": "2026-10-30", "value": 0.2, "coverage": 0.5 } ] },
+          "groups": { "cepes": [ { "date": "2026-10-30", "value": 0.2, "leading": "boletus_edulis", "coverage": 0.5 } ] }
+        }
+      }
+    }
+    """
+
     static func decode<T: Decodable>(_ type: T.Type, _ json: String) throws -> T {
         try JSONDecoder().decode(type, from: Data(json.utf8))
     }
