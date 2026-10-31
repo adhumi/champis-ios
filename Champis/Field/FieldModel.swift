@@ -1,5 +1,5 @@
 import Foundation
-import FieldObservation
+import Observation
 import UserNotifications
 
 /// Retour terrain et mes coins (skill `field-feedback`) : observations écrites d'abord sur
