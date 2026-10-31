@@ -46,6 +46,7 @@ struct MapContainer: PlatformRepresentable {
         private var tileRenderer: MKTileOverlayRenderer?
         private var shownGeneration = -1
         private var shownFranceView: Bool?
+        private var shownFollowRequest = 0
         private var basemap: Basemap?
         private var deptOverlaysInstalled = false
         private var deptRenderers: [String: [MKOverlayPathRenderer]] = [:]
@@ -60,6 +61,7 @@ struct MapContainer: PlatformRepresentable {
             self.mapView = mapView
             mapView.delegate = self
             mapView.setRegion(MapModel.initialRegion, animated: false)
+            mapView.showsUserLocation = true
             mapView.addOverlay(model.overlay, level: .aboveRoads)
             #if os(macOS)
             let recognizer = NSClickGestureRecognizer(target: self, action: #selector(handleTap(_:)))
@@ -81,6 +83,10 @@ struct MapContainer: PlatformRepresentable {
                 }
             }
             tileRenderer?.alpha = model.isFranceView ? 0 : model.overlayOpacity
+            if shownFollowRequest != model.followRequest {
+                shownFollowRequest = model.followRequest
+                mapView.setUserTrackingMode(.follow, animated: true)
+            }
             if !deptOverlaysInstalled && !model.deptFeatures.isEmpty {
                 installDepartements(on: mapView)
             }

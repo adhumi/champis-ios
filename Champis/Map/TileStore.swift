@@ -3,8 +3,9 @@ import Foundation
 
 /// Lecture et décodage des PMTiles hors du MainActor : un lecteur par fichier du manifeste
 /// (`T-<espèce>…` par espèce, `A-300m…` pour les classes d'altitude), cache mémoire des tuiles
-/// décodées. Source distante par requêtes Range aujourd'hui, fichier local demain (skill
-/// `offline`) : le lecteur ne fait pas la différence (`TileSource`).
+/// décodées et cache disque des octets lus (`DiskTileCache`, skill `offline`). Source distante par
+/// requêtes Range aujourd'hui, fichier local demain : le lecteur ne fait pas la différence
+/// (`TileSource`).
 actor TileStore {
     private struct Key: Hashable {
         let name: String
@@ -22,10 +23,12 @@ actor TileStore {
     private var order: [Key] = []
     private let capacity: Int
     private let session: URLSession
+    private let disk: DiskTileCache?
 
-    init(capacity: Int = 512, session: URLSession = .shared) {
+    init(capacity: Int = 512, session: URLSession = .shared, disk: DiskTileCache? = nil) {
         self.capacity = capacity
         self.session = session
+        self.disk = disk
     }
 
     var hasAltitudeLayer: Bool { altReader != nil }
@@ -64,14 +67,31 @@ actor TileStore {
             terrainReaders[sid] = PMTilesReader(source: RemoteRangeSource(url: url, session: session))
             terrainNames[sid] = entry.name
         }
+        // Changement de hash dans le manifeste = nouveau dossier ; les anciens sont purgés.
+        var keep = Set(terrainNames.values)
+        if !altName.isEmpty {
+            keep.insert(altName)
+        }
+        _ = try? disk?.prune(keeping: keep)
+    }
+
+    /// Octets du cache disque, pour les réglages.
+    func diskSize() -> Int64 {
+        disk?.totalSize() ?? 0
+    }
+
+    func clearDisk() throws {
+        try disk?.removeAll()
+        cache = [:]
+        order = []
     }
 
     /// Lecteurs fournis directement (tests, et demain les fichiers hors ligne).
     func install(terrain: [String: PMTilesReader], alt: PMTilesReader?) {
         terrainReaders = terrain
-        terrainNames = Dictionary(uniqueKeysWithValues: terrain.keys.map { ($0, "T:" + $0) })
+        terrainNames = Dictionary(uniqueKeysWithValues: terrain.keys.map { ($0, "T-" + $0) })
         altReader = alt
-        altName = "A"
+        altName = alt == nil ? "" : "A"
         cache = [:]
         order = []
     }
@@ -90,7 +110,20 @@ actor TileStore {
 
     private func tile(reader: PMTilesReader, key: Key) async throws -> DecodedPNG? {
         if let hit = cache[key] { return hit }
-        let data = try await reader.tile(z: key.z, x: key.x, y: key.y)
+        var data: Data?
+        var fromDisk = false
+        switch disk?.read(file: key.name, z: key.z, x: key.x, y: key.y) ?? .miss {
+        case .tile(let cached):
+            data = cached
+            fromDisk = true
+        case .absent:
+            fromDisk = true
+        case .miss:
+            data = try await reader.tile(z: key.z, x: key.x, y: key.y)
+        }
+        if !fromDisk {
+            try? disk?.write(file: key.name, z: key.z, x: key.x, y: key.y, data: data)
+        }
         let png = try data.map { try PNGDecoder.decode($0) }
         remember(key, png)
         return png

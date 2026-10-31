@@ -9,7 +9,9 @@ struct MapScreen: View {
 
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
     @AppStorage("legalNoticeAcknowledged") private var legalNoticeAcknowledged = false
-    @State private var model = MapModel(apiBaseURL: URL(string: MapScreen.defaultAPIBaseURL)!)
+    @State private var model = MapModel(
+        apiBaseURL: URL(string: MapScreen.defaultAPIBaseURL)!, diskCache: try? DiskTileCache.default()
+    )
     @State private var showSettings = false
     @State private var showLegalNotice = false
 
@@ -21,6 +23,19 @@ struct MapScreen: View {
                 VStack(spacing: 8) {
                     controls
                     Spacer(minLength: 0)
+                    HStack {
+                        Spacer()
+                        Button {
+                            model.locateMe()
+                        } label: {
+                            Image(systemName: model.locationDenied ? "location.slash" : "location")
+                                .padding(10)
+                                .background(.regularMaterial, in: Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Centrer sur ma position")
+                        .accessibilityHint(model.locationDenied ? "Position refusée dans les réglages du système" : "")
+                    }
                     panel
                 }
                 .padding(12)
@@ -231,6 +246,16 @@ struct SettingsView: View {
                     }
                 }
                 Section {
+                    LabeledContent("Tuiles en cache", value: cacheSizeText)
+                    Button("Vider le cache des tuiles", role: .destructive) {
+                        Task { await model.clearTileCache() }
+                    }
+                } header: {
+                    Text("Hors ligne")
+                } footer: {
+                    Text("Les tuiles déjà vues restent lisibles sans réseau. Le téléchargement par département viendra ensuite.")
+                }
+                Section {
                     Button(LegalNotice.title) {
                         dismiss()
                         showLegalNotice = true
@@ -243,7 +268,13 @@ struct SettingsView: View {
                     Button("OK") { dismiss() }
                 }
             }
+            .task { await model.refreshTileCacheSize() }
         }
+    }
+
+    private var cacheSizeText: String {
+        guard let size = model.tileCacheSize else { return "…" }
+        return size.formatted(.byteCount(style: .file))
     }
 }
 
