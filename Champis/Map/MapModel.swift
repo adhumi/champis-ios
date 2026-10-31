@@ -68,7 +68,8 @@ final class MapModel {
     private(set) var isLoading = false
     private(set) var isLoadingWeather = false
     private(set) var loadError: String?
-    private(set) var zoom = 0.0
+    /// Zoom Web Mercator de la vue ; `nil` tant que la carte n'a pas donné sa première région.
+    private(set) var zoom: Double?
     /// Incrémenté à chaque réglage poussé au rendu : la vue carte redessine tuiles et départements.
     private(set) var renderGeneration = 0
 
@@ -106,7 +107,10 @@ final class MapModel {
     var palette: Palette? { catalog?.palette }
     var legend: [Palette.Threshold] { catalog?.palette.thresholds ?? [] }
     /// Mode score sous le zoom seuil : départements colorés par l'indice au lieu des tuiles.
-    var isFranceView: Bool { mode == .score && zoom < Self.deptZoom }
+    var isFranceView: Bool {
+        guard let zoom else { return false }
+        return mode == .score && zoom < Self.deptZoom
+    }
 
     /// `today` de l'API, par la météo ou l'indice par département, selon ce qui est arrivé.
     var today: String? { weather.today ?? deptIndex?.today }
