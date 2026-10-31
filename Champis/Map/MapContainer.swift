@@ -173,7 +173,7 @@ struct MapContainer: PlatformRepresentable {
         // MARK: Épingles (mes observations, mes coins : privées, jamais celles des autres)
 
         private func syncPins(on mapView: MKMapView) {
-            var wantedObservations: [UUID: Observation] = [:]
+            var wantedObservations: [UUID: FieldObservation] = [:]
             for observation in model.field.observations {
                 wantedObservations[observation.id] = observation
             }

@@ -3,7 +3,7 @@ import Foundation
 /// Observations et coins : les seuls appels qui portent l'identifiant de l'app (`X-Champis-User`).
 nonisolated extension ChampisAPI {
     /// Lot idempotent : renvoyer le même lot après une coupure ne crée pas de doublon.
-    func postObservations(_ observations: [Observation], user: UUID) async throws -> ObservationsPostResponse {
+    func postObservations(_ observations: [FieldObservation], user: UUID) async throws -> ObservationsPostResponse {
         let body = try JSONEncoder().encode(ObservationsBatch(observations: observations))
         let data = try await send("POST", "observations", body: body, user: user)
         return try JSONDecoder().decode(ObservationsPostResponse.self, from: data)

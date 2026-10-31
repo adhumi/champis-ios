@@ -58,7 +58,7 @@ struct FieldModelTests {
         return model
     }
 
-    @Test("Observation : enregistrée localement, envoyée avec l'identifiant, en attente si le serveur tombe")
+    @Test("FieldObservation : enregistrée localement, envoyée avec l'identifiant, en attente si le serveur tombe")
     func recordAndSync() async throws {
         let directory = FieldStoreTests.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
