@@ -2,26 +2,75 @@ import Foundation
 import Testing
 @testable import Champis
 
-/// Serveur champis-api factice : enregistre les requêtes (méthode, chemin, en-tête d'identité, corps)
-/// et répond selon un gestionnaire remplaçable par le test.
+/// Serveur champis-api factice. Les tests tournent en parallèle : chaque test prend son propre hôte
+/// (`StubURLProtocol.host()`), et gestionnaires comme requêtes sont rangés par hôte.
 final class StubURLProtocol: URLProtocol, @unchecked Sendable {
-    nonisolated(unsafe) static var handler: (@Sendable (String, String, Data?) -> (Int, String))?
-    nonisolated(unsafe) static var requests: [(method: String, path: String, user: String?, body: Data?)] = []
+    typealias Handler = @Sendable (String, String, Data?) -> (Int, String)
+    typealias Binary = @Sendable (String, String) -> Data?
+    typealias Request = (method: String, path: String, user: String?, body: Data?)
+
+    nonisolated(unsafe) private static var handlers: [String: Handler] = [:]
+    nonisolated(unsafe) private static var binaries: [String: Binary] = [:]
+    nonisolated(unsafe) private static var log: [String: [Request]] = [:]
+    private static let lock = NSLock()
+
+    /// Un hôte unique pour un test.
+    static func host() -> String {
+        "t" + UUID().uuidString.lowercased().replacingOccurrences(of: "-", with: "").prefix(12) + ".test"
+    }
+
+    static func configuration() -> URLSessionConfiguration {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [StubURLProtocol.self]
+        return configuration
+    }
+
+    static func api(host: String) -> ChampisAPI {
+        ChampisAPI(baseURL: URL(string: "https://\(host)")!, session: URLSession(configuration: configuration()))
+    }
+
+    static func set(host: String, binary: Binary? = nil, handler: Handler?) {
+        lock.lock()
+        defer { lock.unlock() }
+        handlers[host] = handler
+        binaries[host] = binary
+        log[host] = log[host] ?? []
+    }
+
+    static func requests(host: String) -> [Request] {
+        lock.lock()
+        defer { lock.unlock() }
+        return log[host] ?? []
+    }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
+        let host = request.url?.host() ?? ""
         let method = request.httpMethod ?? "GET"
         let path = request.url?.path ?? ""
         let body = request.httpBody ?? Self.read(request.httpBodyStream)
-        StubURLProtocol.requests.append((method, path, request.value(forHTTPHeaderField: "X-Champis-User"), body))
-        let (status, json) = StubURLProtocol.handler?(method, path, body) ?? (404, #"{"detail": "inconnu"}"#)
+        Self.lock.lock()
+        Self.log[host, default: []].append((method, path, request.value(forHTTPHeaderField: "X-Champis-User"), body))
+        let handler = Self.handlers[host]
+        let binary = Self.binaries[host]
+        Self.lock.unlock()
+
+        let status: Int
+        let payload: Data
+        let contentType: String
+        if let data = binary?(method, path) {
+            (status, payload, contentType) = (200, data, "application/octet-stream")
+        } else {
+            let (code, json) = handler?(method, path, body) ?? (404, #"{"detail": "inconnu"}"#)
+            (status, payload, contentType) = (code, Data(json.utf8), "application/json")
+        }
         let response = HTTPURLResponse(
-            url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": "application/json"]
+            url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": contentType]
         )!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: Data(json.utf8))
+        client?.urlProtocol(self, didLoad: payload)
         client?.urlProtocolDidFinishLoading(self)
     }
 
@@ -49,27 +98,24 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
 
 @MainActor
 struct FieldModelTests {
-    static func model(directory: URL) -> FieldModel {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [StubURLProtocol.self]
-        let api = ChampisAPI(baseURL: URL(string: "https://api.test")!, session: URLSession(configuration: configuration))
-        let model = FieldModel(api: api, store: LocalStore(directory: directory), identityStores: [MemoryIdentityStore()])
+    static func model(host: String, directory: URL) -> FieldModel {
+        let model = FieldModel(
+            api: StubURLProtocol.api(host: host), store: LocalStore(directory: directory),
+            identityStores: [MemoryIdentityStore()]
+        )
         model.asksNotificationPermission = false
         return model
     }
 
-    @Test("FieldObservation : enregistrée localement, envoyée avec l'identifiant, en attente si le serveur tombe")
+    @Test("Observation : enregistrée localement, envoyée avec l'identifiant, en attente si le serveur tombe")
     func recordAndSync() async throws {
         let directory = FieldStoreTests.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
-        StubURLProtocol.requests = []
-        StubURLProtocol.handler = { method, path, _ in
-            switch (method, path) {
-            case ("POST", "/observations"): (201, #"{"inserted": 1, "duplicates": 0}"#)
-            default: (404, #"{"detail": "inconnu"}"#)
-            }
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host) { method, path, _ in
+            (method, path) == ("POST", "/observations") ? (201, #"{"inserted": 1, "duplicates": 0}"#) : (404, #"{"detail": "inconnu"}"#)
         }
-        let model = Self.model(directory: directory)
+        let model = Self.model(host: host, directory: directory)
         await model.start(api: model.api)
         let user = try #require(model.userID)
 
@@ -77,7 +123,7 @@ struct FieldModelTests {
         #expect(model.observations.count == 1)
         #expect(model.pendingCount == 0)
         #expect(model.status == nil)
-        let post = try #require(StubURLProtocol.requests.first { $0.method == "POST" })
+        let post = try #require(StubURLProtocol.requests(host: host).first { $0.method == "POST" })
         #expect(post.path == "/observations")
         #expect(post.user == user.uuidString.lowercased())
         let sent = StubURLProtocol.json(post.body)["observations"] as? [[String: Any]]
@@ -87,14 +133,14 @@ struct FieldModelTests {
         #expect(sent?[0]["quantity"] as? Int == 2)
 
         // serveur indisponible : l'observation reste en attente, le statut le dit
-        StubURLProtocol.handler = { _, _, _ in (503, #"{"detail": "observations non configurées"}"#) }
+        StubURLProtocol.set(host: host) { _, _, _ in (503, #"{"detail": "observations non configurées"}"#) }
         await model.record(species: "boletus_aereus", latitude: 47.0, longitude: 6.0, accuracyM: nil, date: "2026-10-31", found: false, quantity: nil)
         #expect(model.observations.count == 2)
         #expect(model.pendingCount == 1)
         #expect(model.status?.contains("non configurées") == true)
 
         // retour du réseau : l'envoi reprend
-        StubURLProtocol.handler = { method, path, _ in
+        StubURLProtocol.set(host: host) { method, path, _ in
             (method, path) == ("POST", "/observations") ? (201, #"{"inserted": 1, "duplicates": 0}"#) : (404, "{}")
         }
         await model.sync()
@@ -106,13 +152,13 @@ struct FieldModelTests {
     func coinsAndDelete() async throws {
         let directory = FieldStoreTests.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
-        StubURLProtocol.requests = []
-        StubURLProtocol.handler = { method, path, body in
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host) { method, path, _ in
             switch (method, path) {
             case ("PUT", "/coins"):
                 return (200, #"{"coins": 1, "notifications": false}"#)
             case ("GET", "/coins"):
-                let last = StubURLProtocol.requests.last { $0.method == "PUT" }
+                let last = StubURLProtocol.requests(host: host).last { $0.method == "PUT" }
                 let coins = StubURLProtocol.json(last?.body)["coins"] as? [[String: Any]] ?? []
                 let id = coins.first?["id"] as? String ?? UUID().uuidString
                 return (200, """
@@ -123,16 +169,15 @@ struct FieldModelTests {
             case ("DELETE", "/observations"):
                 return (200, #"{"deleted": 1}"#)
             default:
-                _ = body
                 return (404, #"{"detail": "inconnu"}"#)
             }
         }
-        let model = Self.model(directory: directory)
+        let model = Self.model(host: host, directory: directory)
         await model.start(api: model.api)
 
         await model.addCoin(name: "Col", latitude: 47.0, longitude: 6.0, target: "cepes", altClass: 750, t: ["boletus_edulis": 0.8])
         #expect(model.coins.count == 1)
-        let put = try #require(StubURLProtocol.requests.first { $0.method == "PUT" })
+        let put = try #require(StubURLProtocol.requests(host: host).first { $0.method == "PUT" })
         let body = StubURLProtocol.json(put.body)
         #expect(body["apns_token"] == nil)
         #expect(body["sandbox"] as? Bool == FieldModel.isSandboxBuild)
@@ -141,17 +186,17 @@ struct FieldModelTests {
         #expect(coins?[0]["alt_class"] as? Int == 750)
         #expect(coins?[0]["target"] as? String == "cepes")
         let coin = try #require(model.coins.first)
-        #expect(model.coinScores[coin.id]?.score == 0.7)
+        #expect(model.coinScores[coin.id]?.score == 0.7, "\(model.status ?? "")")
         #expect(model.coinsToday == "2026-10-31")
 
         await model.removeCoin(coin.id)
         #expect(model.coins.isEmpty)
-        #expect(StubURLProtocol.requests.filter { $0.method == "PUT" }.count == 2)
+        #expect(StubURLProtocol.requests(host: host).filter { $0.method == "PUT" }.count == 2)
 
         await model.addCoin(name: "Autre", latitude: 47.0, longitude: 6.0, target: "cepes", altClass: 450, t: ["boletus_edulis": 0.5])
         await model.deleteAll()
-        #expect(StubURLProtocol.requests.contains { $0.method == "DELETE" && $0.path == "/observations" })
-        #expect(model.coins.isEmpty)
+        #expect(StubURLProtocol.requests(host: host).contains { $0.method == "DELETE" && $0.path == "/observations" })
+        #expect(model.coins.isEmpty, "\(model.status ?? "")")
         #expect(model.observations.isEmpty)
         #expect(model.coinScores.isEmpty)
     }
