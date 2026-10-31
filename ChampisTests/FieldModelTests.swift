@@ -6,6 +6,8 @@ import Testing
 /// et répond selon un gestionnaire remplaçable par le test.
 final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var handler: (@Sendable (String, String, Data?) -> (Int, String))?
+    /// Réponse binaire (PMTiles) si non nil, consultée avant `handler`.
+    nonisolated(unsafe) static var binary: (@Sendable (String, String) -> Data?)?
     nonisolated(unsafe) static var requests: [(method: String, path: String, user: String?, body: Data?)] = []
 
     override class func canInit(with request: URLRequest) -> Bool { true }
@@ -16,12 +18,20 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         let path = request.url?.path ?? ""
         let body = request.httpBody ?? Self.read(request.httpBodyStream)
         StubURLProtocol.requests.append((method, path, request.value(forHTTPHeaderField: "X-Champis-User"), body))
-        let (status, json) = StubURLProtocol.handler?(method, path, body) ?? (404, #"{"detail": "inconnu"}"#)
+        let status: Int
+        let payload: Data
+        let contentType: String
+        if let data = StubURLProtocol.binary?(method, path) {
+            (status, payload, contentType) = (200, data, "application/octet-stream")
+        } else {
+            let (code, json) = StubURLProtocol.handler?(method, path, body) ?? (404, #"{"detail": "inconnu"}"#)
+            (status, payload, contentType) = (code, Data(json.utf8), "application/json")
+        }
         let response = HTTPURLResponse(
-            url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": "application/json"]
+            url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": contentType]
         )!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: Data(json.utf8))
+        client?.urlProtocol(self, didLoad: payload)
         client?.urlProtocolDidFinishLoading(self)
     }
 

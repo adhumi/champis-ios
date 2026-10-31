@@ -3,7 +3,7 @@ import Foundation
 
 /// Réponse de `GET /species` : espèces et palette telles quelles (règle 10 du modèle : rien en dur
 /// dans l'app). Les blocs `terrain` des espèces ne sont pas décodés, l'app ne calcule pas T.
-nonisolated struct SpeciesCatalog: Decodable, Sendable {
+nonisolated struct SpeciesCatalog: Codable, Sendable {
     let scoringVersion: String
     let speciesHash: String
     let palette: Palette
@@ -19,8 +19,8 @@ nonisolated struct SpeciesCatalog: Decodable, Sendable {
 /// Manifeste `GET /tiles` : un PMTiles par espèce (`T-<espèce>-<hash>-p<version>-d<dh>.pmtiles`) et
 /// la couche des classes d'altitude (`A-300m-d<dh>.pmtiles`). `url` est absolue (mode presign) ou
 /// relative à l'API (mode proxy, `/tiles/<nom>`) : le client suit le manifeste, il ne choisit pas.
-nonisolated struct TilesManifest: Decodable, Sendable {
-    nonisolated struct Entry: Decodable, Hashable, Sendable {
+nonisolated struct TilesManifest: Codable, Sendable {
+    nonisolated struct Entry: Codable, Hashable, Sendable {
         let kind: String
         let name: String
         let url: String
@@ -30,9 +30,11 @@ nonisolated struct TilesManifest: Decodable, Sendable {
         let scoringVersion: String?
         let deptsHash: String?
         let classM: Int?
+        /// Jeu d'un seul département (hors ligne de l'app), sinon absent.
+        let dept: String?
 
         enum CodingKeys: String, CodingKey {
-            case kind, name, url, bytes, species, hash
+            case kind, name, url, bytes, species, hash, dept
             case scoringVersion = "scoring_version"
             case deptsHash = "depts_hash"
             case classM = "class_m"
@@ -46,7 +48,7 @@ nonisolated struct TilesManifest: Decodable, Sendable {
 }
 
 /// Cellule de la grille météo (~5 km) telle que l'API la décrit.
-nonisolated struct WeatherCellInfo: Decodable, Hashable, Sendable {
+nonisolated struct WeatherCellInfo: Codable, Hashable, Sendable {
     let id: String
     let lat: Double
     let lon: Double
@@ -63,7 +65,7 @@ nonisolated struct WeatherCellInfo: Decodable, Hashable, Sendable {
 }
 
 /// `M`, `M_eff` et `Φ` d'une espèce pour un jour et une classe d'altitude.
-nonisolated struct WeatherRow: Decodable, Hashable, Sendable {
+nonisolated struct WeatherRow: Codable, Hashable, Sendable {
     let m: Double
     let mEff: Double
     let phi: Double
@@ -81,7 +83,7 @@ nonisolated struct WeatherRow: Decodable, Hashable, Sendable {
     var factor: Double { mEff * phi }
 }
 
-nonisolated struct WeatherDay: Decodable, Sendable {
+nonisolated struct WeatherDay: Codable, Sendable {
     /// Jour civil ISO (`2026-10-30`).
     let date: String
     /// Clé = centre de classe en mètres, tel que l'API l'écrit (`"150"`, `"450"`).
@@ -93,7 +95,7 @@ nonisolated struct WeatherDay: Decodable, Sendable {
     }
 }
 
-nonisolated struct CellWeather: Decodable, Sendable {
+nonisolated struct CellWeather: Codable, Sendable {
     let cell: WeatherCellInfo
     let stale: Bool
     let species: [String: [WeatherDay]]
@@ -129,7 +131,7 @@ nonisolated struct DepartementsResponse: Decodable, Sendable {
 }
 
 /// Réponse de `GET /weather/bbox` : les 11 jours J−3 → J+7 de chaque cellule de l'emprise.
-nonisolated struct WeatherBBoxResponse: Decodable, Sendable {
+nonisolated struct WeatherBBoxResponse: Codable, Sendable {
     let today: String
     let scoringVersion: String?
     let cells: [CellWeather]

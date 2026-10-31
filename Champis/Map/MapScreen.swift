@@ -286,6 +286,11 @@ struct SettingsView: View {
                     }
                 }
                 Section {
+                    NavigationLink {
+                        OfflineView(offline: model.offline, model: model)
+                    } label: {
+                        LabeledContent("Départements embarqués", value: "\(model.offline.departments.filter(\.complete).count)")
+                    }
                     LabeledContent("Tuiles en cache", value: cacheSizeText)
                     Button("Vider le cache des tuiles", role: .destructive) {
                         Task { await model.clearTileCache() }
@@ -293,7 +298,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Hors ligne")
                 } footer: {
-                    Text("Les tuiles déjà vues restent lisibles sans réseau. Le téléchargement par département viendra ensuite.")
+                    Text("Les départements embarqués se lisent sans réseau, météo du téléchargement comprise ; les tuiles déjà vues aussi.")
                 }
                 Section {
                     LabeledContent("Observations", value: "\(model.field.observations.count)")

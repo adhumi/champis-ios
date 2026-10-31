@@ -15,6 +15,7 @@ Champis/                    cible app : SwiftUI, MVVM @Observable, Assets, entit
 Champis/API/                client champis-api (/species, /tiles, /weather/bbox) et ses modèles
 Champis/Map/                carte : MapModel, overlay MKTileOverlay, TileStore, colorisation, écran
 Champis/Field/              retour terrain et mes coins : modèles, identité (trousseau), LocalStore JSON, formulaire, liste
+Champis/Offline/            hors ligne par département : manifeste offline.json, OfflineStore, DownloadManager (URLSession de fond), écran
 ChampisTests/               tests de l'app (Swift Testing)
 Packages/ChampisScoring/    paquet local : portage du scoring, vecteurs de parité en ressources de test
 Packages/ChampisPMTiles/    paquet local : lecteur PMTiles (fichier ou Range HTTP) et décodeur PNG de données
@@ -40,6 +41,10 @@ scripts/sync-vectors.sh ../champis      # puis relancer les tests
 ## Carte
 
 `MapScreen` affiche un `MKMapView` (via `UIViewRepresentable` / `NSViewRepresentable` : la `Map` SwiftUI n'accepte pas d'`MKTileOverlay`) sous un overlay de tuiles colorisées. `TileStore` (acteur) lit les PMTiles du manifeste `GET /tiles` par requêtes Range et décode les PNG ; `TileColorizer` (fonction pure, testée) calcule par pixel `T` ou `S = T × M_eff × Φ` avec la météo de `GET /weather/bbox` (cellule la plus proche par bloc de 16 px, classe d'altitude lue dans la couche A, repli sur la médiane de la cellule) et la palette de `GET /species` ; `TileRenderer` encode et met en cache les PNG rendus. Changer de jour ne recharge aucune tuile. Pixel sans météo : transparent. Toucher la carte ouvre la fiche du point (`PointInspector` lit `T` et la classe d'altitude au zoom 15, `PointSheet` montre l'espèce qui porte le score, `M_eff`, `Φ`, la cellule et les facteurs météo de `GET /weather`). Sous le zoom 9 en mode score, la carte passe aux départements colorés par l'indice de `GET /departements` (vue France ; limites du GeoJSON servi par l'API sous `/web/departements.geojson`, décodé par `MKGeoJSONDecoder`). Les tuiles lues sont gardées sur disque (`DiskTileCache`, Application Support, exclu de la sauvegarde, purgé au changement de manifeste) : ce qui a été vu reste lisible sans réseau, premier étage du hors ligne ; la position GPS « pendant l'utilisation » s'affiche sur la carte à la demande. L'adresse de l'API se règle dans l'app (`https://champis.adhumi.fr` par défaut) ; l'avertissement sur le cadre légal de la cueillette s'affiche au premier lancement et reste accessible dans les réglages.
+
+## Hors ligne par département
+
+Le pipeline publie un jeu de PMTiles par département (décision du 31 oct. 2026) : le manifeste `GET /tiles` marque ces entrées d'un champ `dept`. Depuis les réglages, « Départements embarqués » liste ce qui est sur l'appareil et permet d'en ajouter : choix du département et des espèces, poids estimé, puis téléchargement des fichiers entiers par `URLSession` de fond (`DownloadManager`), météo des 11 jours récupérée sur l'emprise du fichier par sous-emprises de 0,3° (`GET /weather/bbox` refuse plus de 40 cellules), le tout noté dans `offline.json` (`OfflineStore`). Un département n'est disponible qu'une fois tuiles, couche A et météo écrits ; on peut rafraîchir la météo seule ou supprimer. Le lecteur de tuiles lit ces fichiers avant la source distante ; sans réseau, la météo embarquée sert la carte avec sa date affichée, et les réponses `/species` et `/tiles` du dernier démarrage permettent de lancer l'app. Rien n'est inventé : un pixel hors des départements embarqués reste transparent.
 
 ## Retour terrain et mes coins
 
