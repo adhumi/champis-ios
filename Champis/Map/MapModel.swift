@@ -1,5 +1,6 @@
 import ChampisPMTiles
 import ChampisScoring
+import CoreLocation
 import Foundation
 import MapKit
 import Observation
@@ -87,7 +88,13 @@ final class MapModel {
     private(set) var pointFactors: [String: Double]?
     private(set) var factorsStatus: String?
 
+    // Position et cache
+    /// Incrémenté quand l'utilisateur demande à centrer la carte sur lui.
+    private(set) var followRequest = 0
+    private(set) var tileCacheSize: Int64?
+
     let overlay: ScoreTileOverlay
+    @ObservationIgnored private let locationManager = CLLocationManager()
     @ObservationIgnored private let renderer: TileRenderer
     @ObservationIgnored private let store: TileStore
     @ObservationIgnored private(set) var api: ChampisAPI
@@ -97,9 +104,9 @@ final class MapModel {
     @ObservationIgnored private var inspectTask: Task<Void, Never>?
     @ObservationIgnored private var isLoadingBoundaries = false
 
-    init(apiBaseURL: URL) {
+    init(apiBaseURL: URL, diskCache: DiskTileCache? = nil) {
         api = ChampisAPI(baseURL: apiBaseURL)
-        store = TileStore()
+        store = TileStore(disk: diskCache)
         renderer = TileRenderer(store: store)
         overlay = ScoreTileOverlay(renderer: renderer)
     }
@@ -413,6 +420,37 @@ final class MapModel {
         pointInfo = nil
         pointFactors = nil
         factorsStatus = nil
+    }
+
+    // MARK: - Position et cache
+
+    /// Position « pendant l'utilisation » seulement (skill `offline`) : demandée au premier appui,
+    /// jamais au lancement ; aucun trajet n'est enregistré.
+    func locateMe() {
+        if locationManager.authorizationStatus == .notDetermined {
+            locationManager.requestWhenInUseAuthorization()
+        }
+        followRequest += 1
+    }
+
+    var locationDenied: Bool {
+        switch locationManager.authorizationStatus {
+        case .denied, .restricted: true
+        default: false
+        }
+    }
+
+    func refreshTileCacheSize() async {
+        tileCacheSize = await store.diskSize()
+    }
+
+    func clearTileCache() async {
+        do {
+            try await store.clearDisk()
+        } catch {
+            loadError = "Cache impossible à vider : \(error.localizedDescription)"
+        }
+        await refreshTileCacheSize()
     }
 
     // MARK: - Rendu
