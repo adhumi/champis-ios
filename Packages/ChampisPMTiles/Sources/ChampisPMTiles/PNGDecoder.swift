@@ -8,6 +8,13 @@ public struct DecodedPNG: Sendable, Equatable {
     public let channels: Int
     public let data: [UInt8]
 
+    public init(width: Int, height: Int, channels: Int, data: [UInt8]) {
+        self.width = width
+        self.height = height
+        self.channels = channels
+        self.data = data
+    }
+
     /// Valeur du premier canal et alpha (255 sans canal alpha) du pixel (x, y).
     public func valueAndAlpha(x: Int, y: Int) -> (value: UInt8, alpha: UInt8) {
         let i = (y * width + x) * channels

@@ -12,6 +12,8 @@ App SwiftUI de [Champis](https://github.com/adhumi/champis) pour iOS, iPadOS et 
 ```
 Champis.xcodeproj/          projet (project.pbxproj), schéma partagé Champis
 Champis/                    cible app : SwiftUI, MVVM @Observable, Assets, entitlements
+Champis/API/                client champis-api (/species, /tiles, /weather/bbox) et ses modèles
+Champis/Map/                carte : MapModel, overlay MKTileOverlay, TileStore, colorisation, écran
 ChampisTests/               tests de l'app (Swift Testing)
 Packages/ChampisScoring/    paquet local : portage du scoring, vecteurs de parité en ressources de test
 Packages/ChampisPMTiles/    paquet local : lecteur PMTiles (fichier ou Range HTTP) et décodeur PNG de données
@@ -33,6 +35,10 @@ scripts/sync-vectors.sh ../champis      # puis relancer les tests
 ## Tuiles
 
 `ChampisPMTiles` lit les PMTiles v3 publiés par le pipeline, en local (fichier téléchargé) ou à distance par requêtes `Range`, et décode les PNG de données octet par octet (jamais via `UIImage`, dont la gestion des couleurs décale les gris). Ses tests rejouent un fichier produit par la bibliothèque `pmtiles` du pipeline et des PNG de chaque filtre (`Tests/ChampisPMTilesTests/Resources`).
+
+## Carte
+
+`MapScreen` affiche un `MKMapView` (via `UIViewRepresentable` / `NSViewRepresentable` : la `Map` SwiftUI n'accepte pas d'`MKTileOverlay`) sous un overlay de tuiles colorisées. `TileStore` (acteur) lit les PMTiles du manifeste `GET /tiles` par requêtes Range et décode les PNG ; `TileColorizer` (fonction pure, testée) calcule par pixel `T` ou `S = T × M_eff × Φ` avec la météo de `GET /weather/bbox` (cellule la plus proche par bloc de 16 px, classe d'altitude lue dans la couche A, repli sur la médiane de la cellule) et la palette de `GET /species` ; `TileRenderer` encode et met en cache les PNG rendus. Changer de jour ne recharge aucune tuile. Pixel sans météo : transparent. L'adresse de l'API se règle dans l'app (`https://champis.adhumi.fr` par défaut) ; l'avertissement sur le cadre légal de la cueillette s'affiche au premier lancement et reste accessible dans les réglages.
 
 ## Tests
 
