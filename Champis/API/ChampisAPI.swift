@@ -85,6 +85,17 @@ nonisolated struct ChampisAPI: Sendable {
 
     @concurrent
     private func getData(_ path: String, query: [URLQueryItem] = []) async throws -> Data {
+        try await send("GET", path, query: query)
+    }
+
+    /// En-tête qui porte l'identifiant de l'app (contrat spec › Backend, 30 oct. 2026).
+    static let userHeader = "X-Champis-User"
+
+    /// Requête générique : `body` est un JSON, `user` ajoute l'en-tête d'identité.
+    @concurrent
+    func send(
+        _ method: String, _ path: String, query: [URLQueryItem] = [], body: Data? = nil, user: UUID? = nil
+    ) async throws -> Data {
         guard var components = URLComponents(url: baseURL.appending(path: path), resolvingAgainstBaseURL: false) else {
             throw Failure.badURL
         }
@@ -93,7 +104,15 @@ nonisolated struct ChampisAPI: Sendable {
         }
         guard let url = components.url else { throw Failure.badURL }
         var request = URLRequest(url: url)
+        request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let body {
+            request.httpBody = body
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+        if let user {
+            request.setValue(user.uuidString.lowercased(), forHTTPHeaderField: Self.userHeader)
+        }
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {

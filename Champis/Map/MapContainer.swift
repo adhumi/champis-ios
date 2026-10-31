@@ -51,6 +51,15 @@ struct MapContainer: PlatformRepresentable {
         private var deptOverlaysInstalled = false
         private var deptRenderers: [String: [MKOverlayPathRenderer]] = [:]
         private var deptNames: [String: String] = [:]
+        private var observationPins: [UUID: MKPointAnnotation] = [:]
+        private var coinPins: [UUID: MKPointAnnotation] = [:]
+        private var pinKinds: [ObjectIdentifier: PinKind] = [:]
+
+        enum PinKind {
+            case found
+            case notFound
+            case coin
+        }
 
         init(model: MapModel) {
             self.model = model
@@ -90,6 +99,7 @@ struct MapContainer: PlatformRepresentable {
             if !deptOverlaysInstalled && !model.deptFeatures.isEmpty {
                 installDepartements(on: mapView)
             }
+            syncPins(on: mapView)
             if shownGeneration != model.renderGeneration || shownFranceView != model.isFranceView {
                 shownGeneration = model.renderGeneration
                 shownFranceView = model.isFranceView
@@ -160,7 +170,71 @@ struct MapContainer: PlatformRepresentable {
             return nil
         }
 
+        // MARK: Épingles (mes observations, mes coins : privées, jamais celles des autres)
+
+        private func syncPins(on mapView: MKMapView) {
+            var wantedObservations: [UUID: Observation] = [:]
+            for observation in model.field.observations {
+                wantedObservations[observation.id] = observation
+            }
+            for (id, pin) in observationPins where wantedObservations[id] == nil {
+                mapView.removeAnnotation(pin)
+                pinKinds[ObjectIdentifier(pin)] = nil
+                observationPins[id] = nil
+            }
+            for (id, observation) in wantedObservations where observationPins[id] == nil {
+                let pin = MKPointAnnotation()
+                pin.coordinate = CLLocationCoordinate2D(latitude: observation.lat, longitude: observation.lon)
+                pin.title = model.speciesName(observation.species)
+                pin.subtitle = (observation.found ? "Trouvé · " : "Rien trouvé · ") + MapModel.format(iso: observation.date)
+                pinKinds[ObjectIdentifier(pin)] = observation.found ? .found : .notFound
+                observationPins[id] = pin
+                mapView.addAnnotation(pin)
+            }
+
+            var wantedCoins: [UUID: Coin] = [:]
+            for coin in model.field.coins {
+                wantedCoins[coin.id] = coin
+            }
+            for (id, pin) in coinPins where wantedCoins[id] == nil {
+                mapView.removeAnnotation(pin)
+                pinKinds[ObjectIdentifier(pin)] = nil
+                coinPins[id] = nil
+            }
+            for (id, coin) in wantedCoins where coinPins[id] == nil {
+                let pin = MKPointAnnotation()
+                pin.coordinate = CLLocationCoordinate2D(latitude: coin.lat, longitude: coin.lon)
+                pin.title = coin.name
+                pin.subtitle = model.layerTitle(forTarget: coin.target)
+                pinKinds[ObjectIdentifier(pin)] = .coin
+                coinPins[id] = pin
+                mapView.addAnnotation(pin)
+            }
+        }
+
         // MARK: MKMapViewDelegate
+
+        func mapView(_ mapView: MKMapView, viewFor annotation: any MKAnnotation) -> MKAnnotationView? {
+            guard let point = annotation as? MKPointAnnotation, let kind = pinKinds[ObjectIdentifier(point)] else {
+                return nil  // position de l'utilisateur et tout le reste : vue par défaut
+            }
+            let view = mapView.dequeueReusableAnnotationView(withIdentifier: "pin") as? MKMarkerAnnotationView
+                ?? MKMarkerAnnotationView(annotation: point, reuseIdentifier: "pin")
+            view.annotation = point
+            view.canShowCallout = true
+            switch kind {
+            case .found:
+                view.markerTintColor = PlatformColor.systemGreen
+                view.glyphText = "✓"
+            case .notFound:
+                view.markerTintColor = PlatformColor.systemGray
+                view.glyphText = "✗"
+            case .coin:
+                view.markerTintColor = PlatformColor.systemOrange
+                view.glyphText = "★"
+            }
+            return view
+        }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: any MKOverlay) -> MKOverlayRenderer {
             if let tiles = overlay as? MKTileOverlay {

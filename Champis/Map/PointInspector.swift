@@ -23,6 +23,8 @@ nonisolated struct PointInfo: Identifiable, Sendable {
         let altKey: String?
         /// La classe vient de l'altitude médiane de la cellule, pas du pixel.
         let altFallback: Bool
+        /// `T` du pixel pour chaque espèce de la couche (pour un coin : le backend n'a que la météo).
+        var terrains: [String: Double] = [:]
     }
 
     nonisolated enum Outcome: Sendable {
@@ -83,12 +85,14 @@ nonisolated enum PointInspector {
 
         var best: PointInfo.Scored?
         var sawTerrain = false
+        var terrains: [String: Double] = [:]
         for sid in layer.members {
             guard let png = try await store.terrainTile(species: sid, z: zoom, x: t.x, y: t.y),
                   png.width == size, png.height == size, png.data.count >= size * size * png.channels,
                   let terrain = colorizer.terrain(png, at: i)
             else { continue }
             sawTerrain = true
+            terrains[sid] = terrain
             var candidate = PointInfo.Scored(
                 species: sid, terrain: terrain, factor: nil, value: terrain, row: nil, cell: nil, stale: false,
                 altClass: altClass, altKey: nil, altFallback: false
@@ -106,7 +110,10 @@ nonisolated enum PointInspector {
             if let current = best, candidate.value <= current.value { continue }
             best = candidate
         }
-        if let best { return base(.scored(best)) }
+        if var best {
+            best.terrains = terrains
+            return base(.scored(best))
+        }
         return base(sawTerrain && useWeather ? .noWeather : .noData)
     }
 }

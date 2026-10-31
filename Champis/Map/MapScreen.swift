@@ -14,6 +14,8 @@ struct MapScreen: View {
     )
     @State private var showSettings = false
     @State private var showLegalNotice = false
+    @State private var showCoins = false
+    @State private var observationRequest: ObservationFormRequest?
 
     var body: some View {
         NavigationStack {
@@ -43,6 +45,29 @@ struct MapScreen: View {
             .navigationTitle("Champis")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button {
+                            observationRequest = ObservationFormRequest(found: true, species: nil, point: model.selection)
+                        } label: {
+                            Label("Trouvé", systemImage: "checkmark.circle")
+                        }
+                        Button {
+                            observationRequest = ObservationFormRequest(found: false, species: nil, point: model.selection)
+                        } label: {
+                            Label("Rien trouvé", systemImage: "xmark.circle")
+                        }
+                        Divider()
+                        Button {
+                            showCoins = true
+                        } label: {
+                            Label("Mes coins", systemImage: "star")
+                        }
+                    } label: {
+                        Label("Retour terrain", systemImage: "leaf")
+                    }
+                    .disabled(model.catalog == nil)
+                }
+                ToolbarItem(placement: .primaryAction) {
                     Button {
                         showSettings = true
                     } label: {
@@ -50,6 +75,15 @@ struct MapScreen: View {
                     }
                 }
             }
+        }
+        .sheet(item: $observationRequest) { request in
+            ObservationForm(
+                field: model.field, species: model.speciesOptions, initialSpecies: request.species,
+                at: request.point, found: request.found
+            )
+        }
+        .sheet(isPresented: $showCoins) {
+            CoinsView(field: model.field, model: model)
         }
         .task {
             await model.start(apiBaseURL: Self.url(from: apiBaseURL))
@@ -141,6 +175,11 @@ struct MapScreen: View {
                     .font(.footnote)
                     .foregroundStyle(.red)
             }
+            if model.field.pendingCount > 0 {
+                Text("\(model.field.pendingCount) observation(s) en attente d'envoi")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(12)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
@@ -222,6 +261,7 @@ struct SettingsView: View {
     @Binding var apiBaseURL: String
     @Binding var showLegalNotice: Bool
     @Environment(\.dismiss) private var dismiss
+    @State private var confirmDelete = false
 
     var body: some View {
         NavigationStack {
@@ -256,11 +296,36 @@ struct SettingsView: View {
                     Text("Les tuiles déjà vues restent lisibles sans réseau. Le téléchargement par département viendra ensuite.")
                 }
                 Section {
+                    LabeledContent("Observations", value: "\(model.field.observations.count)")
+                    LabeledContent("Coins", value: "\(model.field.coins.count)")
+                    Button("Supprimer mes observations et mes coins", role: .destructive) {
+                        confirmDelete = true
+                    }
+                    .disabled(model.field.userID == nil)
+                    if let status = model.field.status {
+                        Text(status).font(.footnote).foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text("Mes données")
+                } footer: {
+                    Text("Observations et coins sont privés, liés à un identifiant anonyme de l'app. La suppression efface tout sur le serveur et sur l'appareil.")
+                }
+                Section {
                     Button(LegalNotice.title) {
                         dismiss()
                         showLegalNotice = true
                     }
                 }
+            }
+            .confirmationDialog(
+                "Supprimer toutes mes observations et mes coins ?", isPresented: $confirmDelete, titleVisibility: .visible
+            ) {
+                Button("Tout supprimer", role: .destructive) {
+                    let field = model.field
+                    Task { await field.deleteAll() }
+                }
+            } message: {
+                Text("Le serveur efface vos lignes, l'appareil aussi. Il n'y a pas de retour.")
             }
             .navigationTitle("Réglages")
             .toolbar {
