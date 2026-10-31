@@ -1,5 +1,5 @@
 import Foundation
-import Observation
+import FieldObservation
 import UserNotifications
 
 /// Retour terrain et mes coins (skill `field-feedback`) : observations écrites d'abord sur
@@ -10,7 +10,7 @@ import UserNotifications
 final class FieldModel {
     static let batchSize = 200
 
-    private(set) var observations: [Observation] = []
+    private(set) var observations: [FieldObservation] = []
     private(set) var pendingCount = 0
     private(set) var coins: [Coin] = []
     private(set) var coinScores: [UUID: ScoredCoin] = [:]
@@ -71,14 +71,14 @@ final class FieldModel {
         species: String, latitude: Double, longitude: Double, accuracyM: Double?, date: String,
         found: Bool, quantity: Int?
     ) async {
-        let observation = Observation(
+        let observation = FieldObservation(
             species: species, lat: latitude, lon: longitude, accuracyM: accuracyM, date: date,
             found: found, quantity: quantity
         )
         do {
             try await store.add(observation)
         } catch {
-            status = "Observation non enregistrée : \(error.localizedDescription)"
+            status = "FieldObservation non enregistrée : \(error.localizedDescription)"
             return
         }
         await refreshFromStore()

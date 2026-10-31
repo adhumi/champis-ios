@@ -6,7 +6,7 @@ import Foundation
 actor LocalStore {
     nonisolated struct ObservationsFile: Codable, Sendable {
         var version = 1
-        var observations: [Observation] = []
+        var observations: [FieldObservation] = []
         /// Identifiants pas encore acceptés par `POST /observations`.
         var pending: [UUID] = []
     }
@@ -46,19 +46,19 @@ actor LocalStore {
     // MARK: Observations
 
     /// Les plus récentes d'abord.
-    var observations: [Observation] {
+    var observations: [FieldObservation] {
         observationsFile.observations.sorted { $0.date > $1.date }
     }
 
     var pendingCount: Int { observationsFile.pending.count }
 
-    var pendingObservations: [Observation] {
+    var pendingObservations: [FieldObservation] {
         let pending = Set(observationsFile.pending)
         return observationsFile.observations.filter { pending.contains($0.id) }
     }
 
     /// Écrit d'abord sur l'appareil (la sortie se passe sans réseau), à envoyer ensuite.
-    func add(_ observation: Observation) throws {
+    func add(_ observation: FieldObservation) throws {
         observationsFile.observations.removeAll { $0.id == observation.id }
         observationsFile.observations.append(observation)
         if !observationsFile.pending.contains(observation.id) {
@@ -74,7 +74,7 @@ actor LocalStore {
     }
 
     /// Ce que le serveur connaît remplace ce qui a déjà été envoyé ; les locales en attente restent.
-    func mergeRemote(_ remote: [Observation]) throws {
+    func mergeRemote(_ remote: [FieldObservation]) throws {
         let pending = Set(observationsFile.pending)
         let remoteIDs = Set(remote.map(\.id))
         let keep = observationsFile.observations.filter { pending.contains($0.id) && !remoteIDs.contains($0.id) }
