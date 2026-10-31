@@ -227,22 +227,7 @@ final class MapModel {
         loadError = nil
         defer { isLoading = false }
         do {
-            let catalog: SpeciesCatalog
-            let manifest: TilesManifest
-            do {
-                catalog = try await api.species()
-                manifest = try await api.tiles()
-                try? await offline.store.saveCatalog(catalog)
-                try? await offline.store.saveTilesManifest(manifest)
-            } catch {
-                // Sans réseau : les réponses du dernier démarrage, gardées pour le hors ligne.
-                guard let cachedCatalog = await offline.store.cachedCatalog(),
-                      let cachedManifest = await offline.store.cachedTilesManifest()
-                else { throw error }
-                catalog = cachedCatalog
-                manifest = cachedManifest
-                loadError = "Hors ligne : espèces et tuiles du dernier démarrage."
-            }
+            let (catalog, manifest) = try await fetchCatalogAndManifest()
             self.catalog = catalog
             self.manifest = manifest
             layers = LayerCatalog.layers(from: catalog)
@@ -257,6 +242,23 @@ final class MapModel {
             refreshData()
         } catch {
             loadError = error.localizedDescription
+        }
+    }
+
+    /// `/species` et `/tiles` ; sans réseau, les réponses du dernier démarrage gardées pour le hors ligne.
+    private func fetchCatalogAndManifest() async throws -> (SpeciesCatalog, TilesManifest) {
+        do {
+            let catalog = try await api.species()
+            let manifest = try await api.tiles()
+            try? await offline.store.saveCatalog(catalog)
+            try? await offline.store.saveTilesManifest(manifest)
+            return (catalog, manifest)
+        } catch {
+            guard let catalog = await offline.store.cachedCatalog(),
+                  let manifest = await offline.store.cachedTilesManifest()
+            else { throw error }
+            loadError = "Hors ligne : espèces et tuiles du dernier démarrage."
+            return (catalog, manifest)
         }
     }
 
