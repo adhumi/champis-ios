@@ -86,6 +86,28 @@ nonisolated enum Fixtures {
     }
     """
 
+    /// `GET /tiles` avec des jeux par département (champ `dept`) et le jeu France.
+    static let manifestPerDeptJSON = """
+    {
+      "configured": true,
+      "mode": "proxy",
+      "generated": "2026-10-31T03:00:00Z",
+      "depts_by_hash": { "a1b2c3": ["25", "39"], "222222": ["25"], "333333": ["39"] },
+      "tiles": [
+        { "kind": "T", "species": "boletus_edulis", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "a1b2c3",
+          "name": "T-boletus_edulis-af34c16e-p1.0.0-da1b2c3.pmtiles", "key": "tiles/x", "bytes": 5000, "url": "/tiles/T-boletus_edulis-af34c16e-p1.0.0-da1b2c3.pmtiles" },
+        { "kind": "T", "species": "boletus_edulis", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "222222", "dept": "25",
+          "name": "T-boletus_edulis-af34c16e-p1.0.0-d222222.pmtiles", "key": "tiles/x", "bytes": 1000, "url": "/tiles/T-boletus_edulis-af34c16e-p1.0.0-d222222.pmtiles" },
+        { "kind": "T", "species": "boletus_aereus", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "222222", "dept": "25",
+          "name": "T-boletus_aereus-af34c16e-p1.0.0-d222222.pmtiles", "key": "tiles/x", "bytes": 2000, "url": "/tiles/T-boletus_aereus-af34c16e-p1.0.0-d222222.pmtiles" },
+        { "kind": "A", "class_m": 300, "depts_hash": "222222", "dept": "25",
+          "name": "A-300m-d222222.pmtiles", "key": "tiles/x", "bytes": 300, "url": "/tiles/A-300m-d222222.pmtiles" },
+        { "kind": "T", "species": "boletus_edulis", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "333333", "dept": "39",
+          "name": "T-boletus_edulis-af34c16e-p1.0.0-d333333.pmtiles", "key": "tiles/x", "bytes": 900, "url": "/tiles/T-boletus_edulis-af34c16e-p1.0.0-d333333.pmtiles" }
+      ]
+    }
+    """
+
     /// `GET /weather/bbox` : une cellule à 47,0 N / 8,4 E (au centre de la tuile 6/33/22), deux
     /// classes d'altitude, deux jours pour le cèpe de Bordeaux, un pour le cèpe bronzé.
     static let weatherJSON = """

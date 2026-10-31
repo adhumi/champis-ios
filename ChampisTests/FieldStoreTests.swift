@@ -16,8 +16,8 @@ struct FieldStoreTests {
         #expect(await store.observations.isEmpty)
         #expect(await store.pendingCount == 0)
 
-        let older = Observation(species: "boletus_edulis", lat: 47.0, lon: 6.0, date: "2026-10-29", found: false, quantity: 2)
-        let newer = Observation(species: "boletus_edulis", lat: 47.1, lon: 6.1, accuracyM: 8, date: "2026-10-31", found: true, quantity: 3)
+        let older = FieldObservation(species: "boletus_edulis", lat: 47.0, lon: 6.0, date: "2026-10-29", found: false, quantity: 2)
+        let newer = FieldObservation(species: "boletus_edulis", lat: 47.1, lon: 6.1, accuracyM: 8, date: "2026-10-31", found: true, quantity: 3)
         try await store.add(older)
         try await store.add(newer)
         #expect(older.quantity == nil)  // rien trouvé : la quantité n'a pas de sens
@@ -31,7 +31,7 @@ struct FieldStoreTests {
         // le serveur connaît l'ancienne (avec une autre précision) et une inconnue ; la locale en attente reste
         var remoteOlder = older
         remoteOlder.accuracyM = 25
-        let remoteOther = Observation(species: "boletus_aereus", lat: 46.0, lon: 5.0, date: "2026-10-20", found: true, quantity: 1)
+        let remoteOther = FieldObservation(species: "boletus_aereus", lat: 46.0, lon: 5.0, date: "2026-10-20", found: true, quantity: 1)
         try await store.mergeRemote([remoteOlder, remoteOther])
         let merged = await store.observations
         #expect(merged.map(\.id) == [newer.id, older.id, remoteOther.id])
@@ -71,7 +71,7 @@ struct FieldStoreTests {
     func wireFormat() throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
-        let observation = Observation(
+        let observation = FieldObservation(
             id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!, species: "boletus_edulis", lat: 47.0, lon: 6.0,
             accuracyM: 12, date: "2026-10-31", found: true, quantity: 2
         )

@@ -46,6 +46,12 @@ Décidé : écrit maison, sans dépendance, ~300 lignes. Il implémente la spec 
 - Un écran « Hors ligne » liste les départements téléchargés avec taille, date de la météo, date des tuiles, et permet de rafraîchir la météo seule (petit) ou de supprimer.
 - Quota : prévenir au-delà d'un seuil raisonnable ; ne jamais supprimer sans demander.
 
+## Implémentation (31 oct. 2026)
+
+- Tranché par Adrien le 31 oct. : fichiers par département publiés par le pipeline (`tiles --per-dept`, `publish --per-dept`, champ `dept` du manifeste), pas d'extraction côté app.
+- `Champis/Offline` : `OfflineManifest` (`OfflineDepartment`, `OfflineFile`, `BBox.split`), `OfflineStore` (acteur : `offline.json`, dossier par département, `weather.json`, caches `/species` et `/tiles`), `DownloadManager` (`URLSessionDownloadDelegate` hors MainActor, `AsyncStream` d'événements ; configuration de fond `fr.adhumi.champis.offline`, éphémère en test), `OfflineModel` (`@Observable` : départements téléchargeables d'après le manifeste, téléchargement, météo par sous-emprises de 0,3° lue sur l'en-tête du PMTiles, rafraîchir la météo, supprimer), `OfflineView`. `TileStore.setLocalFiles` lit les fichiers embarqués avant la source distante ; `MapModel` bascule sur la météo embarquée quand l'API ne répond pas et démarre sur les caches sans réseau.
+- Pas encore : reprise des téléchargements après relance de l'app (`handleEventsForBackgroundURLSession`) et quota d'alerte.
+
 ## Tests
 
 Swift Testing, sans réseau : un PMTiles synthétique de quelques tuiles généré en fixture (en-tête, répertoire, données), lu par `LocalPMTiles` et par `RemotePMTiles` via un `URLProtocol` de test qui sert les `Range`. Vérifier l'identifiant de Hilbert sur des valeurs connues de la spec PMTiles, la lecture des répertoires feuilles, la purge au changement de hash, l'atomicité d'un téléchargement interrompu.

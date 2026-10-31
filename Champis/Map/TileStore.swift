@@ -18,6 +18,9 @@ actor TileStore {
     private var terrainNames: [String: String] = [:]
     private var altReader: PMTilesReader?
     private var altName = ""
+    /// Fichiers des départements embarqués (skill `offline`), lus avant la source distante.
+    private var localTerrain: [String: [(name: String, reader: PMTilesReader)]] = [:]
+    private var localAlt: [(name: String, reader: PMTilesReader)] = []
     /// Tuiles décodées, absentes comprises (`nil`) : une tuile hors emprise ne se redemande pas.
     private var cache: [Key: DecodedPNG?] = [:]
     private var order: [Key] = []
@@ -96,23 +99,63 @@ actor TileStore {
         order = []
     }
 
+    /// Remplace la liste des fichiers embarqués ; chacun est lu par `LocalFileSource`.
+    func setLocalFiles(_ files: [OfflineLocalFile]) {
+        localTerrain = [:]
+        localAlt = []
+        for file in files {
+            guard let reader = (try? LocalFileSource(url: file.url)).map({ PMTilesReader(source: $0) }) else { continue }
+            let entry = (name: "local:" + file.url.lastPathComponent, reader: reader)
+            if file.kind == "T", let species = file.species {
+                localTerrain[species, default: []].append(entry)
+            } else if file.kind == "A" {
+                localAlt.append(entry)
+            }
+        }
+        cache = [:]
+        order = []
+    }
+
+    var hasLocalFiles: Bool { !localTerrain.isEmpty || !localAlt.isEmpty }
+
     /// Tuile `T` d'une espèce, décodée ; `nil` si l'espèce n'a pas de fichier ou la tuile n'existe pas.
+    /// Les fichiers embarqués passent d'abord ; sans réseau, une tuile hors d'eux est `nil`.
     func terrainTile(species: String, z: Int, x: Int, y: Int) async throws -> DecodedPNG? {
+        let local = localTerrain[species] ?? []
+        for file in local {
+            if let png = try await tile(reader: file.reader, key: Key(name: file.name, z: z, x: x, y: y), useDisk: false) {
+                return png
+            }
+        }
         guard let reader = terrainReaders[species], let name = terrainNames[species] else { return nil }
-        return try await tile(reader: reader, key: Key(name: name, z: z, x: x, y: y))
+        do {
+            return try await tile(reader: reader, key: Key(name: name, z: z, x: x, y: y), useDisk: true)
+        } catch where !local.isEmpty {
+            return nil  // hors ligne, hors des départements embarqués
+        }
     }
 
     /// Tuile de la couche A, décodée ; `nil` sans couche ou hors emprise.
     func altitudeTile(z: Int, x: Int, y: Int) async throws -> DecodedPNG? {
+        for file in localAlt {
+            if let png = try await tile(reader: file.reader, key: Key(name: file.name, z: z, x: x, y: y), useDisk: false) {
+                return png
+            }
+        }
         guard let reader = altReader else { return nil }
-        return try await tile(reader: reader, key: Key(name: altName, z: z, x: x, y: y))
+        do {
+            return try await tile(reader: reader, key: Key(name: altName, z: z, x: x, y: y), useDisk: true)
+        } catch where !localAlt.isEmpty {
+            return nil
+        }
     }
 
-    private func tile(reader: PMTilesReader, key: Key) async throws -> DecodedPNG? {
+    private func tile(reader: PMTilesReader, key: Key, useDisk: Bool) async throws -> DecodedPNG? {
         if let hit = cache[key] { return hit }
         var data: Data?
         var fromDisk = false
-        switch disk?.read(file: key.name, z: key.z, x: key.x, y: key.y) ?? .miss {
+        let onDisk: DiskTileCache.Hit = useDisk ? (disk?.read(file: key.name, z: key.z, x: key.x, y: key.y) ?? .miss) : .miss
+        switch onDisk {
         case .tile(let cached):
             data = cached
             fromDisk = true
@@ -121,7 +164,7 @@ actor TileStore {
         case .miss:
             data = try await reader.tile(z: key.z, x: key.x, y: key.y)
         }
-        if !fromDisk {
+        if useDisk && !fromDisk {
             try? disk?.write(file: key.name, z: key.z, x: key.x, y: key.y, data: data)
         }
         let png = try data.map { try PNGDecoder.decode($0) }

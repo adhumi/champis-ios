@@ -1,8 +1,9 @@
 import Foundation
 
 /// Observation terrain (skill `field-feedback`) : un signalement technique, privé, jamais partagé.
+/// Nommée `FieldObservation` pour ne pas masquer le module `Observation` de la macro `@Observable`.
 /// Même forme que `POST /observations` : clés `snake_case` explicites.
-nonisolated struct Observation: Codable, Hashable, Identifiable, Sendable {
+nonisolated struct FieldObservation: Codable, Hashable, Identifiable, Sendable {
     let id: UUID
     var species: String
     var lat: Double
@@ -89,7 +90,7 @@ nonisolated struct CoinsResponse: Decodable, Sendable {
 
 nonisolated struct ObservationsResponse: Decodable, Sendable {
     let count: Int
-    let observations: [Observation]
+    let observations: [FieldObservation]
 }
 
 nonisolated struct ObservationsPostResponse: Decodable, Sendable {
@@ -108,7 +109,7 @@ nonisolated struct PutCoinsResponse: Decodable, Sendable {
 
 /// Corps de `POST /observations`.
 nonisolated struct ObservationsBatch: Encodable, Sendable {
-    let observations: [Observation]
+    let observations: [FieldObservation]
 }
 
 /// Corps de `PUT /coins` : liste complète, jeton APNs facultatif (absent = pas de notification).

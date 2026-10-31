@@ -96,6 +96,10 @@ final class MapModel {
     let overlay: ScoreTileOverlay
     /// Observations et coins (skill `field-feedback`).
     let field: FieldModel
+    /// Départements embarqués (skill `offline`).
+    let offline: OfflineModel
+    /// Noms des départements, du GeoJSON servi par l'API (vue France, écran hors ligne).
+    private(set) var departmentNames: [String: String] = [:]
     @ObservationIgnored private let locationManager = CLLocationManager()
     @ObservationIgnored private let renderer: TileRenderer
     @ObservationIgnored private let store: TileStore
@@ -108,19 +112,28 @@ final class MapModel {
 
     init(
         apiBaseURL: URL, diskCache: DiskTileCache? = nil, fieldDirectory: URL? = nil,
-        identityStores: [any IdentityStore]? = nil
+        identityStores: [any IdentityStore]? = nil, offlineRoot: URL? = nil, downloads: DownloadManager? = nil
     ) {
         let api = ChampisAPI(baseURL: apiBaseURL)
         self.api = api
-        store = TileStore(disk: diskCache)
-        renderer = TileRenderer(store: store)
-        overlay = ScoreTileOverlay(renderer: renderer)
+        let tileStore = TileStore(disk: diskCache)
+        store = tileStore
+        let tileRenderer = TileRenderer(store: tileStore)
+        renderer = tileRenderer
+        overlay = ScoreTileOverlay(renderer: tileRenderer)
         let directory = fieldDirectory ?? (try? LocalStore.defaultDirectory())
             ?? FileManager.default.temporaryDirectory.appending(path: "champis-field", directoryHint: .isDirectory)
         field = FieldModel(
             api: api, store: LocalStore(directory: directory),
             identityStores: identityStores ?? [KeychainIdentityStore(), DefaultsIdentityStore()]
         )
+        let offlineRoot = offlineRoot ?? (try? OfflineStore.defaultRoot())
+            ?? FileManager.default.temporaryDirectory.appending(path: "champis-offline", directoryHint: .isDirectory)
+        let offlineModel = OfflineModel(api: api, store: OfflineStore(root: offlineRoot), downloads: downloads ?? DownloadManager())
+        offlineModel.onLocalFilesChanged = { files in
+            await tileStore.setLocalFiles(files)
+        }
+        offline = offlineModel
     }
 
     var palette: Palette? { catalog?.palette }
@@ -206,6 +219,7 @@ final class MapModel {
         }
         await load()
         await field.start(api: api)
+        await offline.start(api: api)
     }
 
     func load() async {
@@ -213,8 +227,7 @@ final class MapModel {
         loadError = nil
         defer { isLoading = false }
         do {
-            let catalog = try await api.species()
-            let manifest = try await api.tiles()
+            let (catalog, manifest) = try await fetchCatalogAndManifest()
             self.catalog = catalog
             self.manifest = manifest
             layers = LayerCatalog.layers(from: catalog)
@@ -229,6 +242,23 @@ final class MapModel {
             refreshData()
         } catch {
             loadError = error.localizedDescription
+        }
+    }
+
+    /// `/species` et `/tiles` ; sans réseau, les réponses du dernier démarrage gardées pour le hors ligne.
+    private func fetchCatalogAndManifest() async throws -> (SpeciesCatalog, TilesManifest) {
+        do {
+            let catalog = try await api.species()
+            let manifest = try await api.tiles()
+            try? await offline.store.saveCatalog(catalog)
+            try? await offline.store.saveTilesManifest(manifest)
+            return (catalog, manifest)
+        } catch {
+            guard let catalog = await offline.store.cachedCatalog(),
+                  let manifest = await offline.store.cachedTilesManifest()
+            else { throw error }
+            loadError = "Hors ligne : espèces et tuiles du dernier démarrage."
+            return (catalog, manifest)
         }
     }
 
@@ -301,15 +331,30 @@ final class MapModel {
                 if case .http(let status, let detail) = failure, status == 422 {
                     weatherStatus = detail.isEmpty ? "Zoomez pour afficher la météo" : detail
                 } else {
-                    weatherStatus = "Météo indisponible : \(failure.localizedDescription)"
+                    await useOfflineWeather(or: "Météo indisponible : \(failure.localizedDescription)")
                 }
             } catch is CancellationError {
                 return
             } catch {
                 guard !Task.isCancelled else { return }
-                weatherStatus = "Météo indisponible : \(error.localizedDescription)"
+                await useOfflineWeather(or: "Météo indisponible : \(error.localizedDescription)")
             }
         }
+    }
+
+    /// Sans réseau : la météo embarquée des départements complets, avec sa date affichée en clair.
+    /// Rien d'inventé : un pixel hors de ces départements reste transparent.
+    private func useOfflineWeather(or message: String) async {
+        let snapshots = await offline.offlineWeather()
+        guard !snapshots.isEmpty else {
+            weatherStatus = message
+            return
+        }
+        for response in snapshots {
+            weather.merge(response)
+        }
+        weatherStatus = "Hors ligne : météo du \(Self.format(iso: weather.today ?? ""))"
+        pushSettings()
     }
 
     static func status(for response: WeatherBBoxResponse) -> String {
@@ -361,6 +406,12 @@ final class MapModel {
         }
     }
 
+    func loadBoundariesIfNeeded() {
+        if deptFeatures.isEmpty {
+            loadBoundaries()
+        }
+    }
+
     private func loadBoundaries() {
         guard !isLoadingBoundaries else { return }
         isLoadingBoundaries = true
@@ -372,6 +423,15 @@ final class MapModel {
                 let data = try await api.departementsGeoJSON()
                 let objects = try MKGeoJSONDecoder().decode(data)
                 deptFeatures = objects.compactMap { $0 as? MKGeoJSONFeature }
+                var names: [String: String] = [:]
+                for feature in deptFeatures {
+                    guard let properties = feature.properties,
+                          let dict = try? JSONSerialization.jsonObject(with: properties) as? [String: Any],
+                          let code = dict["code"] as? String, let name = dict["nom"] as? String
+                    else { continue }
+                    names[code] = name
+                }
+                departmentNames = names
             } catch {
                 deptStatus = "Limites des départements indisponibles : \(error.localizedDescription)"
             }
