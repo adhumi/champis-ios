@@ -30,8 +30,11 @@ struct MapScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                // la carte occupe tout l'écran, sous la barre d'état, la barre d'outils et la barre
+                // d'onglets ; les commandes restent dans la zone sûre
                 MapContainer(model: model)
                     .accessibilityLabel("Carte des champignons")
+                    .ignoresSafeArea()
                 VStack(spacing: 8) {
                     controls
                     Spacer(minLength: 0)
@@ -56,7 +59,10 @@ struct MapScreen: View {
                 .padding(12)
                 .animation(.default, value: model.field.undoable.isEmpty)
             }
-            .navigationTitle(layout == .split ? "Carte" : "Champis")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
+            #endif
             .background {
                 // ⌘← et ⌘→ changent de jour (Mac, iPad avec clavier)
                 Group {
