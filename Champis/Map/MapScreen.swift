@@ -1,9 +1,10 @@
 import ChampisScoring
 import SwiftUI
 
-/// Onglet Carte : overlay colorisé sur fond Apple (ou départements en vue France), sélecteur
-/// d'espèce ou de groupe, mode terrain ou score du jour, curseur de jour J−3 → J+7, légende, fiche
-/// au toucher, avertissement sur le cadre légal. Les coins ont leur onglet (`CoinsScreen`).
+/// Onglet Carte (refonte UX, lot 2) : overlay colorisé sur fond Apple (ou départements en vue
+/// France), menu de calque (groupes, espèces, potentiel toute saison), bandeau des onze jours
+/// coloré par le département sous le centre, légende, fiche au toucher en clair. Les coins ont
+/// leur onglet (`CoinsScreen`).
 struct MapScreen: View {
     static let defaultAPIBaseURL = "https://champis.adhumi.fr"
 
@@ -13,6 +14,7 @@ struct MapScreen: View {
     @AppStorage("legalNoticeAcknowledged") private var legalNoticeAcknowledged = false
     @State private var showSettings = false
     @State private var showLegalNotice = false
+    @State private var showLegend = false
     @State private var observationRequest: ObservationFormRequest?
 
     var body: some View {
@@ -88,6 +90,9 @@ struct MapScreen: View {
         .sheet(item: deptBinding) { info in
             DeptSheet(info: info, model: model)
         }
+        .sheet(isPresented: $showLegend) {
+            LegendSheet(model: model)
+        }
         .alert(LegalNotice.title, isPresented: $showLegalNotice) {
             Button("J'ai compris") { legalNoticeAcknowledged = true }
         } message: {
@@ -95,57 +100,59 @@ struct MapScreen: View {
         }
     }
 
+    /// Calque en haut (groupes, espèces, potentiel toute saison), légende à droite.
     private var controls: some View {
-        VStack(spacing: 8) {
-            HStack {
+        HStack {
+            Menu {
                 Picker("Espèce ou groupe", selection: layerBinding) {
                     ForEach(model.layers) { layer in
                         Text(layer.title).tag(Optional(layer.key))
                     }
                 }
-                .pickerStyle(.menu)
-                .disabled(model.layers.isEmpty)
-                Spacer()
-                if model.isLoading || model.isInspecting {
-                    ProgressView().controlSize(.small)
+                .pickerStyle(.inline)
+                Divider()
+                Toggle(isOn: potentialBinding) {
+                    Label("Afficher le potentiel toute saison", systemImage: "leaf")
                 }
+                Text("Le terrain seul, sans la météo ni la saison : pour repérer des secteurs.")
+            } label: {
+                HStack(spacing: 4) {
+                    Text(model.selectedLayer?.title ?? "Couche")
+                        .fontWeight(.semibold)
+                    Image(systemName: "chevron.down").font(.caption)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .background(.regularMaterial, in: Capsule())
             }
-            Picker("Mode", selection: modeBinding) {
-                Text("Terrain").tag(MapMode.terrain)
-                Text("Score du jour").tag(MapMode.score)
+            .buttonStyle(.plain)
+            .disabled(model.layers.isEmpty)
+            .accessibilityLabel("Couche : \(model.selectedLayer?.title ?? "aucune")")
+            if model.isLoading || model.isInspecting || model.isLoadingWeather {
+                ProgressView().controlSize(.small)
             }
-            .pickerStyle(.segmented)
+            Spacer()
+            Button {
+                showLegend = true
+            } label: {
+                Image(systemName: "info")
+                    .fontWeight(.semibold)
+                    .padding(10)
+                    .background(.regularMaterial, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Légende")
         }
-        .padding(10)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
+    /// Bandeau du bas : les onze jours (mode score) ou le rappel du potentiel (mode terrain),
+    /// puis les messages (vue France, météo, erreurs, envois en attente).
     private var panel: some View {
         VStack(alignment: .leading, spacing: 6) {
             if model.mode == .score {
-                HStack {
-                    Text(model.dayLabel)
-                        .font(.headline)
-                        .monospacedDigit()
-                    Spacer()
-                    if model.isLoadingWeather {
-                        ProgressView().controlSize(.small)
-                    }
-                }
-                Slider(
-                    value: dayBinding,
-                    in: Double(MapModel.dayRange.lowerBound)...Double(MapModel.dayRange.upperBound),
-                    step: 1
-                ) {
-                    Text("Jour")
-                } minimumValueLabel: {
-                    Text("J−3").font(.caption)
-                } maximumValueLabel: {
-                    Text("J+7").font(.caption)
-                }
-                .accessibilityValue(model.dayLabel)
+                DayStrip(model: model)
                 if model.isFranceView {
-                    Text(model.deptStatus ?? "Vue France : indice par département, zoomez pour les parcelles")
+                    Text(model.deptStatus ?? "Vue par département : zoomez pour voir la parcelle")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 } else if let status = model.weatherStatus {
@@ -153,33 +160,27 @@ struct MapScreen: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
+            } else {
+                Label("Potentiel terrain, indépendant de la météo et de la saison", systemImage: "leaf")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
-            LegendView(thresholds: model.legend)
             if let error = model.loadError ?? model.inspectError {
                 Label(error, systemImage: "exclamationmark.triangle")
                     .font(.footnote)
                     .foregroundStyle(.red)
-            }
-            if model.field.pendingCount > 0 {
-                Text("\(model.field.pendingCount) observation(s) en attente d'envoi")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
             }
         }
         .padding(12)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
+    private var potentialBinding: Binding<Bool> {
+        Binding(get: { model.mode == .terrain }, set: { model.setMode($0 ? .terrain : .score) })
+    }
+
     private var layerBinding: Binding<LayerKey?> {
         Binding(get: { model.selectedLayer?.key }, set: { model.select(layerKey: $0) })
-    }
-
-    private var modeBinding: Binding<MapMode> {
-        Binding(get: { model.mode }, set: { model.setMode($0) })
-    }
-
-    private var dayBinding: Binding<Double> {
-        Binding(get: { Double(model.dayOffset) }, set: { model.setDay(Int($0.rounded())) })
     }
 
     private var pointBinding: Binding<PointInfo?> {
@@ -217,6 +218,88 @@ struct LegendView: View {
                 .accessibilityElement(children: .combine)
             }
         }
+    }
+}
+
+/// Bandeau des onze jours (lot 2) : une pastille par jour, colorée par l'indice du département sous
+/// le centre de la carte, l'initiale du jour dessous, aujourd'hui en gras ; les jours passés restent
+/// consultables. Remplace le curseur J−3 → J+7 : on choisit une date, pas un décalage.
+struct DayStrip: View {
+    let model: MapModel
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(model.dayDots) { dot in
+                Button {
+                    model.setDay(dot.offset)
+                } label: {
+                    VStack(spacing: 4) {
+                        ScoreDot(value: dot.value, model: model, size: 14, selected: dot.offset == model.dayOffset)
+                        Text(dot.date.map { CoinTrend.initial(iso: $0) } ?? "·")
+                            .font(.caption2)
+                            .fontWeight(dot.offset == 0 ? .bold : .regular)
+                            .foregroundStyle(dot.offset == 0 ? .primary : .secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(label(dot))
+                .accessibilityAddTraits(dot.offset == model.dayOffset ? .isSelected : [])
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Jour : \(model.dayLabel)")
+    }
+
+    private func label(_ dot: DayDot) -> String {
+        let day = dot.date.map { CoinTrend.shortDay(iso: $0) } ?? (dot.offset == 0 ? "aujourd'hui" : "J\(dot.offset > 0 ? "+" : "")\(dot.offset)")
+        let state = dot.value.flatMap { model.classify($0)?.fr } ?? "pas d'indice"
+        return "\(day) : \(state)"
+    }
+}
+
+/// Légende (lot 2) : les cinq couleurs et leurs mots, ce que veut dire un pixel transparent, et
+/// le renvoi vers Comprendre. La couleur ne porte jamais seule l'information.
+struct LegendSheet: View {
+    let model: MapModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(model.legend, id: \.label) { threshold in
+                        HStack(spacing: 10) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color(hex: threshold.hex))
+                                .frame(width: 22, height: 16)
+                            Text(threshold.fr)
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                    HStack(spacing: 10) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .strokeBorder(.secondary, lineWidth: 1)
+                            .frame(width: 22, height: 16)
+                        Text("Transparent : hors forêt ou sans donnée")
+                    }
+                    .accessibilityElement(children: .combine)
+                } header: {
+                    Text("Ce que montrent les couleurs")
+                } footer: {
+                    Text("Le terrain, la météo des dernières semaines et la saison de l'espèce, en un seul score. Le détail est dans l'onglet Comprendre.")
+                }
+            }
+            .navigationTitle("Légende")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("OK") { dismiss() }
+                }
+            }
+        }
+        #if os(iOS)
+        .presentationDetents([.medium])
+        #endif
     }
 }
 
