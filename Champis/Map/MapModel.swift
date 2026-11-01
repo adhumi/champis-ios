@@ -91,6 +91,8 @@ final class MapModel {
     // Position et cache
     /// Incrémenté quand l'utilisateur demande à centrer la carte sur lui.
     private(set) var followRequest = 0
+    /// Demande de recentrage sur un point (un coin ouvert depuis Mes coins) : (numéro, coordonnée).
+    private(set) var focusRequest: (id: Int, latitude: Double, longitude: Double)?
     private(set) var tileCacheSize: Int64?
 
     let overlay: ScoreTileOverlay
@@ -138,6 +140,8 @@ final class MapModel {
 
     var palette: Palette? { catalog?.palette }
     var legend: [Palette.Threshold] { catalog?.palette.thresholds ?? [] }
+    /// Seuil « bon » de la palette (notification et tendance des coins) ; `nil` tant que rien n'est chargé.
+    var goodThreshold: Double? { palette?.thresholds.first { $0.label == "bon" }?.min }
     /// Mode score sous le zoom seuil : départements colorés par l'indice au lieu des tuiles.
     var isFranceView: Bool {
         guard let zoom else { return false }
@@ -519,6 +523,12 @@ final class MapModel {
 
     /// Position « pendant l'utilisation » seulement (skill `offline`) : demandée au premier appui,
     /// jamais au lancement ; aucun trajet n'est enregistré.
+    /// Recentre la carte sur un coin et sélectionne le point, depuis Mes coins › Voir sur la carte.
+    func focus(latitude: Double, longitude: Double) {
+        focusRequest = (id: (focusRequest?.id ?? 0) + 1, latitude: latitude, longitude: longitude)
+        select(latitude: latitude, longitude: longitude)
+    }
+
     func locateMe() {
         if locationManager.authorizationStatus == .notDetermined {
             locationManager.requestWhenInUseAuthorization()

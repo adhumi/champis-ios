@@ -60,6 +60,19 @@ struct MapModelTests {
         #expect(model.deptInfo == nil)
     }
 
+    @Test("Voir sur la carte : recentrage demandé et point sélectionné")
+    func focus() {
+        let model = MapModel(apiBaseURL: URL(string: "https://champis.example")!)
+        #expect(model.focusRequest == nil)
+        model.focus(latitude: 47.1, longitude: 6.3)
+        #expect(model.focusRequest?.id == 1)
+        #expect(model.focusRequest?.latitude == 47.1 && model.focusRequest?.longitude == 6.3)
+        #expect(model.selection == MapSelection(latitude: 47.1, longitude: 6.3))
+        model.focus(latitude: 47.2, longitude: 6.4)
+        #expect(model.focusRequest?.id == 2)
+        #expect(model.goodThreshold == nil)  // rien chargé : pas de seuil inventé
+    }
+
     @Test("Date affichée : à partir du today de l'API")
     func format() {
         #expect(!MapModel.format(iso: "2026-10-30").isEmpty)

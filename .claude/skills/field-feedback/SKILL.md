@@ -56,3 +56,7 @@ Position et date d'une personne sont des données personnelles. Rappels : jamais
 ## Tests
 
 Swift Testing. File locale : enregistrement hors ligne, envoi par lots au retour du réseau (via `URLProtocol` de test), idempotence sur renvoi, purge après `DELETE`. Coins : `PUT` en liste complète à chaque changement, jeton APNs mis à jour, aucune tâche d'arrière-plan planifiée (vérifiable : aucun identifiant `BGTaskScheduler` dans l'app). Interface : « rien trouvé » accessible en un geste, libellés VoiceOver (skill `ios-accessibility`).
+
+## Écran Mes coins (refonte UX, lot 1, 1er nov. 2026)
+
+Onglet à part entière, première réponse de l'app (« j'y vais ce week-end ou pas ? »). Règles : des mots avant des chiffres (libellé de la palette via `MapModel.classify`, jamais un nombre hors de « Détails ») ; classement du meilleur au moins bon, sans météo en dernier (`CoinTrend.order`) ; tendance calculée sur les onze jours de `GET /coins` › `days` avec le seuil « bon » de la palette (`MapModel.goodThreshold`), jamais un seuil écrit dans le code ; dates en français sans dépendre de la locale (`CoinTrend.weekdayName`). Une notification porte `coin_id` : `AppDelegate` le lit, `AppRouter.open(coinID:)` bascule l'onglet et `CoinsScreen` pousse la fiche. L'état vide est le seul endroit où la promesse de confidentialité est écrite en entier.
