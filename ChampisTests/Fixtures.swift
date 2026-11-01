@@ -121,7 +121,8 @@ nonisolated enum Fixtures {
           "species": {
             "boletus_edulis": [
               { "date": "2026-10-30", "by_alt": { "150": { "M": 0.5, "M_eff": 0.5, "phi": 1.0 }, "450": { "M": 0.9, "M_eff": 0.9, "phi": 1.0 } } },
-              { "date": "2026-10-31", "by_alt": { "150": { "M": 0.6, "M_eff": 0.6, "phi": 1.0 }, "450": { "M": 0.6, "M_eff": 0.6, "phi": 1.0 } } }
+              { "date": "2026-10-31", "by_alt": { "150": { "M": 0.6, "M_eff": 0.6, "phi": 1.0 }, "450": { "M": 0.6, "M_eff": 0.6, "phi": 1.0,
+                "summary": ["pluie déclenchante il y a 12 jours", "sol bien humide", "pleine saison"], "trigger_days": 12 } } }
             ],
             "boletus_aereus": [
               { "date": "2026-10-30", "by_alt": { "150": { "M": 0.2, "M_eff": 0.2, "phi": 1.0 }, "450": { "M": 0.2, "M_eff": 0.2, "phi": 1.0 } } }

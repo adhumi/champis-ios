@@ -56,6 +56,11 @@ struct APIModelsTests {
         #expect(row?.mEff == 0.9)
         #expect(row?.factor == 0.9)
         #expect(cell.species["boletus_edulis"]?.count == 2)
+        // lot 2 : `summary` et `trigger_days` facultatifs (GET /weather seulement)
+        #expect(row?.summary == nil && row?.triggerDays == nil)
+        let detailed = cell.species["boletus_edulis"]?[1].byAlt["450"]
+        #expect(detailed?.summary == ["pluie déclenchante il y a 12 jours", "sol bien humide", "pleine saison"])
+        #expect(detailed?.triggerDays == 12)
 
         let detail = ChampisAPI.detail(in: Data(#"{"detail": "47 cellules dans l'emprise, maximum 40 : zoomez"}"#.utf8))
         #expect(detail.hasSuffix("zoomez"))

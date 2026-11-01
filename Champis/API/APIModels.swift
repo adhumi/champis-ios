@@ -72,11 +72,16 @@ nonisolated struct WeatherRow: Codable, Hashable, Sendable {
     /// Détail des facteurs (`GET /weather` seulement) : `temp`, `rain`, `trigger`, `soil_moisture`,
     /// `frost`, `water_balance`, `heat`, `memory`, chacun dans [0, 1].
     let factors: [String: Double]?
+    /// Phrases en clair de l'API (`GET /weather` seulement, lot 2) : pluie, sol, freins, saison.
+    let summary: [String]?
+    /// Âge en jours de la pluie déclenchante retenue ; `nil` sans événement (ou hors détail).
+    let triggerDays: Int?
 
     enum CodingKeys: String, CodingKey {
         case m = "M"
         case mEff = "M_eff"
-        case phi, factors
+        case phi, factors, summary
+        case triggerDays = "trigger_days"
     }
 
     /// Facteur appliqué à T : `M_eff × Φ`.

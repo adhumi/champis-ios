@@ -26,6 +26,14 @@ nonisolated struct MapSelection: Hashable, Sendable {
     let longitude: Double
 }
 
+/// Une pastille du bandeau des jours (lot 2).
+nonisolated struct DayDot: Identifiable, Hashable, Sendable {
+    let offset: Int
+    let date: String?
+    let value: Double?
+    var id: Int { offset }
+}
+
 /// Département touché en vue France ; `code` nil = hors département.
 nonisolated struct DeptInfo: Identifiable, Sendable {
     let id = UUID()
@@ -87,6 +95,12 @@ final class MapModel {
     private(set) var inspectError: String?
     private(set) var pointFactors: [String: Double]?
     private(set) var factorsStatus: String?
+    /// Phrases en clair de `GET /weather` › `summary` pour le point (lot 2).
+    private(set) var pointSummary: [String]?
+    /// Les onze jours du point : `T × M_eff × Φ` par jour pour l'espèce porteuse (lot 2).
+    private(set) var pointDays: [CoinDay] = []
+    /// Département sous le centre de la carte, pour colorer le bandeau des jours (lot 2).
+    private(set) var centerDeptCode: String?
 
     // Position et cache
     /// Incrémenté quand l'utilisateur demande à centrer la carte sur lui.
@@ -109,6 +123,7 @@ final class MapModel {
     @ObservationIgnored private var visibleBBox: BBox?
     @ObservationIgnored private var weatherTask: Task<Void, Never>?
     @ObservationIgnored private var deptTask: Task<Void, Never>?
+    @ObservationIgnored private var deptTaskKey: LayerKey?
     @ObservationIgnored private var inspectTask: Task<Void, Never>?
     @ObservationIgnored private var isLoadingBoundaries = false
 
@@ -292,16 +307,19 @@ final class MapModel {
         if isFranceView != wasFranceView {
             pushSettings()
         }
+        centerDeptCode = departementCode(
+            latitude: (bbox.minLat + bbox.maxLat) / 2, longitude: (bbox.minLon + bbox.maxLon) / 2
+        )
         refreshData(debounce: true)
     }
 
-    /// Selon la vue : l'indice par département (vue France) ou la météo de l'emprise.
+    /// L'indice par département sert à tout zoom (bandeau des jours, lot 2) ; la météo de l'emprise
+    /// seulement sous le zoom seuil.
     private func refreshData(debounce: Bool = false) {
+        refreshDeptIndex()
         if isFranceView {
             weatherTask?.cancel()
-            refreshDeptIndex()
         } else {
-            deptTask?.cancel()
             refreshWeather(debounce: debounce)
         }
     }
@@ -381,17 +399,22 @@ final class MapModel {
     /// `GET /departements` pour la couche : 11 jours d'un coup, le curseur ne recharge rien. Les
     /// limites (GeoJSON servi avec le site) se chargent une fois.
     private func refreshDeptIndex() {
-        guard isFranceView, let layer = selectedLayer, catalog != nil else { return }
+        guard mode == .score, let layer = selectedLayer, catalog != nil else { return }
         if deptFeatures.isEmpty {
             loadBoundaries()
         }
         if let deptIndex, deptIndex.layerKey == layer.key {
             return
         }
+        if deptTask != nil, deptTaskKey == layer.key {
+            return  // déjà en cours pour cette couche
+        }
+        deptTaskKey = layer.key
         deptTask?.cancel()
         let api = api
         deptTask = Task { [weak self] in
             guard let self else { return }
+            defer { deptTaskKey = nil }
             do {
                 let response = try await api.departements(species: layer.members)
                 guard !Task.isCancelled else { return }
@@ -501,8 +524,11 @@ final class MapModel {
         factorsStatus = nil
         do {
             let detail = try await api.weatherDetail(cell: cell.id, species: [scored.species])
-            let row = detail.species[scored.species]?.first { $0.date == date }?.byAlt[altKey]
+            let rows = detail.species[scored.species] ?? []
+            let row = rows.first { $0.date == date }?.byAlt[altKey]
             pointFactors = row?.factors
+            pointSummary = row?.summary
+            pointDays = Self.pointDays(rows: rows, altKey: altKey, terrain: scored.terrain, species: scored.species)
             if pointFactors == nil {
                 factorsStatus = "Facteurs indisponibles pour ce jour."
             }
@@ -511,11 +537,84 @@ final class MapModel {
         }
     }
 
+    /// `T × M_eff × Φ` pour chacun des jours renvoyés par l'API, à la classe d'altitude du pixel.
+    nonisolated static func pointDays(rows: [WeatherDay], altKey: String, terrain: Double, species: String) -> [CoinDay] {
+        rows.map { day in
+            let row = day.byAlt[altKey]
+            return CoinDay(date: day.date, value: row.map { terrain * $0.factor }, leading: row == nil ? nil : species)
+        }
+    }
+
+    /// Jour ISO pour un décalage de `offset` jours autour de `today` ; `nil` sans `today`.
+    func date(forOffset offset: Int) -> String? {
+        guard let today, let date = try? CivilDate(iso: today) else { return nil }
+        return date.adding(days: offset).description
+    }
+
+    /// Les onze pastilles du bandeau des jours : décalage, jour ISO et indice du département sous
+    /// le centre (`nil` sans indice : pastille vide, jamais une valeur inventée).
+    var dayDots: [DayDot] {
+        Self.dayRange.map { k in
+            let iso = date(forOffset: k)
+            var value: Double?
+            if let iso, let code = centerDeptCode {
+                value = deptIndex?.value(code: code, date: iso)
+            }
+            return DayDot(offset: k, date: iso, value: value)
+        }
+    }
+
+    /// Département contenant une coordonnée, par les limites déjà chargées (`/web/departements.geojson`).
+    func departementCode(latitude: Double, longitude: Double) -> String? {
+        let point = MKMapPoint(CLLocationCoordinate2D(latitude: latitude, longitude: longitude))
+        for feature in deptFeatures {
+            guard let properties = feature.properties,
+                  let dict = try? JSONSerialization.jsonObject(with: properties) as? [String: Any],
+                  let code = dict["code"] as? String
+            else { continue }
+            for shape in feature.geometry {
+                if let polygon = shape as? MKPolygon, Self.contains(point, in: polygon) {
+                    return code
+                }
+                if let multi = shape as? MKMultiPolygon, multi.polygons.contains(where: { Self.contains(point, in: $0) }) {
+                    return code
+                }
+            }
+        }
+        return nil
+    }
+
+    /// Point dans polygone par lancer de rayon, sur les points carte du polygone (trous ignorés).
+    nonisolated static func contains(_ point: MKMapPoint, in polygon: MKPolygon) -> Bool {
+        guard polygon.boundingMapRect.contains(point) else { return false }
+        let points = polygon.points()
+        return contains(point, ring: (0..<polygon.pointCount).map { points[$0] })
+    }
+
+    nonisolated static func contains(_ point: MKMapPoint, ring: [MKMapPoint]) -> Bool {
+        guard ring.count >= 3 else { return false }
+        var inside = false
+        var j = ring.count - 1
+        for i in 0..<ring.count {
+            let a = ring[i], b = ring[j]
+            if (a.y > point.y) != (b.y > point.y) {
+                let x = (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x
+                if point.x < x {
+                    inside.toggle()
+                }
+            }
+            j = i
+        }
+        return inside
+    }
+
     func clearSelection() {
         inspectTask?.cancel()
         selection = nil
         pointInfo = nil
         pointFactors = nil
+        pointSummary = nil
+        pointDays = []
         factorsStatus = nil
     }
 
