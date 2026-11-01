@@ -76,7 +76,7 @@ struct MarkdownView: View {
         .listRowSeparator(.hidden)
     }
 
-    static func inline(_ text: String) -> AttributedString {
+    nonisolated static func inline(_ text: String) -> AttributedString {
         (try? AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
             ?? AttributedString(text)
     }
