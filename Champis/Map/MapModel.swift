@@ -20,10 +20,11 @@ nonisolated enum Basemap: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// Point touché sur la carte.
-nonisolated struct MapSelection: Hashable, Sendable {
+/// Point touché sur la carte. `Identifiable` par ses coordonnées : une feuille par point (lot 3).
+nonisolated struct MapSelection: Hashable, Identifiable, Sendable {
     let latitude: Double
     let longitude: Double
+    var id: MapSelection { self }
 }
 
 /// Une pastille du bandeau des jours (lot 2).
