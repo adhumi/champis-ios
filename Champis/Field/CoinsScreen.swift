@@ -1,3 +1,4 @@
+import ChampisScoring
 import Foundation
 import SwiftUI
 
