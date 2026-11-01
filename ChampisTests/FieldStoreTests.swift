@@ -28,6 +28,17 @@ struct FieldStoreTests {
         #expect(await store.pendingCount == 1)
         #expect(await store.pendingObservations.map(\.id) == [newer.id])
 
+        // retrait d'une observation annulée (lot 3) : disparue de la liste et de la file, persistant
+        let undone = FieldObservation(species: "boletus_edulis", lat: 47.2, lon: 6.2, date: "2026-11-01", found: false, quantity: nil)
+        try await store.add(undone)
+        #expect(await store.pendingCount == 2)
+        try await store.remove(undone.id)
+        #expect(await store.observations.map(\.id) == [newer.id, older.id])
+        #expect(await store.pendingObservations.map(\.id) == [newer.id])
+        let reopened = LocalStore(directory: directory)
+        try await reopened.load()
+        #expect(await reopened.observations.count == 2)
+
         // le serveur connaît l'ancienne (avec une autre précision) et une inconnue ; la locale en attente reste
         var remoteOlder = older
         remoteOlder.accuracyM = 25

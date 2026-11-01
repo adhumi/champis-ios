@@ -67,6 +67,13 @@ actor LocalStore {
         try write(observationsFile, to: observationsURL)
     }
 
+    /// Retire une observation encore sur l'appareil (annulation dans les cinq secondes, lot 3).
+    func remove(_ id: UUID) throws {
+        observationsFile.observations.removeAll { $0.id == id }
+        observationsFile.pending.removeAll { $0 == id }
+        try write(observationsFile, to: observationsURL)
+    }
+
     func markSynced(_ ids: [UUID]) throws {
         let done = Set(ids)
         observationsFile.pending.removeAll { done.contains($0) }

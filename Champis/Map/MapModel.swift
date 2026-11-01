@@ -20,10 +20,11 @@ nonisolated enum Basemap: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// Point touché sur la carte.
-nonisolated struct MapSelection: Hashable, Sendable {
+/// Point touché sur la carte. `Identifiable` par ses coordonnées : une feuille par point (lot 3).
+nonisolated struct MapSelection: Hashable, Identifiable, Sendable {
     let latitude: Double
     let longitude: Double
+    var id: MapSelection { self }
 }
 
 /// Une pastille du bandeau des jours (lot 2).
@@ -90,6 +91,12 @@ final class MapModel {
 
     // Fiche au toucher
     private(set) var selection: MapSelection?
+    /// Appui long sur la carte (lot 3) : le point pressé, à proposer en menu de terrain.
+    private(set) var longPressPoint: MapSelection?
+    /// Après un appui long « Ajouter à mes coins » : la fiche inspectée sert à nommer le coin.
+    private(set) var coinRequestFromLongPress = false
+    /// Proposition d'embarquer un département après la création d'un coin (lot 3).
+    private(set) var offlineSuggestion: DownloadableDepartment?
     private(set) var pointInfo: PointInfo?
     private(set) var isInspecting = false
     private(set) var inspectError: String?
@@ -609,6 +616,7 @@ final class MapModel {
     }
 
     func clearSelection() {
+        coinRequestFromLongPress = false
         inspectTask?.cancel()
         selection = nil
         pointInfo = nil
@@ -620,14 +628,110 @@ final class MapModel {
 
     // MARK: - Position et cache
 
-    /// Position « pendant l'utilisation » seulement (skill `offline`) : demandée au premier appui,
-    /// jamais au lancement ; aucun trajet n'est enregistré.
+    // MARK: - Terrain en deux tapes (lot 3)
+
+    func longPress(latitude: Double, longitude: Double) {
+        longPressPoint = MapSelection(latitude: latitude, longitude: longitude)
+    }
+
+    func clearLongPress() {
+        longPressPoint = nil
+    }
+
+    /// « Ajouter à mes coins » depuis l'appui long : inspecter le point, puis nommer le coin.
+    func requestCoin(latitude: Double, longitude: Double) {
+        coinRequestFromLongPress = true
+        select(latitude: latitude, longitude: longitude)
+    }
+
+    func clearCoinRequest() {
+        coinRequestFromLongPress = false
+    }
+
+    /// Espèces du calque affiché : une observation « rien trouvé » par espèce (un groupe = toutes).
+    var layerSpecies: [String] {
+        selectedLayer?.members ?? []
+    }
+
+    /// Ce qu'un coin garde d'un point inspecté : la cible de la couche, la classe d'altitude du
+    /// pixel et le T de chaque espèce (le backend n'a que la météo). `nil` hors forêt.
+    func coinParameters(for info: PointInfo) -> (target: String, altClass: Int, t: [String: Double])? {
+        guard let scored = info.scored else { return nil }
+        let target = selectedLayer.map { Self.apiTarget($0.key) } ?? scored.species
+        let classM = Int(palette?.altEncoding.classM ?? 300)
+        let altClass = scored.altClass.map { $0 * classM + classM / 2 } ?? scored.altKey.flatMap { Int($0) } ?? 0
+        let terrains = scored.terrains.isEmpty ? [scored.species: scored.terrain] : scored.terrains
+        return (target, altClass, terrains)
+    }
+
+    /// Crée le coin depuis sa fiche, la ferme, et propose une fois d'embarquer son département s'il
+    /// ne l'est pas. La proposition vient avant l'envoi au serveur : en forêt, il peut être long.
+    func addCoin(named name: String, from info: PointInfo) async {
+        guard let parameters = coinParameters(for: info) else { return }
+        clearSelection()
+        if let code = departementCode(latitude: info.latitude, longitude: info.longitude) {
+            let suggestion = Self.suggestOffline(
+                code: code, manifest: manifest, names: departmentNames,
+                embarked: Set(offline.departments.map(\.code)), declined: Self.declinedOfflineDepts
+            )
+            if suggestion != nil {
+                // le temps que la feuille se ferme, sinon l'alerte tombe sur une présentation en cours
+                try? await Task.sleep(for: .milliseconds(400))
+                offlineSuggestion = suggestion
+            }
+        }
+        await field.addCoin(
+            name: name, latitude: info.latitude, longitude: info.longitude, target: parameters.target,
+            altClass: parameters.altClass, t: parameters.t
+        )
+    }
+
+    /// Le jeu par département à proposer, ou `nil` : déjà embarqué, déjà refusé, ou pas publié.
+    nonisolated static func suggestOffline(
+        code: String, manifest: TilesManifest?, names: [String: String], embarked: Set<String>, declined: Set<String>
+    ) -> DownloadableDepartment? {
+        guard let manifest, !embarked.contains(code), !declined.contains(code) else { return nil }
+        return OfflineModel.downloadable(from: manifest, names: names).first { $0.code == code }
+    }
+
+    nonisolated static let declinedOfflineKey = "offlineDeclinedDepartments"
+
+    /// Départements pour lesquels la proposition a été refusée : jamais redemandés.
+    nonisolated static var declinedOfflineDepts: Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: declinedOfflineKey) ?? [])
+    }
+
+    /// Accepte la proposition : toutes les espèces du jeu, pour que le calque puisse changer en forêt.
+    func acceptOfflineSuggestion() {
+        guard let choice = offlineSuggestion, let manifest else { return }
+        offlineSuggestion = nil
+        let species = choice.terrain.keys.sorted()
+        let version = catalog?.scoringVersion ?? ""
+        let offline = offline
+        Task { await offline.download(choice, species: species, manifest: manifest, scoringVersion: version) }
+    }
+
+    func declineOfflineSuggestion() {
+        guard let choice = offlineSuggestion else { return }
+        offlineSuggestion = nil
+        var declined = Self.declinedOfflineDepts
+        declined.insert(choice.code)
+        UserDefaults.standard.set(Array(declined).sorted(), forKey: Self.declinedOfflineKey)
+    }
+
     /// Recentre la carte sur un coin et sélectionne le point, depuis Mes coins › Voir sur la carte.
     func focus(latitude: Double, longitude: Double) {
         focusRequest = (id: (focusRequest?.id ?? 0) + 1, latitude: latitude, longitude: longitude)
         select(latitude: latitude, longitude: longitude)
     }
 
+    /// Recentre sans ouvrir de fiche : la barre latérale montre déjà celle du coin (lot 3).
+    func center(latitude: Double, longitude: Double) {
+        focusRequest = (id: (focusRequest?.id ?? 0) + 1, latitude: latitude, longitude: longitude)
+    }
+
+    /// Position « pendant l'utilisation » seulement (skill `offline`) : demandée au premier appui,
+    /// jamais au lancement ; aucun trajet n'est enregistré.
     func locateMe() {
         if locationManager.authorizationStatus == .notDetermined {
             locationManager.requestWhenInUseAuthorization()

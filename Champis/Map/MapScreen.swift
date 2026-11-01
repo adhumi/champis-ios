@@ -4,18 +4,29 @@ import SwiftUI
 /// Onglet Carte (refonte UX, lot 2) : overlay colorisé sur fond Apple (ou départements en vue
 /// France), menu de calque (groupes, espèces, potentiel toute saison), bandeau des onze jours
 /// coloré par le département sous le centre, légende, fiche au toucher en clair. Les coins ont
-/// leur onglet (`CoinsScreen`).
+/// leur onglet (`CoinsScreen`). Lot 3 : appui long pour le menu de terrain, « Noté : rien trouvé »
+/// annulable, proposition d'embarquer le département d'un nouveau coin ; sur iPad et Mac
+/// (`layout: .split`), les fiches vont dans l'inspecteur de `SplitContentView`, pas en feuille.
 struct MapScreen: View {
     static let defaultAPIBaseURL = "https://champis.adhumi.fr"
 
+    nonisolated enum Layout: Sendable {
+        /// iPhone : les fiches sont des feuilles.
+        case compact
+        /// iPad et Mac : les fiches sont dans l'inspecteur, l'écran n'en présente pas.
+        case split
+    }
+
     /// Modèle partagé par les trois onglets, créé et démarré par `ContentView`.
     let model: MapModel
+    var layout: Layout = .compact
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
     @AppStorage("legalNoticeAcknowledged") private var legalNoticeAcknowledged = false
     @State private var showSettings = false
     @State private var showLegalNotice = false
     @State private var showLegend = false
     @State private var observationRequest: ObservationFormRequest?
+    @State private var quickFound: MapSelection?
 
     var body: some View {
         NavigationStack {
@@ -38,11 +49,25 @@ struct MapScreen: View {
                         .accessibilityLabel("Centrer sur ma position")
                         .accessibilityHint(model.locationDenied ? "Position refusée dans les réglages du système" : "")
                     }
+                    if !model.field.undoable.isEmpty {
+                        undoToast
+                    }
                     panel
                 }
                 .padding(12)
+                .animation(.default, value: model.field.undoable.isEmpty)
             }
-            .navigationTitle("Champis")
+            .navigationTitle(layout == .split ? "Carte" : "Champis")
+            .background {
+                // ⌘← et ⌘→ changent de jour (Mac, iPad avec clavier)
+                Group {
+                    Button("Jour précédent") { model.setDay(model.dayOffset - 1) }
+                        .keyboardShortcut(.leftArrow, modifiers: .command)
+                    Button("Jour suivant") { model.setDay(model.dayOffset + 1) }
+                        .keyboardShortcut(.rightArrow, modifiers: .command)
+                }
+                .hidden()
+            }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
@@ -92,6 +117,43 @@ struct MapScreen: View {
         }
         .sheet(isPresented: $showLegend) {
             LegendSheet(model: model)
+        }
+        .sheet(item: $quickFound) { point in
+            QuickFoundSheet(model: model, point: point, initialSpecies: nil)
+        }
+        .confirmationDialog(
+            "À cet endroit", isPresented: longPressBinding, titleVisibility: .visible, presenting: model.longPressPoint
+        ) { point in
+            Button("Trouvé ici") {
+                quickFound = point
+            }
+            Button("Rien trouvé ici") {
+                let field = model.field
+                let species = model.layerSpecies
+                Task { await field.recordNotFound(species: species, latitude: point.latitude, longitude: point.longitude) }
+            }
+            .disabled(model.layerSpecies.isEmpty)
+            Button("Ajouter à mes coins") {
+                model.requestCoin(latitude: point.latitude, longitude: point.longitude)
+            }
+        } message: { _ in
+            Text(model.selectedLayer.map { "Pour \($0.title)." } ?? "")
+        }
+        .alert(
+            offlineTitle, isPresented: offlineBinding, presenting: model.offlineSuggestion
+        ) { _ in
+            Button("Embarquer") { model.acceptOfflineSuggestion() }
+            Button("Non merci", role: .cancel) { model.declineOfflineSuggestion() }
+        } message: { choice in
+            Text(
+                "\(Self.sizeText(choice)) : la carte et la météo de toutes les espèces se liront sans réseau. " +
+                "Modifiable plus tard dans les réglages."
+            )
+        }
+        .onChange(of: model.field.undoable.isEmpty) { _, empty in
+            if !empty {
+                AccessibilityNotification.Announcement("Noté : rien trouvé. Annuler possible pendant cinq secondes.").post()
+            }
         }
         .alert(LegalNotice.title, isPresented: $showLegalNotice) {
             Button("J'ai compris") { legalNoticeAcknowledged = true }
@@ -175,6 +237,41 @@ struct MapScreen: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
+    /// « Noté : rien trouvé » avec Annuler, le temps du délai avant l'envoi.
+    private var undoToast: some View {
+        HStack {
+            Label("Noté : rien trouvé", systemImage: "checkmark")
+                .font(.subheadline)
+            Spacer()
+            Button("Annuler") {
+                let field = model.field
+                Task { await field.undoNotFound() }
+            }
+            .font(.subheadline.weight(.semibold))
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(.regularMaterial, in: Capsule())
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    private var offlineTitle: String {
+        guard let choice = model.offlineSuggestion else { return "" }
+        return "Embarquer \(choice.name ?? "le département \(choice.code)") pour la forêt ?"
+    }
+
+    static func sizeText(_ choice: DownloadableDepartment) -> String {
+        choice.bytes(for: Array(choice.terrain.keys)).formatted(.byteCount(style: .file))
+    }
+
+    private var longPressBinding: Binding<Bool> {
+        Binding(get: { model.longPressPoint != nil }, set: { if !$0 { model.clearLongPress() } })
+    }
+
+    private var offlineBinding: Binding<Bool> {
+        Binding(get: { model.offlineSuggestion != nil }, set: { if !$0, model.offlineSuggestion != nil { model.declineOfflineSuggestion() } })
+    }
+
     private var potentialBinding: Binding<Bool> {
         Binding(get: { model.mode == .terrain }, set: { model.setMode($0 ? .terrain : .score) })
     }
@@ -183,12 +280,13 @@ struct MapScreen: View {
         Binding(get: { model.selectedLayer?.key }, set: { model.select(layerKey: $0) })
     }
 
+    /// En disposition partagée, l'inspecteur montre la fiche : la feuille ne se présente jamais.
     private var pointBinding: Binding<PointInfo?> {
-        Binding(get: { model.pointInfo }, set: { if $0 == nil { model.clearSelection() } })
+        Binding(get: { layout == .compact ? model.pointInfo : nil }, set: { if $0 == nil { model.clearSelection() } })
     }
 
     private var deptBinding: Binding<DeptInfo?> {
-        Binding(get: { model.deptInfo }, set: { if $0 == nil { model.clearDeptInfo() } })
+        Binding(get: { layout == .compact ? model.deptInfo : nil }, set: { if $0 == nil { model.clearDeptInfo() } })
     }
 
     static func url(from text: String) -> URL {

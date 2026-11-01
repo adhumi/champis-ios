@@ -45,6 +45,10 @@ T, classe d'altitude du pixel, cellule météo, `M_eff`, `Φ`, facteurs météo 
 
 Implémentation : `PointInspector.inspect` (fonction pure async, testée avec un PMTiles en mémoire) lit `T` de chaque espèce de la couche et la classe `A` au zoom 15, prend la cellule la plus proche et garde la meilleure espèce ; trois issues : `noData` (hors forêt), `noWeather` (du terrain mais pas de ligne météo), `scored`. `PointSheet` affiche ; les facteurs arrivent ensuite par `MapModel.loadFactors`. Jamais de valeur inventée : sans ligne météo, la fiche le dit.
 
+## Appui long et disposition iPad / Mac (lot 3)
+
+Un appui long (0,5 s) sur la carte, hors vue France, donne `MapModel.longPress` ; `MapScreen` ouvre le menu de terrain au point pressé (skill `field-feedback`). « Ajouter à mes coins » passe par la fiche (`requestCoin` → `select` ; `PointSheet` ouvre directement le nom). Sur iPad en largeur régulière et sur Mac, `SplitContentView` remplace les onglets : barre latérale, carte en détail, fiches (`PointSheet`, `DeptSheet`, `CoinDetailView`) dans `.inspector`. `MapScreen(layout: .split)` ne présente aucune feuille de fiche : c'est la sélection du modèle qui commande, et les boutons OK des fiches appellent `clearSelection` / `clearDeptInfo`, jamais `dismiss`.
+
 ## Vue France
 
 En dessous du zoom 9 (`MapModel.deptZoom`, comme le site), en mode score, la carte passe aux départements colorés par l'indice `I = Σ T × M_eff × Φ / Σ T` (section Scoring de la spec), servi par `/departements`, avec la même palette. Groupe = max des indices d'espèces (`leading` dans la fiche). Les limites viennent du GeoJSON servi par l'API (`/web/departements.geojson`, le même que le site), décodé par `MKGeoJSONDecoder` en `MKPolygon`/`MKMultiPolygon` ajoutés à la carte ; le coordinateur recolore les renderers à chaque `renderGeneration` et masque l'overlay de tuiles (alpha 0) en vue France. Département sans indice : transparent. Le toucher cherche le polygone par `MKOverlayPathRenderer.path`.
