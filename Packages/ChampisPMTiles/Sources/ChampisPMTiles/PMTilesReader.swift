@@ -15,6 +15,9 @@ public final class PMTilesReader: Sendable {
         var header: PMTilesHeader?
         var root: [DirectoryEntry]?
         var leaves: [UInt64: [DirectoryEntry]] = [:]
+        /// Répertoires feuilles en cours de lecture : les tuiles voisines demandées en même temps
+        /// (premier affichage) partagent une seule requête au lieu d'en lancer une chacune.
+        var pendingLeaves: [UInt64: Task<[DirectoryEntry], any Error>] = [:]
     }
 
     private let cache = Mutex(Cache())
@@ -50,14 +53,31 @@ public final class PMTilesReader: Sendable {
 
     private func leaf(at offset: UInt64, length: UInt32, header h: PMTilesHeader) async throws -> [DirectoryEntry] {
         if let cached = cache.withLock({ $0.leaves[offset] }) { return cached }
-        let raw = try await source.read(offset: h.leafDirectoryOffset + offset, length: Int(length))
-        let entries = try Directory.deserialize(try Inflate.decompress(raw, h.internalCompression))
-        let limit = maxCachedLeaves
-        cache.withLock {
-            if $0.leaves.count >= limit { $0.leaves.removeAll(keepingCapacity: true) }
-            $0.leaves[offset] = entries
+        let source = source
+        let task: Task<[DirectoryEntry], any Error> = cache.withLock { c in
+            if let running = c.pendingLeaves[offset] { return running }
+            let started = Task {
+                let raw = try await source.read(offset: h.leafDirectoryOffset + offset, length: Int(length))
+                return try Directory.deserialize(try Inflate.decompress(raw, h.internalCompression))
+            }
+            c.pendingLeaves[offset] = started
+            return started
         }
-        return entries
+        do {
+            let entries = try await task.value
+            let limit = maxCachedLeaves
+            cache.withLock {
+                $0.pendingLeaves[offset] = nil
+                if $0.leaves[offset] == nil {
+                    if $0.leaves.count >= limit { $0.leaves.removeAll(keepingCapacity: true) }
+                    $0.leaves[offset] = entries
+                }
+            }
+            return entries
+        } catch {
+            cache.withLock { $0.pendingLeaves[offset] = nil }
+            throw error
+        }
     }
 
     /// Octets de la tuile (décompressés si le fichier compresse ses tuiles), ou `nil` si absente.

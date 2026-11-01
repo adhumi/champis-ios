@@ -16,23 +16,28 @@ nonisolated struct RenderSettings: Sendable {
     var colorizer: TileColorizer?
 }
 
-/// Produit l'image PNG d'une tuile z/x/y pour l'overlay : lit `T` (et `A`) dans `TileStore`,
-/// colorise, encode. Cache des PNG rendus, vidé à chaque changement de réglages. Changer de jour ne
+/// Une tuile colorisée et la génération de réglages qui l'a produite ; `image == nil` : rien à
+/// dessiner (hors forêt, hors emprise, aucune couche choisie). `CGImage` est immuable : la boîte
+/// peut passer d'un fil à l'autre.
+nonisolated final class RenderedTile: @unchecked Sendable {
+    let generation: Int
+    let image: CGImage?
+
+    init(generation: Int, image: CGImage?) {
+        self.generation = generation
+        self.image = image
+    }
+}
+
+/// Produit l'image d'une tuile z/x/y pour l'overlay : lit `T` de chaque espèce (et `A`) dans
+/// `TileStore` en parallèle, colorise. Le cache des images rendues est dans `ScoreOverlayRenderer`,
+/// qui garde l'ancienne image à l'écran tant que la nouvelle n'est pas prête. Changer de jour ne
 /// recharge aucune tuile de données : seule la colorisation est refaite.
 nonisolated final class TileRenderer: Sendable {
-    private struct Key: Hashable {
-        let z: Int
-        let x: Int
-        let y: Int
-    }
-
     private struct State {
         var settings = RenderSettings()
-        var rendered: [Key: Data] = [:]
         var generation = 0
     }
-
-    static let maxRendered = 256
 
     let store: TileStore
     private let state = Mutex(State())
@@ -41,60 +46,70 @@ nonisolated final class TileRenderer: Sendable {
         self.store = store
     }
 
+    /// Numéro des réglages courants : une image d'une autre génération est périmée.
+    var generation: Int {
+        state.withLock { $0.generation }
+    }
+
     func update(_ settings: RenderSettings) {
         state.withLock {
             $0.settings = settings
-            $0.rendered.removeAll(keepingCapacity: true)
             $0.generation += 1
         }
     }
 
-    /// PNG RGBA de la tuile ; `nil` s'il n'y a rien à dessiner (hors emprise, aucune couche choisie).
-    func pngData(z: Int, x: Int, y: Int) async throws -> Data? {
-        let key = Key(z: z, x: x, y: y)
-        let (settings, generation, hit) = state.withLock { ($0.settings, $0.generation, $0.rendered[key]) }
-        if let hit { return hit }
-        guard let layer = settings.layer, let colorizer = settings.colorizer else { return nil }
+    /// Tuile colorisée avec les réglages courants.
+    func render(z: Int, x: Int, y: Int) async throws -> RenderedTile {
+        let (settings, generation) = state.withLock { ($0.settings, $0.generation) }
+        guard let layer = settings.layer, let colorizer = settings.colorizer else {
+            return RenderedTile(generation: generation, image: nil)
+        }
 
-        var tiles: [TileColorizer.SpeciesTile] = []
-        for sid in layer.members {
-            if let png = try await store.terrainTile(species: sid, z: z, x: x, y: y) {
-                tiles.append(TileColorizer.SpeciesTile(species: sid, png: png))
+        // Toutes les espèces de la couche et la couche A en même temps : une requête Range chacune
+        // au premier affichage, autant les lancer ensemble.
+        let store = store
+        let wantAlt = settings.mode == .score
+        let (terrain, alt) = try await withThrowingTaskGroup(of: (String?, DecodedPNG?).self) { group in
+            for sid in layer.members {
+                group.addTask { (sid, try await store.terrainTile(species: sid, z: z, x: x, y: y)) }
             }
+            if wantAlt {
+                group.addTask { (nil, try await store.altitudeTile(z: z, x: x, y: y)) }
+            }
+            var terrain: [String: DecodedPNG] = [:]
+            var alt: DecodedPNG?
+            for try await (sid, png) in group {
+                if let sid {
+                    terrain[sid] = png
+                } else {
+                    alt = png
+                }
+            }
+            return (terrain, alt)
         }
-        guard !tiles.isEmpty else { return nil }
-        var alt: DecodedPNG?
-        if settings.mode == .score {
-            alt = try await store.altitudeTile(z: z, x: x, y: y)
+        let tiles = layer.members.compactMap { sid in
+            terrain[sid].map { TileColorizer.SpeciesTile(species: sid, png: $0) }
         }
+        guard !tiles.isEmpty else { return RenderedTile(generation: generation, image: nil) }
 
         let request = TileColorizer.Request(
             z: z, x: x, y: y, mode: settings.mode, date: settings.date, tiles: tiles, alt: alt,
             weather: settings.weather
         )
-        guard let rgba = colorizer.render(request), let png = TileImage.png(rgba: rgba, size: TileMath.tileSize) else {
-            return nil
-        }
-        state.withLock {
-            // Réglages changés pendant le rendu : l'image ne correspond plus, ne pas la garder.
-            guard $0.generation == generation else { return }
-            if $0.rendered.count >= Self.maxRendered {
-                $0.rendered.removeAll(keepingCapacity: true)
-            }
-            $0.rendered[key] = png
-        }
-        return png
+        let image = colorizer.render(request).flatMap { TileImage.cgImage(rgba: $0, size: TileMath.tileSize) }
+        return RenderedTile(generation: generation, image: image)
     }
 }
 
-/// Encodage PNG des tuiles colorisées (sortie seulement : le décodage des tuiles de données reste
+/// Images des tuiles colorisées (sortie seulement : le décodage des tuiles de données reste
 /// octet par octet dans `ChampisPMTiles`, jamais via `UIImage`).
 nonisolated enum TileImage {
     /// Tuile entièrement transparente, pour les zones sans donnée.
     static let empty: Data = png(rgba: [UInt8](repeating: 0, count: TileMath.tileSize * TileMath.tileSize * 4),
                                  size: TileMath.tileSize) ?? Data()
 
-    static func png(rgba: [UInt8], size: Int) -> Data? {
+    /// Image RGBA prémultipliée, sans interpolation (les pixels 25 m restent nets à l'agrandissement).
+    static func cgImage(rgba: [UInt8], size: Int) -> CGImage? {
         guard rgba.count == size * size * 4 else { return nil }
         guard let provider = CGDataProvider(data: Data(rgba) as CFData) else { return nil }
         // Les pixels transparents sont noirs : les octets valent déjà comme prémultipliés.
@@ -104,6 +119,11 @@ nonisolated enum TileImage {
             space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: info, provider: provider,
             decode: nil, shouldInterpolate: false, intent: .defaultIntent
         ) else { return nil }
+        return image
+    }
+
+    static func png(rgba: [UInt8], size: Int) -> Data? {
+        guard let image = cgImage(rgba: rgba, size: size) else { return nil }
         let out = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(out as CFMutableData, UTType.png.identifier as CFString, 1, nil) else {
             return nil
