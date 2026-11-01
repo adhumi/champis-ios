@@ -243,6 +243,42 @@
       ]
     }
   },
+  "about": {
+    "summary": "Le premier cèpe de l'année. Chapeau brun clair et mat, souvent craquelé par temps sec, pied à réseau marqué sur toute la hauteur, chair blanche qui ne change pas.",
+    "habitat": "Chênaies et hêtraies de plaine et de colline, stations plutôt sèches et chaudes.",
+    "season": "Dès la fin mai après les pluies, pic en juin et juillet, seconde poussée en septembre et octobre.",
+    "confusions": [
+      {
+        "name": "Bolet amer",
+        "latin": "Tylopilus felleus",
+        "risk": "Pas toxique, mais d'une amertume qui gâche tout le plat.",
+        "tell": "Réseau brun foncé sur le pied, pores qui rosissent avec l'âge, saveur très amère au bout de la langue. Très ressemblant à cette saison : goûter un fragment cru et le recracher lève le doute.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Bolets à pores rouges (bolet de Satan et proches)",
+        "latin": "Rubroboletus satanas, Suillellus luridus",
+        "risk": "Toxiques, surtout crus ou mal cuits : troubles digestifs violents.",
+        "tell": "Pores rouges ou orangés, pied souvent rouge, chair qui bleuit à la coupe. Un cèpe a les pores blancs puis jaune-vert et une chair blanche qui ne change pas.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": null,
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — caractères distinctifs du bolet amer, des bolets à pores rouges, de la fausse girolle et du clitocybe de l'olivier",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes"
+    }
+  },
   "references": {
     "bielefeld2025": "Brejon Lamartinière & Hoffman 2025, Predicting porcini, bioRxiv 10.64898/2025.12.12.693895 — modèle journalier B. edulis, hêtraies, 2015-2024 : T moy 20 j optimum ≈13 °C, pluie moyenne 26 j linéaire",
     "beugelsdijk2008": "Beugelsdijk et al. 2008, Persoonia 20:1-7 — phylogénie du groupe edulis et hôtes documentés",

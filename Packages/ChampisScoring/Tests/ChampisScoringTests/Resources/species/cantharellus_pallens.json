@@ -245,6 +245,42 @@
       ]
     }
   },
+  "about": {
+    "summary": "Girolle plus charnue et plus pâle que la girolle commune : chapeau couvert d'une pruine blanchâtre qui se tache de jaune ou de roux au toucher, plis jaunes dessous.",
+    "habitat": "Feuillus sur sols riches ou calcaires, hêtres et chênes en premier, en plaine et en colline.",
+    "season": "De la mi-mai à novembre, plus précoce que la girolle commune, pic de juin à la mi-septembre.",
+    "confusions": [
+      {
+        "name": "Fausse girolle",
+        "latin": "Hygrophoropsis aurantiaca",
+        "risk": "Peu toxique mais sans intérêt ; cause de troubles digestifs chez certaines personnes.",
+        "tell": "De vraies lames, fines, serrées et molles, là où la girolle a des plis épais et fourchus ; orangé plus vif, chair souple, pousse sur bois pourri ou aiguilles.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Clitocybe de l'olivier",
+        "latin": "Omphalotus olearius",
+        "risk": "Toxique : vomissements et diarrhées violents quelques heures après le repas.",
+        "tell": "Pousse en touffes sur les souches et les racines (chênes, oliviers), lames vraies et serrées, chair orangée et non blanche. Surtout dans le Sud.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": null,
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — caractères distinctifs du bolet amer, des bolets à pores rouges, de la fausse girolle et du clitocybe de l'olivier",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes"
+    }
+  },
   "references": {
     "olariaga2017": "Olariaga et al. 2017, Fungal Diversity — C. pallens : chênes caducifoliés et sempervirents, hêtre, noisetier, épicéa ; du Maroc à la Suède",
     "arnolds1998": "Arnolds 1998, Coolia — C. pallens neutrophile à subneutrophile, argiles fluviatiles basiques riches",

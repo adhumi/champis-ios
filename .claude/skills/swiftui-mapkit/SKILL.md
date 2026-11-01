@@ -45,6 +45,10 @@ T, classe d'altitude du pixel, cellule météo, `M_eff`, `Φ`, facteurs météo 
 
 Implémentation : `PointInspector.inspect` (fonction pure async, testée avec un PMTiles en mémoire) lit `T` de chaque espèce de la couche et la classe `A` au zoom 15, prend la cellule la plus proche et garde la meilleure espèce ; trois issues : `noData` (hors forêt), `noWeather` (du terrain mais pas de ligne météo), `scored`. `PointSheet` affiche ; les facteurs arrivent ensuite par `MapModel.loadFactors`. Jamais de valeur inventée : sans ligne météo, la fiche le dit.
 
+## Menu de calque (lots 2 à 4)
+
+Groupes puis espèces, le potentiel toute saison en bascule, et depuis le lot 4 le fond de carte (standard ou satellite) : il n'y a plus de réglage d'opacité ni de fond ailleurs, `overlayOpacity` est fixe.
+
 ## Appui long et disposition iPad / Mac (lot 3)
 
 Un appui long (0,5 s) sur la carte, hors vue France, donne `MapModel.longPress` ; `MapScreen` ouvre le menu de terrain au point pressé (skill `field-feedback`). « Ajouter à mes coins » passe par la fiche (`requestCoin` → `select` ; `PointSheet` ouvre directement le nom). Sur iPad en largeur régulière et sur Mac, `SplitContentView` remplace les onglets : barre latérale, carte en détail, fiches (`PointSheet`, `DeptSheet`, `CoinDetailView`) dans `.inspector`. `MapScreen(layout: .split)` ne présente aucune feuille de fiche : c'est la sélection du modèle qui commande, et les boutons OK des fiches appellent `clearSelection` / `clearDeptInfo`, jamais `dismiss`.

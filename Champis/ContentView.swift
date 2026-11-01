@@ -6,6 +6,8 @@ import SwiftUI
 /// iPad en largeur régulière et sur Mac, barre latérale et inspecteur (`SplitContentView`).
 struct ContentView: View {
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
+    /// Première ouverture (lot 4) : trois cartes puis « Commencer », une seule fois.
+    @AppStorage("onboardingDone") private var onboardingDone = false
     @State private var model = MapModel(
         apiBaseURL: URL(string: MapScreen.defaultAPIBaseURL)!, diskCache: try? DiskTileCache.default()
     )
@@ -25,6 +27,16 @@ struct ContentView: View {
         .task {
             await model.start(apiBaseURL: MapScreen.url(from: apiBaseURL))
         }
+        #if os(iOS)
+        .fullScreenCover(isPresented: onboardingBinding) {
+            OnboardingView(model: model) { onboardingDone = true }
+        }
+        #else
+        .sheet(isPresented: onboardingBinding) {
+            OnboardingView(model: model) { onboardingDone = true }
+                .frame(minWidth: 480, minHeight: 560)
+        }
+        #endif
         .onChange(of: apiBaseURL) { _, newValue in
             Task { await model.start(apiBaseURL: MapScreen.url(from: newValue)) }
         }
@@ -50,6 +62,10 @@ struct ContentView: View {
                 UnderstandScreen(model: model)
             }
         }
+    }
+
+    private var onboardingBinding: Binding<Bool> {
+        Binding(get: { !onboardingDone }, set: { if !$0 { onboardingDone = true } })
     }
 
     private var tabBinding: Binding<AppRouter.Tab> {

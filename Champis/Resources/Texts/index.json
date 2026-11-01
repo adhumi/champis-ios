@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "articles": [
+    {
+      "id": "comment-ca-marche",
+      "title": "Comment ça marche",
+      "file": "comment-ca-marche.md",
+      "icon": "map"
+    },
+    {
+      "id": "donnees-et-sources",
+      "title": "Les données et leurs sources",
+      "file": "donnees-et-sources.md",
+      "icon": "doc.text"
+    },
+    {
+      "id": "especes",
+      "title": "Les espèces",
+      "file": "especes.md",
+      "icon": "leaf",
+      "species": true
+    },
+    {
+      "id": "cueillir-sans-nuire",
+      "title": "Cueillir sans nuire",
+      "file": "cueillir-sans-nuire.md",
+      "icon": "tree"
+    },
+    {
+      "id": "confidentialite",
+      "title": "Confidentialité",
+      "file": "confidentialite.md",
+      "icon": "lock"
+    }
+  ]
+}

@@ -239,6 +239,42 @@
       ]
     }
   },
+  "about": {
+    "summary": "Petite girolle méditerranéenne, pâle à jaune crème, qui blanchit puis roussit quand on la froisse ; plis peu marqués.",
+    "habitat": "Chênaies de chêne vert et de chêne pubescent sur calcaire, garrigues boisées, basse altitude.",
+    "season": "Tardive : d'octobre à décembre, après les pluies d'automne.",
+    "confusions": [
+      {
+        "name": "Clitocybe de l'olivier",
+        "latin": "Omphalotus olearius",
+        "risk": "Toxique : vomissements et diarrhées violents quelques heures après le repas.",
+        "tell": "Pousse en touffes sur les souches et les racines (chênes, oliviers), lames vraies et serrées, chair orangée et non blanche. Surtout dans le Sud. Il partage exactement le milieu de cette girolle : regarder si le pied sort du bois ou de la terre.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Fausse girolle",
+        "latin": "Hygrophoropsis aurantiaca",
+        "risk": "Peu toxique mais sans intérêt ; cause de troubles digestifs chez certaines personnes.",
+        "tell": "De vraies lames, fines, serrées et molles, là où la girolle a des plis épais et fourchus ; orangé plus vif, chair souple, pousse sur bois pourri ou aiguilles.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": null,
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — caractères distinctifs du bolet amer, des bolets à pores rouges, de la fausse girolle et du clitocybe de l'olivier",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes"
+    }
+  },
   "references": {
     "olariaga2017": "Olariaga et al. 2017, Fungal Diversity — C. alborufescens : chênes méditerranéens sempervirents (Q. ilex surtout), collections à 100-500 m, calcicole",
     "straatsma_egli2001": "Straatsma & Egli 2001, NBT — T de juillet négative, pluie de juin positive",
