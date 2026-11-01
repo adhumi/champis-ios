@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// Onglet Mes coins (refonte UX, lot 1) : la réponse à « j'y vais ce week-end ou pas ? ».

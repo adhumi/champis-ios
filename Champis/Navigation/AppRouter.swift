@@ -49,16 +49,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         return true
     }
 
-    nonisolated func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        let coinID = AppRouter.coinID(from: response.notification.request.content.userInfo)
-        if let coinID {
-            Task { @MainActor in AppRouter.shared.open(coinID: coinID) }
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse
+    ) async {
+        if let coinID = AppRouter.coinID(from: response.notification.request.content.userInfo) {
+            AppRouter.shared.open(coinID: coinID)
         }
-        completionHandler()
     }
 }
 #elseif os(macOS)
@@ -67,16 +63,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
         UNUserNotificationCenter.current().delegate = self
     }
 
-    nonisolated func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        let coinID = AppRouter.coinID(from: response.notification.request.content.userInfo)
-        if let coinID {
-            Task { @MainActor in AppRouter.shared.open(coinID: coinID) }
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse
+    ) async {
+        if let coinID = AppRouter.coinID(from: response.notification.request.content.userInfo) {
+            AppRouter.shared.open(coinID: coinID)
         }
-        completionHandler()
     }
 }
 #endif

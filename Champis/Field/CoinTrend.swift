@@ -31,10 +31,14 @@ nonisolated enum CoinTrend {
 
     static func phrase(_ kind: Kind) -> String? {
         switch kind {
-        case .better(let day): "mieux \(weekdayName(iso: day))"
-        case .stable: "stable toute la semaine"
-        case .falling: "en baisse"
-        case .unknown: nil
+        case .better(let day):
+            return "mieux \(weekdayName(iso: day))"
+        case .stable:
+            return "stable toute la semaine"
+        case .falling:
+            return "en baisse"
+        case .unknown:
+            return nil
         }
     }
 
