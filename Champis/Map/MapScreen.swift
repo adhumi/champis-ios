@@ -20,9 +20,6 @@ struct MapScreen: View {
     /// Modèle partagé par les trois onglets, créé et démarré par `ContentView`.
     let model: MapModel
     var layout: Layout = .compact
-    @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
-    @State private var showSettings = false
-    @State private var showLegalNotice = false
     @State private var showLegend = false
     @State private var observationRequest: ObservationFormRequest?
     @State private var quickFound: MapSelection?
@@ -36,7 +33,6 @@ struct MapScreen: View {
                     .accessibilityLabel("Carte des champignons")
                     .ignoresSafeArea()
                 VStack(spacing: 8) {
-                    controls
                     Spacer(minLength: 0)
                     HStack {
                         Spacer()
@@ -44,10 +40,11 @@ struct MapScreen: View {
                             model.locateMe()
                         } label: {
                             Image(systemName: model.locationDenied ? "location.slash" : "location")
-                                .padding(10)
-                                .background(.regularMaterial, in: Circle())
+                                .font(.body.weight(.medium))
+                                .padding(6)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.glass)
+                        .buttonBorderShape(.circle)
                         .accessibilityLabel("Centrer sur ma position")
                         .accessibilityHint(model.locationDenied ? "Position refusée dans les réglages du système" : "")
                     }
@@ -74,6 +71,23 @@ struct MapScreen: View {
                 .hidden()
             }
             .toolbar {
+                // le menu de calque à gauche, la légende et le retour terrain à droite : tout en
+                // Liquid Glass dans la barre, plus rien de flottant en haut de la carte
+                ToolbarItem(placement: Self.leadingPlacement) {
+                    layerMenu
+                }
+                if model.isLoading || model.isInspecting || model.isLoadingWeather {
+                    ToolbarItem(placement: Self.leadingPlacement) {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showLegend = true
+                    } label: {
+                        Label("Légende", systemImage: "info")
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button {
@@ -91,13 +105,6 @@ struct MapScreen: View {
                     }
                     .disabled(model.catalog == nil)
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showSettings = true
-                    } label: {
-                        Label("Réglages", systemImage: "slider.horizontal.3")
-                    }
-                }
             }
         }
         .sheet(item: $observationRequest) { request in
@@ -105,9 +112,6 @@ struct MapScreen: View {
                 field: model.field, species: model.speciesOptions, initialSpecies: request.species,
                 at: request.point, found: request.found
             )
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView(model: model, apiBaseURL: $apiBaseURL, showLegalNotice: $showLegalNotice)
         }
         .sheet(item: pointBinding) { info in
             PointSheet(info: info, model: model)
@@ -155,63 +159,47 @@ struct MapScreen: View {
                 AccessibilityNotification.Announcement("Noté : rien trouvé. Annuler possible pendant cinq secondes.").post()
             }
         }
-        .alert(LegalNotice.title, isPresented: $showLegalNotice) {
-            Button("OK") {}
-        } message: {
-            Text(LegalNotice.text)
-        }
     }
 
-    /// Calque en haut (groupes, espèces, potentiel toute saison), légende à droite.
-    private var controls: some View {
-        HStack {
-            Menu {
-                Picker("Espèce ou groupe", selection: layerBinding) {
-                    ForEach(model.layers) { layer in
-                        Text(layer.title).tag(Optional(layer.key))
-                    }
+    /// À gauche de la barre d'outils sur iOS, dans la zone de navigation sur Mac.
+    private static var leadingPlacement: ToolbarItemPlacement {
+        #if os(iOS)
+        .topBarLeading
+        #else
+        .navigation
+        #endif
+    }
+
+    /// Menu de calque (groupes, espèces, potentiel toute saison, fond de carte), dans la barre.
+    private var layerMenu: some View {
+        Menu {
+            Picker("Espèce ou groupe", selection: layerBinding) {
+                ForEach(model.layers) { layer in
+                    Text(layer.title).tag(Optional(layer.key))
                 }
-                .pickerStyle(.inline)
-                Divider()
-                Toggle(isOn: potentialBinding) {
-                    Label("Afficher le potentiel toute saison", systemImage: "leaf")
-                }
-                Text("Le terrain seul, sans la météo ni la saison : pour repérer des secteurs.")
-                Divider()
-                Picker("Fond de carte", selection: basemapBinding) {
-                    ForEach(Basemap.allCases) { basemap in
-                        Text(basemap.title).tag(basemap)
-                    }
-                }
-                .pickerStyle(.menu)
-            } label: {
-                HStack(spacing: 4) {
-                    Text(model.selectedLayer?.title ?? "Couche")
-                        .fontWeight(.semibold)
-                    Image(systemName: "chevron.down").font(.caption)
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 9)
-                .background(.regularMaterial, in: Capsule())
             }
-            .buttonStyle(.plain)
-            .disabled(model.layers.isEmpty)
-            .accessibilityLabel("Couche : \(model.selectedLayer?.title ?? "aucune")")
-            if model.isLoading || model.isInspecting || model.isLoadingWeather {
-                ProgressView().controlSize(.small)
+            .pickerStyle(.inline)
+            Divider()
+            Toggle(isOn: potentialBinding) {
+                Label("Afficher le potentiel toute saison", systemImage: "leaf")
             }
-            Spacer()
-            Button {
-                showLegend = true
-            } label: {
-                Image(systemName: "info")
+            Text("Le terrain seul, sans la météo ni la saison : pour repérer des secteurs.")
+            Divider()
+            Picker("Fond de carte", selection: basemapBinding) {
+                ForEach(Basemap.allCases) { basemap in
+                    Text(basemap.title).tag(basemap)
+                }
+            }
+            .pickerStyle(.menu)
+        } label: {
+            HStack(spacing: 4) {
+                Text(model.selectedLayer?.title ?? "Couche")
                     .fontWeight(.semibold)
-                    .padding(10)
-                    .background(.regularMaterial, in: Circle())
+                Image(systemName: "chevron.down").font(.caption)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Légende")
         }
+        .disabled(model.layers.isEmpty)
+        .accessibilityLabel("Couche : \(model.selectedLayer?.title ?? "aucune")")
     }
 
     /// Bandeau du bas : les onze jours (mode score) ou le rappel du potentiel (mode terrain),
