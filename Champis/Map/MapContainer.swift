@@ -45,7 +45,7 @@ struct MapContainer: PlatformRepresentable {
     final class Coordinator: NSObject, MKMapViewDelegate {
         let model: MapModel
         private weak var mapView: MKMapView?
-        private var tileRenderer: MKTileOverlayRenderer?
+        private var tileRenderer: ScoreOverlayRenderer?
         private var shownGeneration = -1
         private var shownFranceView: Bool?
         private var shownFollowRequest = 0
@@ -123,7 +123,7 @@ struct MapContainer: PlatformRepresentable {
             if shownGeneration != model.renderGeneration || shownFranceView != model.isFranceView {
                 shownGeneration = model.renderGeneration
                 shownFranceView = model.isFranceView
-                tileRenderer?.reloadData()
+                tileRenderer?.settingsChanged()
                 recolorDepartements()
             }
         }
@@ -257,8 +257,8 @@ struct MapContainer: PlatformRepresentable {
         }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: any MKOverlay) -> MKOverlayRenderer {
-            if let tiles = overlay as? MKTileOverlay {
-                let renderer = MKTileOverlayRenderer(tileOverlay: tiles)
+            if let tiles = overlay as? ScoreTileOverlay {
+                let renderer = ScoreOverlayRenderer(overlay: tiles)
                 renderer.alpha = model.isFranceView ? 0 : model.overlayOpacity
                 tileRenderer = renderer
                 return renderer

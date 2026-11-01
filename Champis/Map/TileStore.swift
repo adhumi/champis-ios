@@ -24,6 +24,9 @@ actor TileStore {
     /// Tuiles décodées, absentes comprises (`nil`) : une tuile hors emprise ne se redemande pas.
     private var cache: [Key: DecodedPNG?] = [:]
     private var order: [Key] = []
+    /// Lectures en cours : une tuile demandée deux fois en même temps (plusieurs rendus, fiche au
+    /// toucher) ne part qu'une fois sur le réseau.
+    private var inflight: [Key: Task<DecodedPNG?, any Error>] = [:]
     private let capacity: Int
     private let session: URLSession
     private let disk: DiskTileCache?
@@ -152,24 +155,40 @@ actor TileStore {
 
     private func tile(reader: PMTilesReader, key: Key, useDisk: Bool) async throws -> DecodedPNG? {
         if let hit = cache[key] { return hit }
-        var data: Data?
-        var fromDisk = false
-        let onDisk: DiskTileCache.Hit = useDisk ? (disk?.read(file: key.name, z: key.z, x: key.x, y: key.y) ?? .miss) : .miss
-        switch onDisk {
+        if let running = inflight[key] { return try await running.value }
+        // Lecture disque, réseau et décodage hors de l'acteur : les tuiles voisines se chargent en
+        // parallèle au lieu d'attendre chacune leur tour.
+        let disk = useDisk ? disk : nil
+        let (name, z, x, y) = (key.name, key.z, key.x, key.y)
+        let task = Task.detached(priority: .userInitiated) {
+            try await Self.fetch(reader: reader, disk: disk, name: name, z: z, x: x, y: y)
+        }
+        inflight[key] = task
+        do {
+            let png = try await task.value
+            inflight[key] = nil
+            remember(key, png)
+            return png
+        } catch {
+            inflight[key] = nil
+            throw error
+        }
+    }
+
+    private nonisolated static func fetch(
+        reader: PMTilesReader, disk: DiskTileCache?, name: String, z: Int, x: Int, y: Int
+    ) async throws -> DecodedPNG? {
+        let data: Data?
+        switch disk?.read(file: name, z: z, x: x, y: y) ?? .miss {
         case .tile(let cached):
             data = cached
-            fromDisk = true
         case .absent:
-            fromDisk = true
+            data = nil
         case .miss:
-            data = try await reader.tile(z: key.z, x: key.x, y: key.y)
+            data = try await reader.tile(z: z, x: x, y: y)
+            try? disk?.write(file: name, z: z, x: x, y: y, data: data)
         }
-        if useDisk && !fromDisk {
-            try? disk?.write(file: key.name, z: key.z, x: key.x, y: key.y, data: data)
-        }
-        let png = try data.map { try PNGDecoder.decode($0) }
-        remember(key, png)
-        return png
+        return try data.map { try PNGDecoder.decode($0) }
     }
 
     private func remember(_ key: Key, _ png: DecodedPNG?) {
