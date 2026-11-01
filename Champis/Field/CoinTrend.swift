@@ -4,7 +4,7 @@ import Foundation
 /// « mieux dimanche » si un jour à venir passe au moins « bon », sinon « stable toute la semaine »
 /// ou « en baisse ». Aucun chiffre ; le seuil « bon » vient de la palette, jamais d'ici.
 nonisolated enum CoinTrend {
-    enum Kind: Equatable, Sendable {
+    nonisolated enum Kind: Equatable, Sendable {
         /// Un jour à venir fait mieux qu'aujourd'hui et atteint au moins « bon » (jour ISO).
         case better(day: String)
         case stable

@@ -12,7 +12,9 @@ import AppKit
 /// Une seule instance : le délégué d'application, hors SwiftUI, doit pouvoir la joindre.
 @Observable
 final class AppRouter {
-    enum Tab: Hashable {
+    /// `nonisolated` : la conformance `Hashable` sert aux génériques de SwiftUI (`TabView`),
+    /// hors de l'acteur principal.
+    nonisolated enum Tab: Hashable, Sendable {
         case coins
         case map
         case understand
