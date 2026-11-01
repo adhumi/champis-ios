@@ -154,6 +154,22 @@ final class FieldModel {
         await pushCoins()
     }
 
+    /// Renomme un coin ; la liste complète repart au serveur.
+    func renameCoin(_ id: UUID, to name: String) async {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let index = coins.firstIndex(where: { $0.id == id }) else { return }
+        var list = coins
+        list[index].name = trimmed
+        do {
+            try await store.setCoins(list)
+        } catch {
+            status = "Coin non renommé : \(error.localizedDescription)"
+            return
+        }
+        await refreshFromStore()
+        await pushCoins()
+    }
+
     func removeCoin(_ id: UUID) async {
         let list = coins.filter { $0.id != id }
         do {

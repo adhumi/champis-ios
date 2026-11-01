@@ -65,6 +65,15 @@ nonisolated struct Coin: Codable, Hashable, Identifiable, Sendable {
     }
 }
 
+/// Un des onze jours J−3 → J+7 d'un coin (`GET /coins` › `days`, lot 1 de la refonte).
+nonisolated struct CoinDay: Decodable, Hashable, Sendable {
+    /// Jour civil, ISO.
+    let date: String
+    /// `nil` : pas de météo ce jour-là.
+    let value: Double?
+    let leading: String?
+}
+
 /// Un coin tel que `GET /coins` le renvoie : avec le score du jour calculé par le backend.
 nonisolated struct ScoredCoin: Decodable, Hashable, Identifiable, Sendable {
     let id: UUID
@@ -76,10 +85,33 @@ nonisolated struct ScoredCoin: Decodable, Hashable, Identifiable, Sendable {
     /// Meilleur jour à venir (strictement meilleur que J), ISO.
     let bestDay: String?
     let best: Double?
+    /// Les onze jours, J−3 → J+7 ; vide avec un serveur d'avant le lot 1.
+    let days: [CoinDay]
 
     enum CodingKeys: String, CodingKey {
-        case id, name, score, leading, best
+        case id, name, score, leading, best, days
         case bestDay = "best_day"
+    }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        score = try c.decodeIfPresent(Double.self, forKey: .score)
+        leading = try c.decodeIfPresent(String.self, forKey: .leading)
+        bestDay = try c.decodeIfPresent(String.self, forKey: .bestDay)
+        best = try c.decodeIfPresent(Double.self, forKey: .best)
+        days = try c.decodeIfPresent([CoinDay].self, forKey: .days) ?? []
+    }
+
+    init(id: UUID, name: String, score: Double?, leading: String?, bestDay: String?, best: Double?, days: [CoinDay]) {
+        self.id = id
+        self.name = name
+        self.score = score
+        self.leading = leading
+        self.bestDay = bestDay
+        self.best = best
+        self.days = days
     }
 }
 

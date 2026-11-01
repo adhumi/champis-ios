@@ -164,7 +164,9 @@ struct FieldModelTests {
                 return (200, """
                 {"today": "2026-10-31", "coins": [{"id": "\(id)", "name": "Col", "lat": 47.0, "lon": 6.0, "target": "cepes",
                   "alt_class": 750, "t": {"boletus_edulis": 0.8}, "score": 0.7, "leading": "boletus_edulis",
-                  "best_day": null, "best": null}]}
+                  "best_day": null, "best": null,
+                  "days": [{"date": "2026-10-31", "value": 0.7, "leading": "boletus_edulis"},
+                           {"date": "2026-11-01", "value": null, "leading": null}]}]}
                 """)
             case ("DELETE", "/observations"):
                 return (200, #"{"deleted": 1}"#)
@@ -188,10 +190,19 @@ struct FieldModelTests {
         let coin = try #require(model.coins.first)
         #expect(model.coinScores[coin.id]?.score == 0.7, "\(model.status ?? "")")
         #expect(model.coinsToday == "2026-10-31")
+        #expect(model.coinScores[coin.id]?.days.count == 2)
+        #expect(model.coinScores[coin.id]?.days.last?.value == nil)
+
+        await model.renameCoin(coin.id, to: "  Col du Nord ")
+        #expect(model.coins.first?.name == "Col du Nord")
+        #expect(StubURLProtocol.requests(host: host).filter { $0.method == "PUT" }.count == 2)
+        await model.renameCoin(coin.id, to: "   ")  // vide : ignoré, pas d'appel
+        #expect(model.coins.first?.name == "Col du Nord")
+        #expect(StubURLProtocol.requests(host: host).filter { $0.method == "PUT" }.count == 2)
 
         await model.removeCoin(coin.id)
         #expect(model.coins.isEmpty)
-        #expect(StubURLProtocol.requests(host: host).filter { $0.method == "PUT" }.count == 2)
+        #expect(StubURLProtocol.requests(host: host).filter { $0.method == "PUT" }.count == 3)
 
         await model.addCoin(name: "Autre", latitude: 47.0, longitude: 6.0, target: "cepes", altClass: 450, t: ["boletus_edulis": 0.5])
         await model.deleteAll()

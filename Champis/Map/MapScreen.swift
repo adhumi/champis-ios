@@ -1,20 +1,18 @@
 import ChampisScoring
 import SwiftUI
 
-/// Écran carte : overlay colorisé sur fond Apple (ou départements en vue France), sélecteur d'espèce
-/// ou de groupe, mode terrain ou score du jour, curseur de jour J−3 → J+7, légende, fiche au
-/// toucher, avertissement sur le cadre légal.
+/// Onglet Carte : overlay colorisé sur fond Apple (ou départements en vue France), sélecteur
+/// d'espèce ou de groupe, mode terrain ou score du jour, curseur de jour J−3 → J+7, légende, fiche
+/// au toucher, avertissement sur le cadre légal. Les coins ont leur onglet (`CoinsScreen`).
 struct MapScreen: View {
     static let defaultAPIBaseURL = "https://champis.adhumi.fr"
 
+    /// Modèle partagé par les trois onglets, créé et démarré par `ContentView`.
+    let model: MapModel
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
     @AppStorage("legalNoticeAcknowledged") private var legalNoticeAcknowledged = false
-    @State private var model = MapModel(
-        apiBaseURL: URL(string: MapScreen.defaultAPIBaseURL)!, diskCache: try? DiskTileCache.default()
-    )
     @State private var showSettings = false
     @State private var showLegalNotice = false
-    @State private var showCoins = false
     @State private var observationRequest: ObservationFormRequest?
 
     var body: some View {
@@ -56,12 +54,6 @@ struct MapScreen: View {
                         } label: {
                             Label("Rien trouvé", systemImage: "xmark.circle")
                         }
-                        Divider()
-                        Button {
-                            showCoins = true
-                        } label: {
-                            Label("Mes coins", systemImage: "star")
-                        }
                     } label: {
                         Label("Retour terrain", systemImage: "leaf")
                     }
@@ -82,17 +74,10 @@ struct MapScreen: View {
                 at: request.point, found: request.found
             )
         }
-        .sheet(isPresented: $showCoins) {
-            CoinsView(field: model.field, model: model)
-        }
         .task {
-            await model.start(apiBaseURL: Self.url(from: apiBaseURL))
             if !legalNoticeAcknowledged {
                 showLegalNotice = true
             }
-        }
-        .onChange(of: apiBaseURL) { _, newValue in
-            Task { await model.start(apiBaseURL: Self.url(from: newValue)) }
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(model: model, apiBaseURL: $apiBaseURL, showLegalNotice: $showLegalNotice)
@@ -349,5 +334,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    MapScreen()
+    MapScreen(model: MapModel(apiBaseURL: URL(string: MapScreen.defaultAPIBaseURL)!))
 }

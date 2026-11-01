@@ -101,6 +101,15 @@ struct FieldStoreTests {
           "score": 0.62, "leading": "boletus_edulis", "best_day": "2026-11-02", "best": 0.7}]}
         """)
         #expect(coins.coins[0].score == 0.62 && coins.coins[0].bestDay == "2026-11-02")
+        #expect(coins.coins[0].days.isEmpty)  // serveur d'avant le lot 1 : pas de `days`, pas d'erreur
+        let withDays = try Fixtures.decode(CoinsResponse.self, """
+        {"today": "2026-10-31", "coins": [{"id": "33333333-3333-3333-3333-333333333333", "name": "Col",
+          "lat": 47.0, "lon": 6.0, "target": "cepes", "alt_class": 750, "t": {"boletus_edulis": 0.8},
+          "score": 0.62, "leading": "boletus_edulis", "best_day": null, "best": null,
+          "days": [{"date": "2026-10-28", "value": 0.5, "leading": "boletus_edulis"}, {"date": "2026-10-29", "value": null, "leading": null}]}]}
+        """)
+        #expect(withDays.coins[0].days.map(\.date) == ["2026-10-28", "2026-10-29"])
+        #expect(withDays.coins[0].days[0].value == 0.5 && withDays.coins[0].days[1].value == nil)
         let post = try Fixtures.decode(ObservationsPostResponse.self, #"{"inserted": 2, "duplicates": 1}"#)
         #expect(post.inserted == 2 && post.duplicates == 1)
         #expect(try Fixtures.decode(DeleteResponse.self, #"{"deleted": 5}"#).deleted == 5)

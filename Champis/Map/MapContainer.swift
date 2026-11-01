@@ -47,6 +47,7 @@ struct MapContainer: PlatformRepresentable {
         private var shownGeneration = -1
         private var shownFranceView: Bool?
         private var shownFollowRequest = 0
+        private var shownFocusRequest = 0
         private var basemap: Basemap?
         private var deptOverlaysInstalled = false
         private var deptRenderers: [String: [MKOverlayPathRenderer]] = [:]
@@ -95,6 +96,15 @@ struct MapContainer: PlatformRepresentable {
             if shownFollowRequest != model.followRequest {
                 shownFollowRequest = model.followRequest
                 mapView.setUserTrackingMode(.follow, animated: true)
+            }
+            if let focus = model.focusRequest, focus.id != shownFocusRequest {
+                shownFocusRequest = focus.id
+                mapView.setUserTrackingMode(.none, animated: false)
+                let center = CLLocationCoordinate2D(latitude: focus.latitude, longitude: focus.longitude)
+                mapView.setRegion(
+                    MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)),
+                    animated: true
+                )
             }
             if !deptOverlaysInstalled && !model.deptFeatures.isEmpty {
                 installDepartements(on: mapView)
