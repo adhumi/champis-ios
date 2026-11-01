@@ -257,6 +257,42 @@
       ]
     }
   },
+  "about": {
+    "summary": "Jaune d'œuf du chapeau au pied, chair ferme et blanche, odeur fruitée d'abricot. Sous le chapeau, pas de lames mais des plis épais et fourchus qui descendent sur le pied.",
+    "habitat": "Toutes les forêts sur sols acides : chênes, hêtres, châtaigniers, bouleaux, épicéas et pins, souvent dans la mousse ; absente du climat méditerranéen.",
+    "season": "De juin à novembre, pic de la mi-août à la mi-octobre ; plus tard en montagne.",
+    "confusions": [
+      {
+        "name": "Fausse girolle",
+        "latin": "Hygrophoropsis aurantiaca",
+        "risk": "Peu toxique mais sans intérêt ; cause de troubles digestifs chez certaines personnes.",
+        "tell": "De vraies lames, fines, serrées et molles, là où la girolle a des plis épais et fourchus ; orangé plus vif, chair souple, pousse sur bois pourri ou aiguilles.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Clitocybe de l'olivier",
+        "latin": "Omphalotus olearius",
+        "risk": "Toxique : vomissements et diarrhées violents quelques heures après le repas.",
+        "tell": "Pousse en touffes sur les souches et les racines (chênes, oliviers), lames vraies et serrées, chair orangée et non blanche. Surtout dans le Sud.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": null,
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — caractères distinctifs du bolet amer, des bolets à pores rouges, de la fausse girolle et du clitocybe de l'olivier",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes"
+    }
+  },
   "references": {
     "olariaga2017": "Olariaga et al. 2017, Fungal Diversity — révision multigène de Cantharellus en Europe, hôtes et sols par espèce",
     "pilz2003": "Pilz, Norvell, Danell & Molina 2003, USDA GTR-576 — synthèse : pH 4,0-5,5, 14 genres d'hôtes, persistance moyenne 44 j (Largent & Sime 1995, Norvell 1995), optimum 20 °C en culture",

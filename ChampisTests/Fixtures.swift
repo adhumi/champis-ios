@@ -50,6 +50,21 @@ nonisolated enum Fixtures {
     }
 
     /// `GET /species` : deux cèpes et une girolle.
+    /// Bloc `about` d'une fiche (lot 4), photo encore à choisir.
+    static let aboutJSON = """
+    {
+      "summary": "Le cèpe le plus répandu en France.",
+      "habitat": "Hêtraies et sapinières.",
+      "season": "Septembre et octobre.",
+      "confusions": [
+        { "name": "Bolet amer", "latin": "Tylopilus felleus", "risk": "Amer.", "tell": "Réseau brun.", "refs": ["courtecuisse2013"] }
+      ],
+      "photo": null,
+      "refs": ["courtecuisse2013"],
+      "references": { "courtecuisse2013": "Courtecuisse & Duhem 2013" }
+    }
+    """
+
     static let catalogJSON = """
     {
       "scoring_version": "1.0.0",

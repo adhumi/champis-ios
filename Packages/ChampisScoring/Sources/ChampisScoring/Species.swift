@@ -177,11 +177,42 @@ public struct Species: Codable, Hashable, Sendable {
         }
     }
 
+    /// Fiche en mots de l'onglet Comprendre et du site (lot 4) : jamais d'aide à l'identification.
+    /// Autoporteuse (`references`) et hors de l'empreinte d'espèce : la relire ne régénère rien.
+    public struct About: Codable, Hashable, Sendable {
+        public struct Confusion: Codable, Hashable, Sendable {
+            public let name: String
+            public let latin: String
+            /// Ce qu'on risque.
+            public let risk: String
+            /// Comment la distinguer.
+            public let tell: String
+            public let refs: [String]
+        }
+
+        /// Photo Wikimedia Commons sous licence libre ; le crédit s'affiche sous l'image.
+        public struct Photo: Codable, Hashable, Sendable {
+            public let url: String
+            public let page: String
+            public let author: String
+            public let license: String
+        }
+
+        public let summary: String
+        public let habitat: String
+        public let season: String
+        public let confusions: [Confusion]
+        public let photo: Photo?
+        public let refs: [String]
+        public let references: [String: String]
+    }
+
     public let id: String
     public let names: Names?
     public let group: Group?
     public let phenology: Phenology
     public let weather: Weather
+    public let about: About?
 
     /// Décode un fichier espèce (clés `snake_case` du dépôt, telles quelles).
     public static func decode(_ data: Data) throws -> Species {

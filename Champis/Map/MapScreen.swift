@@ -21,7 +21,6 @@ struct MapScreen: View {
     let model: MapModel
     var layout: Layout = .compact
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
-    @AppStorage("legalNoticeAcknowledged") private var legalNoticeAcknowledged = false
     @State private var showSettings = false
     @State private var showLegalNotice = false
     @State private var showLegend = false
@@ -101,11 +100,6 @@ struct MapScreen: View {
                 at: request.point, found: request.found
             )
         }
-        .task {
-            if !legalNoticeAcknowledged {
-                showLegalNotice = true
-            }
-        }
         .sheet(isPresented: $showSettings) {
             SettingsView(model: model, apiBaseURL: $apiBaseURL, showLegalNotice: $showLegalNotice)
         }
@@ -156,7 +150,7 @@ struct MapScreen: View {
             }
         }
         .alert(LegalNotice.title, isPresented: $showLegalNotice) {
-            Button("J'ai compris") { legalNoticeAcknowledged = true }
+            Button("OK") {}
         } message: {
             Text(LegalNotice.text)
         }
@@ -177,6 +171,13 @@ struct MapScreen: View {
                     Label("Afficher le potentiel toute saison", systemImage: "leaf")
                 }
                 Text("Le terrain seul, sans la météo ni la saison : pour repérer des secteurs.")
+                Divider()
+                Picker("Fond de carte", selection: basemapBinding) {
+                    ForEach(Basemap.allCases) { basemap in
+                        Text(basemap.title).tag(basemap)
+                    }
+                }
+                .pickerStyle(.menu)
             } label: {
                 HStack(spacing: 4) {
                     Text(model.selectedLayer?.title ?? "Couche")
@@ -270,6 +271,10 @@ struct MapScreen: View {
 
     private var offlineBinding: Binding<Bool> {
         Binding(get: { model.offlineSuggestion != nil }, set: { if !$0, model.offlineSuggestion != nil { model.declineOfflineSuggestion() } })
+    }
+
+    private var basemapBinding: Binding<Basemap> {
+        Binding(get: { model.basemap }, set: { model.basemap = $0 })
     }
 
     private var potentialBinding: Binding<Bool> {
@@ -419,99 +424,6 @@ nonisolated enum LegalNotice {
     en quantité limitée, et peut être restreinte ou interdite par arrêté préfectoral ou municipal. \
     Renseignez-vous avant de partir et respectez les lieux.
     """
-}
-
-/// Réglages : fond de carte, opacité de l'overlay, adresse de l'API, rappel du cadre légal.
-struct SettingsView: View {
-    @Bindable var model: MapModel
-    @Binding var apiBaseURL: String
-    @Binding var showLegalNotice: Bool
-    @Environment(\.dismiss) private var dismiss
-    @State private var confirmDelete = false
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Carte") {
-                    Picker("Fond", selection: $model.basemap) {
-                        ForEach(Basemap.allCases) { basemap in
-                            Text(basemap.title).tag(basemap)
-                        }
-                    }
-                    LabeledContent("Opacité") {
-                        Slider(value: $model.overlayOpacity, in: 0.2...1)
-                            .accessibilityValue("\(Int(model.overlayOpacity * 100)) %")
-                    }
-                }
-                Section("Serveur") {
-                    TextField("Adresse de l'API", text: $apiBaseURL)
-                        .autocorrectionDisabled()
-                    if let catalog = model.catalog {
-                        LabeledContent("Scoring", value: catalog.scoringVersion)
-                        LabeledContent("Espèces", value: "\(catalog.species.count)")
-                    }
-                }
-                Section {
-                    NavigationLink {
-                        OfflineView(offline: model.offline, model: model)
-                    } label: {
-                        LabeledContent("Départements embarqués", value: "\(model.offline.departments.filter(\.complete).count)")
-                    }
-                    LabeledContent("Tuiles en cache", value: cacheSizeText)
-                    Button("Vider le cache des tuiles", role: .destructive) {
-                        Task { await model.clearTileCache() }
-                    }
-                } header: {
-                    Text("Hors ligne")
-                } footer: {
-                    Text("Les départements embarqués se lisent sans réseau, météo du téléchargement comprise ; les tuiles déjà vues aussi.")
-                }
-                Section {
-                    LabeledContent("Observations", value: "\(model.field.observations.count)")
-                    LabeledContent("Coins", value: "\(model.field.coins.count)")
-                    Button("Supprimer mes observations et mes coins", role: .destructive) {
-                        confirmDelete = true
-                    }
-                    .disabled(model.field.userID == nil)
-                    if let status = model.field.status {
-                        Text(status).font(.footnote).foregroundStyle(.secondary)
-                    }
-                } header: {
-                    Text("Mes données")
-                } footer: {
-                    Text("Observations et coins sont privés, liés à un identifiant anonyme de l'app. La suppression efface tout sur le serveur et sur l'appareil.")
-                }
-                Section {
-                    Button(LegalNotice.title) {
-                        dismiss()
-                        showLegalNotice = true
-                    }
-                }
-            }
-            .confirmationDialog(
-                "Supprimer toutes mes observations et mes coins ?", isPresented: $confirmDelete, titleVisibility: .visible
-            ) {
-                Button("Tout supprimer", role: .destructive) {
-                    let field = model.field
-                    Task { await field.deleteAll() }
-                }
-            } message: {
-                Text("Le serveur efface vos lignes, l'appareil aussi. Il n'y a pas de retour.")
-            }
-            .navigationTitle("Réglages")
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("OK") { dismiss() }
-                }
-            }
-            .task { await model.refreshTileCacheSize() }
-        }
-    }
-
-    private var cacheSizeText: String {
-        guard let size = model.tileCacheSize else { return "…" }
-        return size.formatted(.byteCount(style: .file))
-    }
 }
 
 #Preview {
