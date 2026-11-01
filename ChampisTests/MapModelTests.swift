@@ -39,6 +39,43 @@ struct MapModelTests {
         #expect(model.pointInfo == nil)
     }
 
+    @Test("Appui long : le point attend le menu de terrain ; « Ajouter à mes coins » passe par la fiche")
+    func longPress() {
+        let model = MapModel(apiBaseURL: URL(string: "https://champis.example")!)
+        #expect(model.longPressPoint == nil)
+        model.longPress(latitude: 47, longitude: 6)
+        #expect(model.longPressPoint == MapSelection(latitude: 47, longitude: 6))
+        model.clearLongPress()
+        #expect(model.longPressPoint == nil)
+        #expect(model.layerSpecies.isEmpty)  // rien chargé : pas de calque, pas de « rien trouvé »
+
+        model.requestCoin(latitude: 47, longitude: 6)
+        #expect(model.coinRequestFromLongPress)
+        #expect(model.selection == MapSelection(latitude: 47, longitude: 6))
+        model.clearCoinRequest()
+        #expect(!model.coinRequestFromLongPress)
+        model.requestCoin(latitude: 47, longitude: 6)
+        model.clearSelection()
+        #expect(!model.coinRequestFromLongPress)  // fermer la fiche oublie la demande
+    }
+
+    @Test("Proposition hors ligne : le jeu du département, sauf déjà embarqué, déjà refusé ou absent")
+    func offlineSuggestion() throws {
+        let manifest = try Fixtures.decode(TilesManifest.self, Fixtures.manifestPerDeptJSON)
+        let names = ["25": "Doubs"]
+        let doubs = MapModel.suggestOffline(code: "25", manifest: manifest, names: names, embarked: [], declined: [])
+        #expect(doubs?.code == "25")
+        #expect(doubs?.name == "Doubs")
+        #expect(doubs.map { MapScreen.sizeText($0) } == ByteCountFormatStyle(style: .file).format(3300))
+        #expect(MapModel.suggestOffline(code: "25", manifest: manifest, names: names, embarked: ["25"], declined: []) == nil)
+        #expect(MapModel.suggestOffline(code: "25", manifest: manifest, names: names, embarked: [], declined: ["25"]) == nil)
+        #expect(MapModel.suggestOffline(code: "01", manifest: manifest, names: names, embarked: [], declined: []) == nil)
+        #expect(MapModel.suggestOffline(code: "25", manifest: nil, names: names, embarked: [], declined: []) == nil)
+        let model = MapModel(apiBaseURL: URL(string: "https://champis.example")!)
+        #expect(model.offlineSuggestion == nil)
+        model.declineOfflineSuggestion()  // sans proposition : rien n'est mémorisé
+    }
+
     @Test("Vue France : mode score sous le zoom seuil ; départements sans indice transparents")
     func franceView() {
         let model = MapModel(apiBaseURL: URL(string: "https://champis.example")!)

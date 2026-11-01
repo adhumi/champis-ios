@@ -4,10 +4,12 @@ import SwiftUI
 #if os(macOS)
 private typealias PlatformRepresentable = NSViewRepresentable
 private typealias PlatformGestureRecognizer = NSGestureRecognizer
+private typealias PlatformLongPressRecognizer = NSPressGestureRecognizer
 private typealias PlatformColor = NSColor
 #else
 private typealias PlatformRepresentable = UIViewRepresentable
 private typealias PlatformGestureRecognizer = UIGestureRecognizer
+private typealias PlatformLongPressRecognizer = UILongPressGestureRecognizer
 private typealias PlatformColor = UIColor
 #endif
 
@@ -79,6 +81,14 @@ struct MapContainer: PlatformRepresentable {
             let recognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
             #endif
             mapView.addGestureRecognizer(recognizer)
+            #if os(macOS)
+            let longPress = NSPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+            longPress.minimumPressDuration = 0.5
+            #else
+            let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+            longPress.minimumPressDuration = 0.5
+            #endif
+            mapView.addGestureRecognizer(longPress)
             return mapView
         }
 
@@ -276,6 +286,14 @@ struct MapContainer: PlatformRepresentable {
             } else {
                 model.select(latitude: coordinate.latitude, longitude: coordinate.longitude)
             }
+        }
+
+        /// Appui long (lot 3) : le menu de terrain au point pressé, sans passer par la fiche.
+        @objc private func handleLongPress(_ gesture: PlatformLongPressRecognizer) {
+            guard gesture.state == .began, let mapView, !model.isFranceView else { return }
+            let point = gesture.location(in: mapView)
+            let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
+            model.longPress(latitude: coordinate.latitude, longitude: coordinate.longitude)
         }
 
         /// Emprise visible en degrés (coins sud-ouest et nord-est de la vue).

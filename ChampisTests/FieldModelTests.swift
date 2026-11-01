@@ -148,6 +148,48 @@ struct FieldModelTests {
         #expect(model.status == nil)
     }
 
+    @Test("Rien trouvé en une tape : une négative par espèce, retenue pendant le délai, annulable, puis envoyée")
+    func notFoundUndo() async throws {
+        let directory = FieldStoreTests.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host) { method, path, _ in
+            (method, path) == ("POST", "/observations") ? (201, #"{"inserted": 2, "duplicates": 0}"#) : (404, "{}")
+        }
+        let model = Self.model(host: host, directory: directory)
+        model.undoWindow = .milliseconds(150)
+        await model.start(api: model.api)
+
+        // annulé avant la fin du délai : rien n'est envoyé, rien ne reste
+        await model.recordNotFound(species: ["boletus_aereus", "boletus_edulis"], latitude: 47, longitude: 6)
+        #expect(model.observations.count == 2)
+        #expect(model.observations.allSatisfy { !$0.found && $0.quantity == nil && $0.date == FieldModel.isoDay() })
+        #expect(model.undoable.count == 2)
+        #expect(model.pendingCount == 2)
+        await model.sync()  // un envoi explicite respecte aussi le délai
+        #expect(StubURLProtocol.requests(host: host).filter { $0.method == "POST" }.isEmpty)
+        await model.undoNotFound()
+        #expect(model.observations.isEmpty)
+        #expect(model.undoable.isEmpty)
+        #expect(model.pendingCount == 0)
+
+        // laissé passer : envoyé à la fin du délai
+        await model.recordNotFound(species: ["boletus_edulis"], latitude: 47, longitude: 6)
+        #expect(model.undoable.count == 1)
+        try await Task.sleep(for: .milliseconds(600))
+        #expect(model.undoable.isEmpty)
+        #expect(model.pendingCount == 0)
+        let post = try #require(StubURLProtocol.requests(host: host).first { $0.method == "POST" })
+        let sent = StubURLProtocol.json(post.body)["observations"] as? [[String: Any]]
+        #expect(sent?.count == 1)
+        #expect(sent?[0]["found"] as? Bool == false)
+
+        // aucune espèce : rien de noté, rien à annuler
+        await model.recordNotFound(species: [], latitude: 47, longitude: 6)
+        #expect(model.undoable.isEmpty)
+        #expect(model.observations.count == 1)
+    }
+
     @Test("Coins : PUT en liste complète sans jeton, scores relus ; suppression totale")
     func coinsAndDelete() async throws {
         let directory = FieldStoreTests.temporaryDirectory()

@@ -18,6 +18,11 @@ final class FieldModel {
     private(set) var status: String?
     private(set) var isSyncing = false
     private(set) var userID: UUID?
+    /// Observations annulables (« Noté : rien trouvé », lot 3) : pas encore envoyées, retirables.
+    private(set) var undoable: [UUID] = []
+    /// Délai pendant lequel « Annuler » est proposé avant l'envoi ; raccourci par les tests.
+    @ObservationIgnored var undoWindow: Duration = .seconds(5)
+    @ObservationIgnored private var undoTask: Task<Void, Never>?
 
     @ObservationIgnored private let store: LocalStore
     @ObservationIgnored private let identityStores: [any IdentityStore]
@@ -78,17 +83,59 @@ final class FieldModel {
         do {
             try await store.add(observation)
         } catch {
-            status = "FieldObservation non enregistrée : \(error.localizedDescription)"
+            status = "Observation non enregistrée : \(error.localizedDescription)"
             return
         }
         await refreshFromStore()
         await sync()
     }
 
+    /// « Rien trouvé ici » en une tape (lot 3) : une observation négative par espèce, enregistrée
+    /// tout de suite, annulable pendant `undoWindow`, envoyée ensuite.
+    func recordNotFound(species: [String], latitude: Double, longitude: Double) async {
+        var ids: [UUID] = []
+        for sid in species {
+            let observation = FieldObservation(
+                species: sid, lat: latitude, lon: longitude, accuracyM: nil, date: Self.isoDay(),
+                found: false, quantity: nil
+            )
+            do {
+                try await store.add(observation)
+                ids.append(observation.id)
+            } catch {
+                status = "Observation non enregistrée : \(error.localizedDescription)"
+            }
+        }
+        await refreshFromStore()
+        guard !ids.isEmpty else { return }
+        undoTask?.cancel()
+        undoable = ids
+        let window = undoWindow
+        undoTask = Task { [weak self] in
+            try? await Task.sleep(for: window)
+            guard !Task.isCancelled, let self else { return }
+            undoable = []
+            await sync()
+        }
+    }
+
+    /// Retire ce qui vient d'être noté « rien trouvé », tant que l'envoi n'a pas eu lieu.
+    func undoNotFound() async {
+        undoTask?.cancel()
+        let ids = undoable
+        undoable = []
+        for id in ids {
+            try? await store.remove(id)
+        }
+        await refreshFromStore()
+    }
+
     /// Envoie les observations en attente par lots ; réessayé à chaque démarrage et enregistrement.
+    /// Ce qui est encore annulable attend la fin de son délai.
     func sync() async {
         guard let userID, !isSyncing else { return }
-        let pending = await store.pendingObservations
+        let held = Set(undoable)
+        let pending = await store.pendingObservations.filter { !held.contains($0.id) }
         guard !pending.isEmpty else { return }
         isSyncing = true
         defer { isSyncing = false }

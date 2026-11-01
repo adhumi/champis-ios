@@ -56,6 +56,13 @@ Le pipeline publie un jeu de PMTiles par département (décision du 31 oct. 2026
 
 Observations (trouvé / rien trouvé, espèce, position, date, quantité, sans photo) et coins (favoris nommés) sont saisis dans l'app seulement et restent privés. Identité : un UUID généré au premier lancement dans le trousseau synchronisé iCloud (`KeychainIdentityStore`, repli `UserDefaults` quand le trousseau refuse), envoyé en en-tête `X-Champis-User`. Stockage local : fichiers JSON dans Application Support (`LocalStore`, écriture atomique) ; les observations partent par lots idempotents vers `POST /observations` dès que le réseau répond, les coins par `PUT /coins` en liste complète. Les scores des coins viennent de `GET /coins` (calculés par le backend) ; la notification est calculée et envoyée par le backend, l'app ne fait aucun travail en arrière-plan. Le jeton APNs n'est pas encore envoyé : cela demande la capacité Push Notifications sur l'App ID, à venir avec les clés. « Supprimer mes observations et mes coins » dans les réglages exerce le droit à l'effacement (`DELETE /observations`, puis purge locale).
 
+## Deux tapes en forêt, iPad et Mac (refonte UX, lot 3)
+
+- Appui long sur la carte (`MapContainer`, `UILongPressGestureRecognizer` / `NSPressGestureRecognizer`) → `MapModel.longPress` → menu « Trouvé ici · Rien trouvé ici · Ajouter à mes coins » (`MapScreen`).
+- « Rien trouvé ici » : `FieldModel.recordNotFound` enregistre une négative par espèce du calque, affiche « Noté : rien trouvé » avec Annuler pendant cinq secondes (`undoable`, `undoNotFound`, `LocalStore.remove`), puis envoie. « Trouvé ici » : `QuickFoundSheet`, trois boutons de quantité. Le formulaire complet reste dans le menu Retour terrain.
+- Nouveau coin dans un département non embarqué dont le serveur publie un jeu : `MapModel.addCoin` propose une fois « Embarquer … ? » (`suggestOffline`, refus mémorisé dans `UserDefaults`).
+- iPad en largeur régulière et Mac : `SplitContentView` (barre latérale Mes coins · Carte · Comprendre, carte en détail, fiches dans l'inspecteur) ; `MapScreen(layout: .split)` ne présente pas de feuille. ⌘← et ⌘→ changent de jour.
+
 ## Tests
 
 Schéma `Champis` → ⌘U : exécute `ChampisTests`, `ChampisScoringTests` et `ChampisPMTilesTests`. En ligne de commande, pour le paquet seul :

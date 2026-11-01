@@ -26,8 +26,7 @@ struct PointSheet: View {
 
     let info: PointInfo
     let model: MapModel
-    @Environment(\.dismiss) private var dismiss
-    @State private var observationRequest: ObservationFormRequest?
+    @State private var quickFound: MapSelection?
     @State private var namingCoin = false
     @State private var coinName = ""
 
@@ -55,14 +54,12 @@ struct PointSheet: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("OK") { dismiss() }
+                    // ferme la feuille comme l'inspecteur : c'est la sélection qui commande
+                    Button("OK") { model.clearSelection() }
                 }
             }
-            .sheet(item: $observationRequest) { request in
-                ObservationForm(
-                    field: model.field, species: model.speciesOptions, initialSpecies: request.species,
-                    at: request.point, found: request.found
-                )
+            .sheet(item: $quickFound) { point in
+                QuickFoundSheet(model: model, point: point, initialSpecies: info.scored?.species)
             }
             .alert("Nom du coin", isPresented: $namingCoin) {
                 TextField("Nom", text: $coinName)
@@ -73,6 +70,16 @@ struct PointSheet: View {
             }
         }
         .task { await model.loadFactors(for: info) }
+        .onAppear {
+            // appui long › « Ajouter à mes coins » : la fiche s'ouvre déjà sur le nom
+            if model.coinRequestFromLongPress {
+                model.clearCoinRequest()
+                if info.scored != nil {
+                    coinName = ""
+                    namingCoin = true
+                }
+            }
+        }
         #if os(iOS)
         .presentationDetents([.medium, .large])
         #endif
@@ -157,20 +164,26 @@ struct PointSheet: View {
 
     // MARK: - Retour terrain
 
-    /// « rien trouvé » aussi accessible que « trouvé » ; un coin garde la cible de la couche, la
-    /// classe d'altitude et le T de chaque espèce du pixel.
+    /// Deux tapes en forêt (lot 3) : « Rien trouvé ici » enregistre tout de suite (annulable cinq
+    /// secondes depuis la carte), « Trouvé ici » ne demande que la quantité. Un coin garde la cible
+    /// de la couche, la classe d'altitude et le T de chaque espèce du pixel.
     private var fieldSection: some View {
         Section {
             Button {
-                observationRequest = ObservationFormRequest(found: true, species: info.scored?.species, point: point)
+                quickFound = point
             } label: {
                 Label("Trouvé ici", systemImage: "checkmark.circle")
             }
             Button {
-                observationRequest = ObservationFormRequest(found: false, species: info.scored?.species, point: point)
+                let field = model.field
+                let species = notFoundSpecies
+                let location = point
+                model.clearSelection()
+                Task { await field.recordNotFound(species: species, latitude: location.latitude, longitude: location.longitude) }
             } label: {
                 Label("Rien trouvé ici", systemImage: "xmark.circle")
             }
+            .disabled(notFoundSpecies.isEmpty)
             if info.scored != nil {
                 Button {
                     coinName = ""
@@ -186,22 +199,19 @@ struct PointSheet: View {
         MapSelection(latitude: info.latitude, longitude: info.longitude)
     }
 
+    /// Les espèces du calque, à défaut celle de la fiche : une négative par espèce.
+    private var notFoundSpecies: [String] {
+        let layer = model.layerSpecies
+        if !layer.isEmpty { return layer }
+        return info.scored.map { [$0.species] } ?? []
+    }
+
     private func addCoin() {
-        guard let scored = info.scored else { return }
         let name = coinName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return }
-        let target = model.selectedLayer.map { MapModel.apiTarget($0.key) } ?? scored.species
-        let classM = Int(model.palette?.altEncoding.classM ?? 300)
-        let altClass = scored.altClass.map { $0 * classM + classM / 2 } ?? scored.altKey.flatMap { Int($0) } ?? 0
-        let terrains = scored.terrains.isEmpty ? [scored.species: scored.terrain] : scored.terrains
-        let field = model.field
-        let location = point
-        Task {
-            await field.addCoin(
-                name: name, latitude: location.latitude, longitude: location.longitude, target: target,
-                altClass: altClass, t: terrains
-            )
-        }
+        let model = model
+        let info = info
+        Task { await model.addCoin(named: name, from: info) }
     }
 
     // MARK: - Détails
@@ -279,7 +289,6 @@ struct FactorRow: View {
 struct DeptSheet: View {
     let info: DeptInfo
     let model: MapModel
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -318,7 +327,7 @@ struct DeptSheet: View {
             .navigationTitle(title)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("OK") { dismiss() }
+                    Button("OK") { model.clearDeptInfo() }
                 }
             }
         }
