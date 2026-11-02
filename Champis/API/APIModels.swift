@@ -138,14 +138,18 @@ nonisolated struct DepartementsResponse: Decodable, Sendable {
 /// Réponse de `GET /weather/bbox` : les 11 jours J−3 → J+7 de chaque cellule de l'emprise.
 nonisolated struct WeatherBBoxResponse: Codable, Sendable {
     let today: String
+    /// Horodatage ISO 8601 du précalcul servi (la pré-chauffe de l'API) ; `nil` si rien n'a été servi.
+    let computedAt: String?
     let scoringVersion: String?
     let cells: [CellWeather]
-    /// Cellules sans météo (quota Open-Meteo, historique trop court) : pixels transparents.
+    /// Cellules sans météo (quota Open-Meteo, historique trop court, pas encore précalculées) :
+    /// pixels transparents.
     let unavailable: [String]
     let retryAfter: Int?
 
     enum CodingKeys: String, CodingKey {
         case today, cells, unavailable
+        case computedAt = "computed_at"
         case scoringVersion = "scoring_version"
         case retryAfter = "retry_after"
     }

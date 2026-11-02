@@ -46,6 +46,7 @@ struct APIModelsTests {
     func weather() throws {
         let response = try Fixtures.decode(WeatherBBoxResponse.self, Fixtures.weatherJSON)
         #expect(response.today == "2026-10-30")
+        #expect(response.computedAt == "2026-10-30T03:12:00+00:00")
         #expect(response.cells.count == 1)
         #expect(response.unavailable == ["c_9"])
         #expect(response.retryAfter == nil)

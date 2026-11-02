@@ -155,12 +155,32 @@ struct MapModelTests {
         #expect(MapModel.format(iso: "n'importe quoi") == "n'importe quoi")
     }
 
-    @Test("Statut météo : cellules, cache périmé, cellules manquantes")
+    @Test("Statut météo : cellules, date du précalcul, cache périmé, cellules manquantes")
     func status() throws {
         let response = try Fixtures.decode(WeatherBBoxResponse.self, Fixtures.weatherJSON)
         let status = MapModel.status(for: response)
         #expect(status.hasPrefix("1 cellule(s) météo"))
+        #expect(status.contains("calculée le"))
         #expect(status.contains("1 sans météo"))
         #expect(!status.contains("périmé"))
+        #expect(!MapModel.isComplete(response))  // une cellule manque : le prochain déplacement redemande
+    }
+
+    @Test("Météo déjà reçue : une emprise contenue dans la dernière, même couche, ne redemande rien")
+    func weatherCoverage() {
+        let loaded = BBox(minLon: 6, minLat: 46, maxLon: 7, maxLat: 47)
+        let inside = BBox(minLon: 6.2, minLat: 46.2, maxLon: 6.8, maxLat: 46.8)
+        let overlapping = BBox(minLon: 5.9, minLat: 46.2, maxLon: 6.8, maxLat: 46.8)
+        let now = Date(timeIntervalSince1970: 1_000_000)
+        let cepes = LayerKey.group("cepes")
+        let coverage = WeatherCoverage(bbox: loaded, layer: cepes, at: now)
+        #expect(loaded.contains(inside) && loaded.contains(loaded) && !loaded.contains(overlapping))
+        #expect(MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: inside, now: now))
+        #expect(MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: loaded, now: now + 60))
+        #expect(!MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: overlapping, now: now))
+        #expect(!MapModel.weatherAlreadyCovers(coverage, layer: .species("boletus_edulis"), bbox: inside, now: now))
+        #expect(!MapModel.weatherAlreadyCovers(nil, layer: cepes, bbox: inside, now: now))
+        let later = now + MapModel.weatherCoverageMaxAge + 1
+        #expect(!MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: inside, now: later))
     }
 }

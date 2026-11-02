@@ -35,6 +35,14 @@ nonisolated struct DayDot: Identifiable, Hashable, Sendable {
     var id: Int { offset }
 }
 
+/// Dernière météo complète reçue de `GET /weather/bbox` : l'emprise demandée (avec marge), la couche
+/// et l'instant. Une emprise contenue dedans, pour la même couche, est déjà peinte : rien à demander.
+nonisolated struct WeatherCoverage: Sendable {
+    let bbox: BBox
+    let layer: LayerKey
+    let at: Date
+}
+
 /// Département touché en vue France ; `code` nil = hors département.
 nonisolated struct DeptInfo: Identifiable, Sendable {
     let id = UUID()
@@ -52,8 +60,14 @@ nonisolated struct DeptInfo: Identifiable, Sendable {
 @Observable
 final class MapModel {
     static let dayRange = -3...7
-    /// Marge autour de l'emprise visible pour la météo (une cellule, comme la carte web).
+    /// Marge autour de l'emprise visible pour la météo (une cellule, comme la carte web). L'API
+    /// sert la météo précalculée de toute l'emprise, quel que soit le zoom au-dessus de `deptZoom`
+    /// (décision du 2 nov. 2026) : plus de « zoomez » sur un écran ordinaire.
     static let weatherPaddingDegrees = 0.1
+    /// Durée pendant laquelle une météo complète reçue dispense de redemander une emprise qu'elle
+    /// contient (zoom avant, petit déplacement) ; au-delà, on redemande pour suivre la pré-chauffe
+    /// et le passage de minuit.
+    nonisolated static let weatherCoverageMaxAge: TimeInterval = 30 * 60
     /// En dessous de ce zoom, en mode score, la carte passe aux départements (comme le site).
     static let deptZoom = 9.0
     /// Centre de la France, vue d'ensemble, tant qu'on n'a pas de position.
@@ -128,6 +142,7 @@ final class MapModel {
     @ObservationIgnored private let store: TileStore
     @ObservationIgnored private(set) var api: ChampisAPI
     @ObservationIgnored private var visibleBBox: BBox?
+    @ObservationIgnored private var weatherCoverage: WeatherCoverage?
     @ObservationIgnored private var weatherTask: Task<Void, Never>?
     @ObservationIgnored private var deptTask: Task<Void, Never>?
     @ObservationIgnored private var deptTaskKey: LayerKey?
@@ -239,6 +254,7 @@ final class MapModel {
         if apiBaseURL != api.baseURL {
             api = ChampisAPI(baseURL: apiBaseURL)
             weather = WeatherField()
+            weatherCoverage = nil
             weatherStatus = nil
             deptIndex = nil
             deptFeatures = []
@@ -334,11 +350,16 @@ final class MapModel {
     // MARK: - Météo
 
     /// `GET /weather/bbox` sur l'emprise visible (avec marge) pour les espèces de la couche ; les
-    /// 11 jours arrivent d'un coup, le curseur de jour ne recharge rien.
+    /// 11 jours arrivent d'un coup, le curseur de jour ne recharge rien. Une emprise déjà couverte
+    /// par la dernière réponse complète (zoom avant, petit déplacement) ne redemande rien.
     private func refreshWeather(debounce: Bool = false) {
         weatherTask?.cancel()
         guard mode == .score, let layer = selectedLayer, let bbox = visibleBBox, catalog != nil else {
             weatherStatus = nil
+            return
+        }
+        let requested = bbox.padded(by: Self.weatherPaddingDegrees)
+        if Self.weatherAlreadyCovers(weatherCoverage, layer: layer.key, bbox: requested, now: .now) {
             return
         }
         let api = api
@@ -350,13 +371,16 @@ final class MapModel {
             isLoadingWeather = true
             defer { isLoadingWeather = false }
             do {
-                let response = try await api.weather(bbox: bbox.padded(by: Self.weatherPaddingDegrees), species: layer.members)
+                let response = try await api.weather(bbox: requested, species: layer.members)
                 guard !Task.isCancelled else { return }
                 weather.merge(response)
                 weatherStatus = Self.status(for: response)
+                weatherCoverage = Self.isComplete(response)
+                    ? WeatherCoverage(bbox: requested, layer: layer.key, at: .now) : nil
                 pushSettings()
             } catch let failure as ChampisAPI.Failure {
                 guard !Task.isCancelled else { return }
+                weatherCoverage = nil
                 if case .http(let status, let detail) = failure, status == 422 {
                     weatherStatus = detail.isEmpty ? "Zoomez pour afficher la météo" : detail
                 } else {
@@ -366,9 +390,26 @@ final class MapModel {
                 return
             } catch {
                 guard !Task.isCancelled else { return }
+                weatherCoverage = nil
                 await useOfflineWeather(or: "Météo indisponible : \(error.localizedDescription)")
             }
         }
+    }
+
+    /// Vrai si la dernière météo complète reçue couvre déjà `bbox` pour cette couche et n'a pas
+    /// dépassé `weatherCoverageMaxAge`. Fonction pure, testée sans réseau.
+    nonisolated static func weatherAlreadyCovers(
+        _ coverage: WeatherCoverage?, layer: LayerKey, bbox: BBox, now: Date
+    ) -> Bool {
+        guard let coverage, coverage.layer == layer else { return false }
+        guard now.timeIntervalSince(coverage.at) < weatherCoverageMaxAge else { return false }
+        return coverage.bbox.contains(bbox)
+    }
+
+    /// Une réponse complète ne manque d'aucune cellule et ne vient pas d'un cache périmé : on peut
+    /// s'en contenter un moment. Sinon, le prochain déplacement redemande.
+    nonisolated static func isComplete(_ response: WeatherBBoxResponse) -> Bool {
+        response.unavailable.isEmpty && !response.cells.contains { $0.stale }
     }
 
     /// Sans réseau : la météo embarquée des départements complets, avec sa date affichée en clair.
@@ -388,6 +429,9 @@ final class MapModel {
 
     static func status(for response: WeatherBBoxResponse) -> String {
         var parts = ["\(response.cells.count) cellule(s) météo"]
+        if let at = response.computedAt {
+            parts.append("calculée le \(Self.format(timestamp: at))")
+        }
         if response.cells.contains(where: { $0.stale }) {
             parts.append("cache périmé")
         }
