@@ -11,6 +11,11 @@ nonisolated struct BBox: Hashable, Sendable {
     func padded(by degrees: Double) -> BBox {
         BBox(minLon: minLon - degrees, minLat: minLat - degrees, maxLon: maxLon + degrees, maxLat: maxLat + degrees)
     }
+
+    /// Vrai si `other` tient entièrement dans cette emprise (bords compris).
+    func contains(_ other: BBox) -> Bool {
+        minLon <= other.minLon && minLat <= other.minLat && maxLon >= other.maxLon && maxLat >= other.maxLat
+    }
 }
 
 /// Client de champis-api (`/species`, `/tiles`, `/weather`, `/weather/bbox`, `/departements`). Sans

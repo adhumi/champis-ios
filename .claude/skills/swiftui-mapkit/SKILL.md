@@ -13,7 +13,7 @@ La carte est la raison d'être de l'app. Elle affiche le potentiel terrain `T` o
 | --- | --- | --- |
 | `T` par espèce | PMTiles `T-<espèce>-<hash>-…pmtiles` (manifeste `GET /tiles`) | PNG 256 px, niveaux 6–15, Web Mercator XYZ ; gris = `T × 254`, alpha 0 = hors forêt, 255 = nodata (`palette.json › tile_encoding`) |
 | Classe d'altitude `A` | PMTiles `A-300m-…pmtiles`, un seul pour toutes les espèces | gris = indice `k` de la classe `[300k, 300k+300[` m, alpha 0 = inconnu (`palette.json › alt_encoding`) |
-| `M_eff`, `Φ` | `GET /weather/bbox` sur l'emprise visible, 11 jours J−3 → J+7, par cellule 5 km et par classe d'altitude | plafonné à 40 cellules (422 « zoomez ») ; cellules `unavailable` listées à part ; `stale` si cache périmé |
+| `M_eff`, `Φ` | `GET /weather/bbox` sur l'emprise visible (+ 0,1° de marge), 11 jours J−3 → J+7, par cellule 5 km et par classe d'altitude | servi depuis la météo précalculée à chaque pré-chauffe (décision du 2 nov. 2026) : une emprise d'écran entière à tout zoom ≥ 9, `computed_at` affiché dans le statut ; 422 « zoomez » seulement au-delà de 5 000 cellules ; cellules `unavailable` listées à part ; `stale` si cache périmé. Une emprise contenue dans la dernière réponse complète (zoom avant, petit déplacement, moins de 30 min) ne redemande rien (`MapModel.weatherAlreadyCovers`) |
 | Espèces, groupes, palette, seuils | `GET /species` | JSON tel quel ; rien n'est embarqué dans l'app |
 | Indice par département | `GET /departements?species=&day=` | pour la vue France |
 

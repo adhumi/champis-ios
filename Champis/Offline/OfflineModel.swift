@@ -37,7 +37,8 @@ final class OfflineModel {
         }
     }
 
-    /// Côté maximal d'une sous-emprise météo, en degrés (≈ 6 × 4 cellules de 5 km, sous la limite de 40).
+    /// Côté maximal d'une sous-emprise météo, en degrés (≈ 6 × 4 cellules de 5 km : des réponses
+    /// courtes, qu'un téléchargement interrompu reprend sans tout refaire).
     static let weatherSpan = 0.3
 
     private(set) var departments: [OfflineDepartment] = []
@@ -174,7 +175,7 @@ final class OfflineModel {
     // MARK: Météo embarquée
 
     /// Météo des 11 jours sur l'emprise du département (lue dans l'en-tête du premier PMTiles), par
-    /// sous-emprises sous la limite de 40 cellules ; le département n'est complet qu'après.
+    /// sous-emprises de quelques dizaines de cellules ; le département n'est complet qu'après.
     func fetchWeather(for department: OfflineDepartment) async {
         progress[department.code, default: Progress()].fetchingWeather = true
         defer {

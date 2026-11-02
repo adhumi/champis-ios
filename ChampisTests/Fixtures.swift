@@ -128,6 +128,7 @@ nonisolated enum Fixtures {
     static let weatherJSON = """
     {
       "today": "2026-10-30",
+      "computed_at": "2026-10-30T03:12:00+00:00",
       "scoring_version": "1.0.0",
       "cells": [
         {
