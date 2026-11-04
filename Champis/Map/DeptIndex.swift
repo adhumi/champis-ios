@@ -1,7 +1,9 @@
 import Foundation
 
 /// Indice par département de `GET /departements`, projeté sur la couche affichée : pour un groupe,
-/// la série `groups[id]` (max des espèces, `leading`) ; pour une espèce, `species[id]`. Vue France.
+/// la série `groups[id]` (max des espèces, `leading`) ; pour une espèce, `species[id]`. Il ne sert
+/// qu'au bandeau des jours (pastille = indice du département sous le centre de la carte) : la vue
+/// France est retirée (spec › Points ouverts › Vue France et indice par département, 4 nov. 2026).
 nonisolated struct DeptIndex: Sendable {
     let layerKey: LayerKey
     let today: String

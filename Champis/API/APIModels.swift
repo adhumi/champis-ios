@@ -121,7 +121,7 @@ nonisolated struct DeptEntry: Decodable, Sendable {
 }
 
 /// Réponse de `GET /departements` : indice `I = Σ T × M_eff × Φ / Σ T` par département, espèce ou
-/// groupe et jour, calculé par la pré-chauffe (vue France).
+/// groupe et jour, calculé par la pré-chauffe (bandeau des jours ; plus de vue France).
 nonisolated struct DepartementsResponse: Decodable, Sendable {
     let today: String
     let computedAt: String

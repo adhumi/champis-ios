@@ -1,11 +1,11 @@
 ---
 name: swiftui-mapkit
-description: Carte Champis dans l'app (MKMapView dans SwiftUI + MKTileOverlay maison) - tuiles PMTiles T et A, colorisation par la palette, score du jour S = T × M_eff × Φ par pixel, groupes, curseur de jour, fiche au toucher, vue France. À lire avant tout code dans Champis/Map ou qui touche un overlay, une tuile ou l'affichage d'un score.
+description: Carte Champis dans l'app (MKMapView dans SwiftUI + MKTileOverlay maison) - tuiles PMTiles T et A, colorisation par la palette, score du jour S = T × M_eff × Φ par pixel, groupes, curseur de jour, bandeau des jours, fiche au toucher. À lire avant tout code dans Champis/Map ou qui touche un overlay, une tuile ou l'affichage d'un score.
 ---
 
 # Carte SwiftUI + MapKit
 
-La carte est la raison d'être de l'app. Elle affiche le potentiel terrain `T` ou le score du jour `S` à 25 m sur un fond Apple, et une vue France par département en dézoomant. Les règles du modèle sont dans le skill `champis-model` ; la parité du calcul dans `scoring-parity` ; ce skill dit comment les mettre à l'écran.
+La carte est la raison d'être de l'app. Elle affiche le potentiel terrain `T` ou le score du jour `S` à 25 m sur un fond Apple, à tout zoom : la vue France par département est retirée (spec › Points ouverts › Vue France et indice par département, décision du 4 nov. 2026). Les règles du modèle sont dans le skill `champis-model` ; la parité du calcul dans `scoring-parity` ; ce skill dit comment les mettre à l'écran.
 
 ## Ce que la carte reçoit
 
@@ -13,9 +13,9 @@ La carte est la raison d'être de l'app. Elle affiche le potentiel terrain `T` o
 | --- | --- | --- |
 | `T` par espèce | PMTiles `T-<espèce>-<hash>-…pmtiles` (manifeste `GET /tiles`) | PNG 256 px, niveaux 6–15, Web Mercator XYZ ; gris = `T × 254`, alpha 0 = hors forêt, 255 = nodata (`palette.json › tile_encoding`) |
 | Classe d'altitude `A` | PMTiles `A-300m-…pmtiles`, un seul pour toutes les espèces | gris = indice `k` de la classe `[300k, 300k+300[` m, alpha 0 = inconnu (`palette.json › alt_encoding`) |
-| `M_eff`, `Φ` | `GET /weather/bbox` sur l'emprise visible (+ 0,1° de marge), 11 jours J−3 → J+7, par cellule 5 km et par classe d'altitude | servi depuis la météo précalculée à chaque pré-chauffe (décision du 2 nov. 2026) : une emprise d'écran entière à tout zoom ≥ 9, `computed_at` affiché dans le statut ; 422 « zoomez » seulement au-delà de 5 000 cellules ; cellules `unavailable` listées à part ; `stale` si cache périmé. Une emprise contenue dans la dernière réponse complète (zoom avant, petit déplacement, moins de 30 min) ne redemande rien (`MapModel.weatherAlreadyCovers`) |
+| `M_eff`, `Φ` | `GET /weather/bbox` sur l'emprise visible (+ 0,1° de marge), 11 jours J−3 → J+7, par cellule 5 km et par classe d'altitude | servi depuis la météo précalculée à chaque pré-chauffe (décision du 2 nov. 2026) : une emprise d'écran entière à tout zoom, `computed_at` affiché dans le statut ; 422 « zoomez » seulement au-delà de 5 000 cellules ; cellules `unavailable` listées à part ; `stale` si cache périmé. Une emprise contenue dans la dernière réponse complète (zoom avant, petit déplacement, moins de 30 min) ne redemande rien (`MapModel.weatherAlreadyCovers`) |
 | Espèces, groupes, palette, seuils | `GET /species` | JSON tel quel ; rien n'est embarqué dans l'app |
-| Indice par département | `GET /departements?species=&day=` | pour la vue France |
+| Indice par département | `GET /departements?species=` | 11 jours par département, pour le seul bandeau des jours (pastille = indice du département sous le centre, trouvé dans le GeoJSON `/web/departements.geojson` chargé une fois) ; les notifications des coins le lisent côté backend |
 
 ## Règles d'affichage (ne pas en inventer d'autres)
 
@@ -51,11 +51,11 @@ Groupes puis espèces, le potentiel toute saison en bascule, et depuis le lot 4 
 
 ## Appui long et disposition iPad / Mac (lot 3)
 
-Un appui long (0,5 s) sur la carte, hors vue France, donne `MapModel.longPress` ; `MapScreen` ouvre le menu de terrain au point pressé (skill `field-feedback`). « Ajouter à mes coins » passe par la fiche (`requestCoin` → `select` ; `PointSheet` ouvre directement le nom). Sur iPad en largeur régulière et sur Mac, `SplitContentView` remplace les onglets : barre latérale, carte en détail, fiches (`PointSheet`, `DeptSheet`, `CoinDetailView`) dans `.inspector`. `MapScreen(layout: .split)` ne présente aucune feuille de fiche : c'est la sélection du modèle qui commande, et les boutons OK des fiches appellent `clearSelection` / `clearDeptInfo`, jamais `dismiss`.
+Un appui long (0,5 s) sur la carte donne `MapModel.longPress` ; `MapScreen` ouvre le menu de terrain au point pressé (skill `field-feedback`). « Ajouter à mes coins » passe par la fiche (`requestCoin` → `select` ; `PointSheet` ouvre directement le nom). Sur iPad en largeur régulière et sur Mac, `SplitContentView` remplace les onglets : barre latérale, carte en détail, fiches (`PointSheet`, `CoinDetailView`) dans `.inspector`. `MapScreen(layout: .split)` ne présente aucune feuille de fiche : c'est la sélection du modèle qui commande, et le bouton OK de la fiche appelle `clearSelection`, jamais `dismiss`.
 
-## Vue France
+## Bandeau des jours et plus de vue France (4 nov. 2026)
 
-En dessous du zoom 9 (`MapModel.deptZoom`, comme le site), en mode score, la carte passe aux départements colorés par l'indice `I = Σ T × M_eff × Φ / Σ T` (section Scoring de la spec), servi par `/departements`, avec la même palette. Groupe = max des indices d'espèces (`leading` dans la fiche). Les limites viennent du GeoJSON servi par l'API (`/web/departements.geojson`, le même que le site), décodé par `MKGeoJSONDecoder` en `MKPolygon`/`MKMultiPolygon` ajoutés à la carte ; le coordinateur recolore les renderers à chaque `renderGeneration` et masque l'overlay de tuiles (alpha 0) en vue France. Département sans indice : transparent. Le toucher cherche le polygone par `MKOverlayPathRenderer.path`.
+La vue France (départements colorés par l'indice `I = Σ T × M_eff × Φ / Σ T` sous le zoom 9) est retirée, de l'app comme du site : l'indice n'était pas à l'échelle de `S` et la couche de tuiles reste visible à tout zoom. `GET /departements` ne sert plus qu'au bandeau des onze jours : `MapModel.dayDots` colore chaque pastille par l'indice du département sous le centre de la carte (`centerDeptCode`, point dans polygone sur le GeoJSON `/web/departements.geojson` décodé par `MKGeoJSONDecoder`, chargé une fois, sans appel réseau par déplacement). Département ou jour sans indice : pastille vide, jamais une valeur inventée. Le GeoJSON donne aussi les noms des départements (écran hors ligne, proposition d'embarquer).
 
 ## Accessibilité et performance
 

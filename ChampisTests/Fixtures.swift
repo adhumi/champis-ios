@@ -151,7 +151,7 @@ nonisolated enum Fixtures {
     }
     """
 
-    /// `GET /departements` : deux départements, un groupe (max + leading) et ses espèces.
+    /// `GET /departements` (bandeau des jours) : deux départements, un groupe (max + leading) et ses espèces.
     static let departementsJSON = """
     {
       "today": "2026-10-30",

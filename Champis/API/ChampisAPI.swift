@@ -68,7 +68,7 @@ nonisolated struct ChampisAPI: Sendable {
         return try await get("weather", query: query)
     }
 
-    /// Indice par département (vue France), 11 jours, pour les espèces données.
+    /// Indice par département (bandeau des jours), 11 jours, pour les espèces données.
     func departements(species: [String]) async throws -> DepartementsResponse {
         try await get("departements", query: species.map { URLQueryItem(name: "species", value: $0) })
     }

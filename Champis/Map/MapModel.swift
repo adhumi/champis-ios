@@ -43,33 +43,23 @@ nonisolated struct WeatherCoverage: Sendable {
     let at: Date
 }
 
-/// Département touché en vue France ; `code` nil = hors département.
-nonisolated struct DeptInfo: Identifiable, Sendable {
-    let id = UUID()
-    let code: String?
-    let name: String?
-    let date: String?
-    let row: DeptDay?
-    let layerTitle: String?
-}
-
 /// Modèle de l'écran carte (MVVM, `@Observable`, MainActor). Les vues ne calculent rien : espèce
-/// ou groupe courant, jour, mode T/S, météo chargée, indice par département, fiche du point touché,
-/// état de chargement. Les tuiles se lisent et se colorisent hors du MainActor (`TileStore`,
-/// `TileRenderer`) ; le modèle leur pousse ses réglages.
+/// ou groupe courant, jour, mode T/S, météo chargée, indice par département (pour le bandeau des
+/// jours), fiche du point touché, état de chargement. Les tuiles se lisent et se colorisent hors
+/// du MainActor (`TileStore`, `TileRenderer`) ; le modèle leur pousse ses réglages. La vue France
+/// (départements colorés sous le zoom 9) est retirée : la couche de tuiles reste visible à tout
+/// zoom (spec › Points ouverts › Vue France et indice par département, 4 nov. 2026).
 @Observable
 final class MapModel {
     static let dayRange = -3...7
     /// Marge autour de l'emprise visible pour la météo (une cellule, comme la carte web). L'API
-    /// sert la météo précalculée de toute l'emprise, quel que soit le zoom au-dessus de `deptZoom`
-    /// (décision du 2 nov. 2026) : plus de « zoomez » sur un écran ordinaire.
+    /// sert la météo précalculée de toute l'emprise, à tout zoom (décision du 2 nov. 2026) :
+    /// plus de « zoomez » sur un écran ordinaire, seulement au-delà de 5 000 cellules.
     static let weatherPaddingDegrees = 0.1
     /// Durée pendant laquelle une météo complète reçue dispense de redemander une emprise qu'elle
     /// contient (zoom avant, petit déplacement) ; au-delà, on redemande pour suivre la pré-chauffe
     /// et le passage de minuit.
     nonisolated static let weatherCoverageMaxAge: TimeInterval = 30 * 60
-    /// En dessous de ce zoom, en mode score, la carte passe aux départements (comme le site).
-    static let deptZoom = 9.0
     /// Centre de la France, vue d'ensemble, tant qu'on n'a pas de position.
     static let initialRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 46.8, longitude: 2.4),
@@ -94,14 +84,13 @@ final class MapModel {
     private(set) var loadError: String?
     /// Zoom Web Mercator de la vue ; `nil` tant que la carte n'a pas donné sa première région.
     private(set) var zoom: Double?
-    /// Incrémenté à chaque réglage poussé au rendu : la vue carte redessine tuiles et départements.
+    /// Incrémenté à chaque réglage poussé au rendu : la vue carte redessine les tuiles.
     private(set) var renderGeneration = 0
 
-    // Vue France
+    // Indice par département (bandeau des jours) et limites des départements (département sous
+    // le centre, noms pour l'écran hors ligne)
     private(set) var deptIndex: DeptIndex?
-    private(set) var deptStatus: String?
     private(set) var deptFeatures: [MKGeoJSONFeature] = []
-    private(set) var deptInfo: DeptInfo?
 
     // Fiche au toucher
     private(set) var selection: MapSelection?
@@ -135,7 +124,7 @@ final class MapModel {
     let field: FieldModel
     /// Départements embarqués (skill `offline`).
     let offline: OfflineModel
-    /// Noms des départements, du GeoJSON servi par l'API (vue France, écran hors ligne).
+    /// Noms des départements, du GeoJSON servi par l'API (écran hors ligne, proposition d'embarquer).
     private(set) var departmentNames: [String: String] = [:]
     @ObservationIgnored private let locationManager = CLLocationManager()
     @ObservationIgnored private let renderer: TileRenderer
@@ -179,11 +168,6 @@ final class MapModel {
     var legend: [Palette.Threshold] { catalog?.palette.thresholds ?? [] }
     /// Seuil « bon » de la palette (notification et tendance des coins) ; `nil` tant que rien n'est chargé.
     var goodThreshold: Double? { palette?.thresholds.first { $0.label == "bon" }?.min }
-    /// Mode score sous le zoom seuil : départements colorés par l'indice au lieu des tuiles.
-    var isFranceView: Bool {
-        guard let zoom else { return false }
-        return mode == .score && zoom < Self.deptZoom
-    }
 
     /// `today` de l'API, par la météo ou l'indice par département, selon ce qui est arrivé.
     var today: String? { weather.today ?? deptIndex?.today }
@@ -323,28 +307,21 @@ final class MapModel {
         refreshData()
     }
 
+    /// Déplacement ou zoom : aucun réglage de rendu ne change (la couche de tuiles reste à tout
+    /// zoom), seuls le département sous le centre et la météo de l'emprise sont à rafraîchir.
     func visibleRegionChanged(_ bbox: BBox, zoom: Double) {
         visibleBBox = bbox
-        let wasFranceView = isFranceView
         self.zoom = zoom
-        if isFranceView != wasFranceView {
-            pushSettings()
-        }
         centerDeptCode = departementCode(
             latitude: (bbox.minLat + bbox.maxLat) / 2, longitude: (bbox.minLon + bbox.maxLon) / 2
         )
         refreshData(debounce: true)
     }
 
-    /// L'indice par département sert à tout zoom (bandeau des jours, lot 2) ; la météo de l'emprise
-    /// seulement sous le zoom seuil.
+    /// L'indice par département (bandeau des jours, lot 2) et la météo de l'emprise, à tout zoom.
     private func refreshData(debounce: Bool = false) {
         refreshDeptIndex()
-        if isFranceView {
-            weatherTask?.cancel()
-        } else {
-            refreshWeather(debounce: debounce)
-        }
+        refreshWeather(debounce: debounce)
     }
 
     // MARK: - Météo
@@ -445,10 +422,11 @@ final class MapModel {
         return parts.joined(separator: " · ")
     }
 
-    // MARK: - Vue France
+    // MARK: - Indice par département (bandeau des jours)
 
-    /// `GET /departements` pour la couche : 11 jours d'un coup, le curseur ne recharge rien. Les
-    /// limites (GeoJSON servi avec le site) se chargent une fois.
+    /// `GET /departements` pour la couche : 11 jours d'un coup, le curseur ne recharge rien, un
+    /// déplacement non plus. Les limites (GeoJSON servi avec le site) se chargent une fois. Sans
+    /// indice, les pastilles du bandeau restent vides : rien d'inventé, et pas de message.
     private func refreshDeptIndex() {
         guard mode == .score, let layer = selectedLayer, catalog != nil else { return }
         if deptFeatures.isEmpty {
@@ -470,16 +448,9 @@ final class MapModel {
                 let response = try await api.departements(species: layer.members)
                 guard !Task.isCancelled else { return }
                 deptIndex = DeptIndex(response: response, layer: layer)
-                deptStatus = "Indice par département calculé le \(Self.format(timestamp: response.computedAt))"
-                pushSettings()
-            } catch let failure as ChampisAPI.Failure {
-                guard !Task.isCancelled else { return }
-                deptStatus = "Vue France indisponible : \(failure.localizedDescription)"
-            } catch is CancellationError {
-                return
             } catch {
-                guard !Task.isCancelled else { return }
-                deptStatus = "Vue France indisponible : \(error.localizedDescription)"
+                // bandeau sans indice ; la météo de l'emprise a son propre statut
+                return
             }
         }
     }
@@ -511,31 +482,10 @@ final class MapModel {
                 }
                 departmentNames = names
             } catch {
-                deptStatus = "Limites des départements indisponibles : \(error.localizedDescription)"
+                // sans limites : bandeau sans indice, pas de proposition d'embarquer ; rien d'inventé
+                return
             }
         }
-    }
-
-    /// Couleur d'un département pour la couche et le jour courants ; `nil` = transparent (pas
-    /// d'indice : jamais une valeur inventée).
-    func deptColor(code: String) -> RGBA? {
-        guard let deptIndex, let date = dayDate, let palette,
-              let value = deptIndex.value(code: code, date: date)
-        else { return nil }
-        return RGBA(hex: palette.classify(value).hex)
-    }
-
-    func selectDepartement(code: String?, name: String?) {
-        let date = dayDate
-        var row: DeptDay?
-        if let code, let date {
-            row = deptIndex?.row(code: code, date: date)
-        }
-        deptInfo = DeptInfo(code: code, name: name, date: date, row: row, layerTitle: selectedLayer?.title)
-    }
-
-    func clearDeptInfo() {
-        deptInfo = nil
     }
 
     // MARK: - Fiche au toucher

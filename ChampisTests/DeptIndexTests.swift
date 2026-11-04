@@ -6,7 +6,7 @@ struct DeptIndexTests {
     static let cepes = Layer(key: .group("cepes"), title: "Cèpes", members: ["boletus_aereus", "boletus_edulis"])
     static let aereus = Layer(key: .species("boletus_aereus"), title: "Cèpe bronzé", members: ["boletus_aereus"])
 
-    @Test("GET /departements : indice par groupe (max, leading) et par espèce ; jour sans météo → nil")
+    @Test("GET /departements (bandeau des jours) : indice par groupe (max, leading) et par espèce ; jour sans météo → nil")
     func index() throws {
         let response = try Fixtures.decode(DepartementsResponse.self, Fixtures.departementsJSON)
         #expect(response.today == "2026-10-30")

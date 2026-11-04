@@ -76,26 +76,18 @@ struct MapModelTests {
         model.declineOfflineSuggestion()  // sans proposition : rien n'est mémorisé
     }
 
-    @Test("Vue France : mode score sous le zoom seuil ; départements sans indice transparents")
-    func franceView() {
+    @Test("Plus de vue France (4 nov. 2026) : le zoom ne change aucun réglage de rendu, la couche reste à tout zoom")
+    func noFranceView() {
         let model = MapModel(apiBaseURL: URL(string: "https://champis.example")!)
         let bbox = BBox(minLon: -5, minLat: 42, maxLon: 9, maxLat: 51)
-        #expect(!model.isFranceView)
+        #expect(model.zoom == nil)
         model.visibleRegionChanged(bbox, zoom: 7)
-        #expect(model.isFranceView)
+        #expect(model.zoom == 7)
+        #expect(model.renderGeneration == 0)  // dézoomer sous 9 ne pousse rien au rendu
         model.visibleRegionChanged(bbox, zoom: 12)
-        #expect(!model.isFranceView)
-        model.visibleRegionChanged(bbox, zoom: 7)
-        model.setMode(.terrain)
-        #expect(!model.isFranceView)
-        #expect(model.deptColor(code: "25") == nil)
-        model.selectDepartement(code: nil, name: nil)
-        #expect(model.deptInfo?.code == nil)
-        model.selectDepartement(code: "25", name: "Doubs")
-        #expect(model.deptInfo?.name == "Doubs")
-        #expect(model.deptInfo?.row == nil)
-        model.clearDeptInfo()
-        #expect(model.deptInfo == nil)
+        #expect(model.renderGeneration == 0)
+        #expect(model.overlay.minimumZ == 6)  // les tuiles commencent au niveau 6, à tout zoom
+        #expect(model.dayDots.allSatisfy { $0.value == nil })  // sans indice : pastilles vides
     }
 
     @Test("Voir sur la carte : recentrage demandé et point sélectionné")

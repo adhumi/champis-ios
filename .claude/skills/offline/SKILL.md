@@ -15,7 +15,7 @@ Indispensable en forêt : pas de réseau, et c'est là qu'on consulte la carte. 
 | Couche `A` (classes d'altitude), niveaux 10–15 | idem, une fois | PMTiles `A-300m-…` |
 | Météo : `GET /weather/bbox` sur l'emprise du département, 11 jours, toutes classes d'altitude | quelques centaines de Ko | API, à l'heure du téléchargement |
 | `GET /species` (espèces, palette, seuils) | négligeable | API |
-| Limites du département | négligeable | pour l'emprise et la vue France |
+| Limites du département | négligeable | pour l'emprise et le département sous le centre (bandeau des jours) |
 
 Point ouvert de la spec, **ne pas trancher seul** : les PMTiles publiés sont un seul fichier France par espèce, alors que l'app télécharge par département. Deux options : des fichiers par département publiés en plus par le pipeline, ou une extraction côté app de la sous-emprise depuis le fichier France (répertoire PMTiles + requêtes Range par plages de tuiles). Le code du lecteur doit fonctionner dans les deux cas : il lit un PMTiles local **ou** distant par la même interface.
 
