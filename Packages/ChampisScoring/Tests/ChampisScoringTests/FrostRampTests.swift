@@ -66,8 +66,8 @@ struct FrostRampTests {
             "cantharellus_alborufescens", "cantharellus_cibarius", "cantharellus_pallens",
         ] {
             let sp = try Species.decode(speciesData(id))
-            #expect(sp.weather.frost.rampC > 0, id)
-            #expect(sp.weather.frost.nights >= 1, id)
+            #expect(sp.weather.frost.rampC > 0, "\(id)")
+            #expect(sp.weather.frost.nights >= 1, "\(id)")
         }
         let sp = try edulis()
         #expect(sp.weather.frost.tminC == -2 && sp.weather.frost.rampC == 2)
