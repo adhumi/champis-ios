@@ -178,6 +178,7 @@
     },
     "frost": {
       "tmin_c": -3,
+      "ramp_c": 2,
       "nights": 2,
       "window_days": 7,
       "factor": 0.3
@@ -235,7 +236,8 @@
         "karavani2018"
       ],
       "frost": [
-        "piemonte"
+        "piemonte",
+        "gel_rampe2026"
       ],
       "heat": [
         "salerni2023",
@@ -282,7 +284,12 @@
         ]
       }
     ],
-    "photo": null,
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Boletus_pinophilus_15.jpg/1280px-Boletus_pinophilus_15.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Boletus_pinophilus_15.jpg",
+      "author": "Mariia Goncharskaia",
+      "license": "CC BY-SA 4.0"
+    },
     "refs": [
       "courtecuisse2013",
       "eyssartier2017"
@@ -312,6 +319,7 @@
     "terrain_fr": "Sources de terrain françaises (Wikipédia FR, Mycocharentes) — > 50 mm/décade, premiers sporophores 6-15 j, pousse ~12 j ; confiance faible",
     "coolia2005": "Coolia 2005 (48:2) — B. pinophilus sur sables acides à lichens",
     "piemonte": "Regione Piemonte, fiche Boletus — B. pinophilus 400-1 400 m (jusqu'à 1 800), bimodal (fin de printemps, sept.-nov.), tolère les premières gelées",
-    "gbif2026": "GBIF, API, France, lu le 16/10/2026 — B. pinophilus FR 365 occ. : avril 67, sept. 76, oct. 69 ; 600-1 800 m en Italie"
+    "gbif2026": "GBIF, API, France, lu le 16/10/2026 — B. pinophilus FR 365 occ. : avril 67, sept. 76, oct. 69 ; 600-1 800 m en Italie",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil, à affiner : la marche (≥ nights nuits ≤ tmin_c → × factor) faisait basculer deux cellules météo voisines de « bon » à « très faible » pour un dixième de degré ; aucune référence plus fine sur la sensibilité au gel partiel ; confiance faible"
   }
 }

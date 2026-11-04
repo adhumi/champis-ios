@@ -173,6 +173,7 @@
     },
     "frost": {
       "tmin_c": -2,
+      "ramp_c": 2,
       "nights": 2,
       "window_days": 7,
       "factor": 0.2
@@ -227,7 +228,8 @@
         "danell1994"
       ],
       "frost": [
-        "danell1994"
+        "danell1994",
+        "gel_rampe2026"
       ],
       "heat": [
         "straatsma_egli2001"
@@ -271,7 +273,12 @@
         ]
       }
     ],
-    "photo": null,
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/97/Cantharellus_pallens_FTLuJjc.jpg/1280px-Cantharellus_pallens_FTLuJjc.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Cantharellus_pallens_FTLuJjc.jpg",
+      "author": "Allar Antson",
+      "license": "CC BY-SA 4.0"
+    },
     "refs": [
       "courtecuisse2013",
       "eyssartier2017"
@@ -300,6 +307,7 @@
     "tahvanainen2019": "Tahvanainen et al. 2019, Forests — pluie juin+juillet",
     "pilz2003": "Pilz et al. 2003, GTR-576 — persistance moyenne 44 j (genre)",
     "populaire_scandinave": "Sources populaires scandinaves — confiance faible",
-    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance"
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil, à affiner : la marche (≥ nights nuits ≤ tmin_c → × factor) faisait basculer deux cellules météo voisines de « bon » à « très faible » pour un dixième de degré ; aucune référence plus fine sur la sensibilité au gel partiel ; confiance faible"
   }
 }

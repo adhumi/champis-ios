@@ -38,7 +38,7 @@ nonisolated enum Fixtures {
             "rain": { "window_days": 28, "mm": { "min": 30, "opt_low": 60, "opt_high": 150, "max": 600 } },
             "trigger": { "event_mm": 20, "event_days": 3, "lag_days": { "min": 6, "opt_low": 10, "opt_high": 20, "max": 32 } },
             "soil_moisture_pct": { "min": 0.15, "opt_low": 0.4, "opt_high": 0.9, "max": 1.0 },
-            "frost": { "tmin_c": -2, "nights": 2, "window_days": 7, "factor": 0.2 },
+            "frost": { "tmin_c": -2, "ramp_c": 2, "nights": 2, "window_days": 7, "factor": 0.2 },
             "water_balance": { "window_days": 14, "moderate_mm": -25, "severe_mm": -45, "moderate_factor": 0.4, "severe_factor": 0.15 },
             "heat": { "tmax_c": 28, "days": 3, "window_days": 7, "factor": 0.5 },
             "memory": { "window_days": 90, "mm": { "min": 60, "opt_low": 120, "opt_high": 400, "max": 900 }, "floor": 0.3 },

@@ -88,14 +88,19 @@ public struct Species: Codable, Hashable, Sendable {
         }
     }
 
+    /// Gel en rampe (spec › Scoring › gel en rampe, 4 nov. 2026). `ramp_c` est obligatoire dans le
+    /// schéma : une espèce sans rampe ne se décode pas, plutôt que de retomber sur une marche.
     public struct Frost: Codable, Hashable, Sendable {
         public let tminC: Double
+        /// Largeur de la rampe au-dessus de `tminC`, en °C (> 0).
+        public let rampC: Double
         public let nights: Int
         public let windowDays: Int
         public let factor: Double
 
         enum CodingKeys: String, CodingKey {
             case tminC = "tmin_c"
+            case rampC = "ramp_c"
             case nights, factor
             case windowDays = "window_days"
         }
