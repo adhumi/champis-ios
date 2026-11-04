@@ -84,4 +84,31 @@ struct APIModelsTests {
         #expect(MapScreen.url(from: "pas une url").absoluteString == MapScreen.defaultAPIBaseURL)
         #expect(MapScreen.url(from: "").absoluteString == MapScreen.defaultAPIBaseURL)
     }
+
+    @Test("GET /weather/field : un jour, f par espèce et classe, stale seulement si présent, manquantes comptées")
+    func weatherField() throws {
+        let field = try Fixtures.decode(WeatherFieldResponse.self, Fixtures.weatherFieldJSON)
+        #expect(field.today == "2026-10-30")
+        #expect(field.day == "2026-10-30")
+        #expect(field.computedAt == "2026-10-30T03:12:00+00:00")
+        #expect(field.scoringVersion == "1.0.0")
+        #expect(field.cells.count == 2)
+        #expect(field.unavailable == 2)
+        #expect(field.anyStale)
+        let c1 = field.cells[0]
+        #expect(c1.id == "c_1" && !c1.stale)
+        #expect(c1.f["boletus_edulis"]?["450"] == 0.9)
+        #expect(c1.f["boletus_aereus"]?["150"] == 0.2)
+        #expect(c1.info == WeatherCellInfo(id: "c_1", lat: 47.0, lon: 8.4, altClasses: [150, 450], elevationM: 620))
+        let c3 = field.cells[1]
+        #expect(c3.stale && c3.altClasses == [150] && c3.f["boletus_edulis"]?["150"] == 0.79)
+
+        // sans aucune cellule ni précalcul : rien d'inventé
+        let empty = try Fixtures.decode(WeatherFieldResponse.self, """
+        {"today": "2026-10-30", "computed_at": null, "day": "2026-10-31", "scoring_version": "1.0.0", "cells": [], "unavailable": 0}
+        """)
+        #expect(empty.cells.isEmpty && empty.computedAt == nil && !empty.anyStale)
+        #expect(MapModel.isComplete(empty))
+        #expect(!MapModel.isComplete(field))
+    }
 }

@@ -39,10 +39,12 @@ nonisolated struct RGBA: Hashable, Sendable {
 /// Colorisation d'une tuile : fonction pure, testée sans MapKit (skill `swiftui-mapkit`).
 ///
 /// - Mode terrain : valeur = max sur les espèces de la couche de `T`.
-/// - Mode score : valeur = max sur les espèces de `T × M_eff × Φ`, avec `M_eff` et `Φ` de la cellule
-///   météo la plus proche (par bloc de 16 × 16 px, une cellule fait 5 km) et de la classe d'altitude
-///   lue par pixel dans la couche A (repli : altitude médiane de la cellule).
-/// - Pixel hors forêt, nodata, sans cellule ou sans ligne météo : transparent. Jamais un 0,5 inventé.
+/// - Mode score : valeur = max sur les espèces de `T × M_eff × Φ`, avec `M_eff × Φ` de la cellule
+///   météo la plus proche (par bloc de 16 × 16 px, une cellule fait 5 km, à moins de 7,5 km) et de
+///   la classe d'altitude lue par pixel dans la couche A (repli : altitude médiane de la cellule).
+///   `/weather/bbox` et `/weather/field` alimentent le même `WeatherField`.
+/// - Pixel hors forêt, nodata, sans cellule à moins de 7,5 km ou sans ligne météo : transparent.
+///   Jamais un 0,5 inventé, jamais la météo de la cellule voisine.
 nonisolated struct TileColorizer: Sendable {
     nonisolated struct SpeciesTile: Sendable {
         let species: String
@@ -101,12 +103,34 @@ nonisolated struct TileColorizer: Sendable {
     }
 
     /// `M_eff × Φ` pour une cellule, une espèce, un jour et l'indice de classe du pixel ; `nil` si
-    /// l'API ne l'a pas (classe absente, jour hors des 11, espèce non demandée).
+    /// l'API ne l'a pas (classe absente, jour hors des 11, espèce non demandée). Jamais la cellule
+    /// voisine : une cellule sans donnée laisse ses pixels transparents.
     func factor(cell: WeatherField.Cell, species: String, date: String, classIndex k: Int?) -> Double? {
-        guard let alt = cell.altKey(classIndex: k, encoding: palette.altEncoding),
-              let row = cell.row(species: species, date: date, altKey: alt.key)
-        else { return nil }
-        return row.factor
+        guard let alt = cell.altKey(classIndex: k, encoding: palette.altEncoding) else { return nil }
+        return cell.factor(species: species, date: date, altKey: alt.key)
+    }
+
+    /// Classes d'altitude mémoïsées par bloc (0 ≤ k < 32 couvre les 4 800 m de la France) ; une
+    /// classe au-delà est calculée sans mémo.
+    static let memoClasses = 32
+
+    /// Cellule météo de chaque bloc de 16 × 16 px de la tuile (centre du bloc), par l'index spatial :
+    /// 256 recherches de quelques dizaines de candidats chacune, quel que soit le nombre de cellules.
+    static func blockCells(z: Int, x: Int, y: Int, weather: WeatherField) -> [WeatherField.Cell?] {
+        let blocks = size / weatherBlock
+        var out: [WeatherField.Cell?] = []
+        out.reserveCapacity(blocks * blocks)
+        for by in 0..<blocks {
+            for bx in 0..<blocks {
+                let p = TileMath.lonLat(
+                    z: z, x: x, y: y,
+                    px: (Double(bx) + 0.5) * Double(weatherBlock),
+                    py: (Double(by) + 0.5) * Double(weatherBlock)
+                )
+                out.append(weather.nearestCell(lat: p.lat, lon: p.lon))
+            }
+        }
+        return out
     }
 
     /// Valeur affichée de chaque pixel (`nan` = transparent).
@@ -117,32 +141,24 @@ nonisolated struct TileColorizer: Sendable {
         guard !useWeather || req.date != nil else { return out }
         let date = req.date ?? ""
         let blocks = Self.size / Self.weatherBlock
+        let alt: DecodedPNG? = req.alt.flatMap { a in
+            a.width == Self.size && a.height == Self.size && a.data.count >= n * a.channels ? a : nil
+        }
+
+        // Cellule météo par bloc, une fois pour toutes les espèces de la couche.
+        let cellsByBlock = useWeather ? Self.blockCells(z: req.z, x: req.x, y: req.y, weather: req.weather) : []
+        // Facteur mémoïsé par (bloc, classe d'altitude) : tableau plat, pas de dictionnaire par pixel.
+        // `nan` = pas encore calculé ; −1 = pas de météo (pixel transparent).
+        let memoStride = Self.memoClasses + 1
+        var memo = [Double](repeating: .nan, count: useWeather ? blocks * blocks * memoStride : 0)
 
         for tile in req.tiles {
             let png = tile.png
             guard png.width == Self.size, png.height == Self.size, png.channels >= 1,
                   png.data.count >= n * png.channels
             else { continue }
-            let alt: DecodedPNG? = req.alt.flatMap { a in
-                a.width == Self.size && a.height == Self.size && a.data.count >= n * a.channels ? a : nil
-            }
-
-            // Cellule météo par bloc, facteur mémoïsé par (bloc, classe d'altitude) ; −1 = pas de météo.
-            var blockCells: [WeatherField.Cell?] = []
-            var memo: [[Int: Double]] = []
             if useWeather {
-                blockCells.reserveCapacity(blocks * blocks)
-                for by in 0..<blocks {
-                    for bx in 0..<blocks {
-                        let p = TileMath.lonLat(
-                            z: req.z, x: req.x, y: req.y,
-                            px: (Double(bx) + 0.5) * Double(Self.weatherBlock),
-                            py: (Double(by) + 0.5) * Double(Self.weatherBlock)
-                        )
-                        blockCells.append(req.weather.nearestCell(lat: p.lat, lon: p.lon))
-                    }
-                }
-                memo = [[Int: Double]](repeating: [:], count: blocks * blocks)
+                for i in memo.indices { memo[i] = .nan }
             }
 
             for i in 0..<n {
@@ -151,15 +167,17 @@ nonisolated struct TileColorizer: Sendable {
                     let px = i % Self.size
                     let py = i / Self.size
                     let b = (py / Self.weatherBlock) * blocks + px / Self.weatherBlock
-                    guard let cell = blockCells[b] else { continue }
+                    guard let cell = cellsByBlock[b] else { continue }
                     let k = alt.flatMap { altitudeClass($0, at: i) }
-                    let memoKey = k ?? -1
                     let f: Double
-                    if let cached = memo[b][memoKey] {
-                        f = cached
-                    } else {
+                    if let k, k >= Self.memoClasses {
                         f = factor(cell: cell, species: tile.species, date: date, classIndex: k) ?? -1
-                        memo[b][memoKey] = f
+                    } else {
+                        let slot = b * memoStride + (k.map { $0 + 1 } ?? 0)
+                        if memo[slot].isNaN {
+                            memo[slot] = factor(cell: cell, species: tile.species, date: date, classIndex: k) ?? -1
+                        }
+                        f = memo[slot]
                     }
                     if f < 0 { continue }
                     v *= f

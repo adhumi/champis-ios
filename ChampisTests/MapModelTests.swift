@@ -158,21 +158,173 @@ struct MapModelTests {
         #expect(!MapModel.isComplete(response))  // une cellule manque : le prochain déplacement redemande
     }
 
-    @Test("Météo déjà reçue : une emprise contenue dans la dernière, même couche, ne redemande rien")
+    @Test("Météo déjà reçue : une emprise contenue dans la dernière, même couche et même jour, ne redemande rien")
     func weatherCoverage() {
         let loaded = BBox(minLon: 6, minLat: 46, maxLon: 7, maxLat: 47)
         let inside = BBox(minLon: 6.2, minLat: 46.2, maxLon: 6.8, maxLat: 46.8)
         let overlapping = BBox(minLon: 5.9, minLat: 46.2, maxLon: 6.8, maxLat: 46.8)
         let now = Date(timeIntervalSince1970: 1_000_000)
         let cepes = LayerKey.group("cepes")
-        let coverage = WeatherCoverage(bbox: loaded, layer: cepes, at: now)
+        let coverage = WeatherCoverage(bbox: loaded, layer: cepes, day: nil, at: now)
         #expect(loaded.contains(inside) && loaded.contains(loaded) && !loaded.contains(overlapping))
-        #expect(MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: inside, now: now))
-        #expect(MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: loaded, now: now + 60))
-        #expect(!MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: overlapping, now: now))
-        #expect(!MapModel.weatherAlreadyCovers(coverage, layer: .species("boletus_edulis"), bbox: inside, now: now))
-        #expect(!MapModel.weatherAlreadyCovers(nil, layer: cepes, bbox: inside, now: now))
+        #expect(MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: inside, day: nil, now: now))
+        #expect(MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: loaded, day: nil, now: now + 60))
+        #expect(!MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: overlapping, day: nil, now: now))
+        #expect(!MapModel.weatherAlreadyCovers(coverage, layer: .species("boletus_edulis"), bbox: inside, day: nil, now: now))
+        #expect(!MapModel.weatherAlreadyCovers(nil, layer: cepes, bbox: inside, day: nil, now: now))
         let later = now + MapModel.weatherCoverageMaxAge + 1
-        #expect(!MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: inside, now: later))
+        #expect(!MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: inside, day: nil, now: later))
+
+        // les 11 jours de /weather/bbox valent pour tout jour ; un champ d'un jour ne vaut que pour lui
+        #expect(MapModel.weatherAlreadyCovers(coverage, layer: cepes, bbox: inside, day: "2026-10-31", now: now))
+        let field = WeatherCoverage(bbox: loaded, layer: cepes, day: "2026-10-30", at: now)
+        #expect(MapModel.weatherAlreadyCovers(field, layer: cepes, bbox: inside, day: "2026-10-30", now: now))
+        #expect(!MapModel.weatherAlreadyCovers(field, layer: cepes, bbox: inside, day: "2026-10-31", now: now))
+        #expect(!MapModel.weatherAlreadyCovers(field, layer: cepes, bbox: inside, day: nil, now: now))
+        #expect(!MapModel.weatherAlreadyCovers(field, layer: cepes, bbox: overlapping, day: "2026-10-30", now: now))
+        #expect(!MapModel.weatherAlreadyCovers(field, layer: cepes, bbox: inside, day: "2026-10-30", now: later))
+    }
+
+    @Test("Sous le zoom 9, le champ compact du jour ; au zoom 9 et au-delà, /weather/bbox (4 nov. 2026)")
+    func weatherRequest() {
+        #expect(MapModel.fieldZoom == 9)
+        #expect(MapModel.weatherRequest(zoom: 6, day: "2026-10-30") == .field(day: "2026-10-30"))
+        #expect(MapModel.weatherRequest(zoom: 8.99, day: "2026-10-31") == .field(day: "2026-10-31"))
+        #expect(MapModel.weatherRequest(zoom: 9, day: "2026-10-30") == .bbox)
+        #expect(MapModel.weatherRequest(zoom: 14, day: "2026-10-30") == .bbox)
+        let model = MapModel(apiBaseURL: URL(string: "https://champis.example")!)
+        #expect(!model.usesWeatherField)  // pas encore de zoom
+        model.visibleRegionChanged(BBox(minLon: -5, minLat: 42, maxLon: 9, maxLat: 51), zoom: 7)
+        #expect(model.usesWeatherField)
+        model.visibleRegionChanged(BBox(minLon: 6, minLat: 47, maxLon: 6.4, maxLat: 47.2), zoom: 12)
+        #expect(!model.usesWeatherField)
+    }
+
+    @Test("Statut d'un champ compact : cellules, date du précalcul, périmées et manquantes en clair")
+    func fieldStatus() throws {
+        let field = try Fixtures.decode(WeatherFieldResponse.self, Fixtures.weatherFieldJSON)
+        let status = MapModel.status(for: field)
+        #expect(status.hasPrefix("2 cellule(s) météo"))
+        #expect(status.contains("calculée le"))
+        #expect(status.contains("cache périmé pour 1 cellule(s)"))
+        #expect(status.contains("2 sans météo"))
+    }
+
+    /// Le champ compact de la fixture, complet (rien de périmé ni de manquant) : une réponse complète
+    /// vaut couverture, une incomplète est redemandée au prochain déplacement.
+    nonisolated static let completeFieldJSON = Fixtures.weatherFieldJSON
+        .replacingOccurrences(of: "\"unavailable\": 2", with: "\"unavailable\": 0")
+        .replacingOccurrences(of: "\"stale\": true,", with: "")
+
+    /// Serveur factice : espèces, manifeste, météo bbox et champ compact ; le reste en 404.
+    static func stubModel() -> (MapModel, host: String, directory: URL) {
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host) { _, path, _ in
+            switch path {
+            case "/species": (200, Fixtures.catalogJSON)
+            case "/tiles": (200, Fixtures.manifestJSON)
+            case "/weather/bbox": (200, Fixtures.weatherJSON)
+            case "/weather/field": (200, MapModelTests.completeFieldJSON)
+            default: (404, #"{"detail": "inconnu"}"#)
+            }
+        }
+        let directory = FieldStoreTests.temporaryDirectory()
+        let model = MapModel(
+            apiBaseURL: URL(string: "https://\(host)")!, session: URLSession(configuration: StubURLProtocol.configuration()),
+            fieldDirectory: directory.appending(path: "field"), identityStores: [MemoryIdentityStore()],
+            offlineRoot: directory.appending(path: "offline")
+        )
+        return (model, host, directory)
+    }
+
+    static func weatherRequests(host: String) -> [(path: String, query: String)] {
+        StubURLProtocol.requests(host: host)
+            .filter { $0.path.hasPrefix("/weather") }
+            .map { (path: $0.path, query: $0.query ?? "") }
+    }
+
+    @Test("Vue France au zoom 7 : le champ du jour est demandé, le jour change le champ, le zoom 12 repasse en bbox")
+    func fieldThenBBox() async throws {
+        let (model, host, directory) = Self.stubModel()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        await model.load()
+        #expect(model.catalog != nil && model.selectedLayer?.key == .group("cepes"))
+        #expect(Self.weatherRequests(host: host).isEmpty)  // pas d'emprise encore
+
+        // France entière (comme à l'ouverture) : le champ compact, jamais /weather/bbox
+        model.visibleRegionChanged(BBox(minLon: -5, minLat: 42, maxLon: 9, maxLat: 51), zoom: 7)
+        await model.awaitWeather()
+        var requests = Self.weatherRequests(host: host)
+        #expect(!requests.isEmpty)
+        #expect(requests.allSatisfy { $0.path == "/weather/field" })
+        // les deux cèpes du groupe, l'emprise avec sa marge de 0,1°, et au final le jour de l'API
+        let last = try #require(requests.last)
+        #expect(last.query.contains("species=boletus_aereus") && last.query.contains("species=boletus_edulis"))
+        #expect(last.query.contains("min_lon=-5.10000") && last.query.contains("max_lat=51.10000"))
+        #expect(last.query.contains("day=2026-10-30"))
+        #expect(model.today == "2026-10-30")
+        #expect(model.weather.cells.count == 2)
+        #expect(model.weatherStatus?.hasPrefix("2 cellule(s) météo") == true)
+        #expect(model.weatherStatus?.contains("calculée le") == true)
+        #expect(model.weatherStatus?.contains("sans météo") == false)
+        let generation = model.renderGeneration
+        #expect(generation > 0)
+
+        // Changer de jour sous le zoom 9 : le champ de ce jour, puis un rendu
+        let before = requests.count
+        model.setDay(1)
+        await model.awaitWeather()
+        requests = Self.weatherRequests(host: host)
+        #expect(requests.count == before + 1)
+        #expect(requests.last?.path == "/weather/field")
+        #expect(requests.last?.query.contains("day=2026-10-31") == true)
+        #expect(model.renderGeneration >= generation + 2)
+
+        // Revenir à un jour déjà reçu pour cette emprise : rien à demander
+        model.setDay(0)
+        await model.awaitWeather()
+        #expect(Self.weatherRequests(host: host).count == before + 1)
+        // Même jour, emprise contenue dans la précédente, toujours sous le zoom 9 : rien non plus
+        model.visibleRegionChanged(BBox(minLon: 0, minLat: 44, maxLon: 6, maxLat: 48), zoom: 8)
+        await model.awaitWeather()
+        #expect(Self.weatherRequests(host: host).count == before + 1)
+        // Une autre couche : son champ
+        model.select(layerKey: .species("cantharellus_cibarius"))
+        await model.awaitWeather()
+        let girolle = try #require(Self.weatherRequests(host: host).last)
+        #expect(Self.weatherRequests(host: host).count == before + 2)
+        #expect(girolle.path == "/weather/field" && girolle.query.contains("species=cantharellus_cibarius"))
+        #expect(!girolle.query.contains("boletus"))
+        model.select(layerKey: .group("cepes"))
+        await model.awaitWeather()
+        #expect(Self.weatherRequests(host: host).count == before + 2)  // couverture des cèpes gardée
+
+        // Zoom 12 : /weather/bbox, les 11 jours, le jour ne redemande rien
+        model.visibleRegionChanged(BBox(minLon: 8.3, minLat: 46.9, maxLon: 8.5, maxLat: 47.1), zoom: 12)
+        await model.awaitWeather()
+        let bbox = try #require(Self.weatherRequests(host: host).last)
+        #expect(bbox.path == "/weather/bbox")
+        #expect(bbox.query.contains("min_lon=8.20000"))
+        #expect(!bbox.query.contains("day="))
+        #expect(model.weatherStatus?.hasPrefix("1 cellule(s) météo") == true)
+        let count = Self.weatherRequests(host: host).count
+        model.setDay(2)
+        await model.awaitWeather()
+        #expect(Self.weatherRequests(host: host).count == count)
+        #expect(model.weather.cells["c_1"]?.row(species: "boletus_edulis", date: "2026-10-31", altKey: "150")?.mEff == 0.6)
+    }
+
+    @Test("Mode terrain : aucune météo demandée, à aucun zoom")
+    func terrainAsksNothing() async throws {
+        let (model, host, directory) = Self.stubModel()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        await model.load()
+        model.setMode(.terrain)
+        model.visibleRegionChanged(BBox(minLon: -5, minLat: 42, maxLon: 9, maxLat: 51), zoom: 7)
+        await model.awaitWeather()
+        model.visibleRegionChanged(BBox(minLon: 8.3, minLat: 46.9, maxLon: 8.5, maxLat: 47.1), zoom: 12)
+        await model.awaitWeather()
+        #expect(Self.weatherRequests(host: host).isEmpty)
+        #expect(model.weatherStatus == nil)
     }
 }

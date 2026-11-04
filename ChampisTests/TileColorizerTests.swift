@@ -8,8 +8,9 @@ import Testing
 /// cas limites : nodata, alpha 0, cellule absente, classe d'altitude inconnue, groupe.
 struct TileColorizerTests {
     static let size = TileMath.tileSize
-    // Tuile 6/33/22 : son centre (47,04 N, 8,44 E) est tout près de la cellule c_1 de la fixture.
-    static let z = 6, x = 33, y = 22
+    // Tuile 15/17148/11525 : elle contient la cellule c_1 de la fixture (47,0 N, 8,4 E), tous ses
+    // pixels sont à moins de 1,5 km, donc sous la borne de 7,5 km de l'index spatial.
+    static let z = 15, x = 17148, y = 11525
 
     static func palette() throws -> Palette {
         try Palette.decode(Data(Fixtures.paletteJSON.utf8))
@@ -18,6 +19,13 @@ struct TileColorizerTests {
     static func weather() throws -> WeatherField {
         var field = WeatherField()
         field.merge(try Fixtures.decode(WeatherBBoxResponse.self, Fixtures.weatherJSON))
+        return field
+    }
+
+    /// La même cellule par le champ compact `/weather/field` (sous le zoom 9).
+    static func compactWeather() throws -> WeatherField {
+        var field = WeatherField()
+        field.merge(try Fixtures.decode(WeatherFieldResponse.self, Fixtures.weatherFieldJSON))
         return field
     }
 
@@ -115,6 +123,59 @@ struct TileColorizerTests {
         let noDate = colorizer.values(Self.request(mode: .score, date: nil, tiles: layer, weather: weather))
         let allTransparent = [noWeather, otherDay, noDate].map { values in values.allSatisfy { $0.isNaN } }
         #expect(allTransparent == [true, true, true])
+    }
+
+    @Test("Champ compact : mêmes couleurs que /weather/bbox, f appliqué à T, un seul jour")
+    func compactField() throws {
+        let colorizer = TileColorizer(palette: try Self.palette())
+        let tile = Self.tile([(0, 254, 255), (3, 127, 255)])
+        let layer = [TileColorizer.SpeciesTile(species: "boletus_edulis", png: tile)]
+        let alt = Self.tile([(0, 0, 255), (3, 1, 255)])
+        let compact = try Self.compactWeather()
+        let full = try Self.weather()
+
+        let fromField = colorizer.values(Self.request(mode: .score, date: "2026-10-30", tiles: layer, alt: alt, weather: compact))
+        let fromBBox = colorizer.values(Self.request(mode: .score, date: "2026-10-30", tiles: layer, alt: alt, weather: full))
+        #expect(abs(fromField[0] - 0.5) < 1e-9)  // classe 150 : f = 0,5
+        #expect(abs(fromField[3] - 0.45) < 1e-9)  // classe 450 : 0,5 × 0,9
+        #expect(fromField[0] == fromBBox[0] && fromField[3] == fromBBox[3])
+        #expect(fromField[1].isNaN)
+        // le champ ne décrit que son jour : J+1 transparent tant qu'il n'est pas demandé
+        let otherDay = colorizer.values(Self.request(mode: .score, date: "2026-10-31", tiles: layer, alt: alt, weather: compact))
+        #expect(otherDay.allSatisfy { $0.isNaN })
+        // groupe : aereus 1,0 × 0,2 contre edulis 0,5 × 0,9 au pixel 3
+        let aereus = TileColorizer.SpeciesTile(species: "boletus_aereus", png: Self.tile([(3, 254, 255)]))
+        let group = colorizer.values(Self.request(mode: .score, date: "2026-10-30", tiles: layer + [aereus], alt: alt, weather: compact))
+        #expect(abs(group[3] - 0.45) < 1e-9)
+    }
+
+    @Test("Pixel à plus de 7,5 km de toute cellule : transparent, jamais la météo d'une cellule lointaine")
+    func farFromCells() throws {
+        let colorizer = TileColorizer(palette: try Self.palette())
+        let weather = try Self.weather()
+        let tile = Self.tile([(0, 254, 255)])
+        let layer = [TileColorizer.SpeciesTile(species: "boletus_edulis", png: tile)]
+        // Tuile 6/33/22 : son coin haut gauche (5,6 E, 48,9 N) est à 200 km de c_1, et ses blocs de
+        // 16 px font 24 km : aucun centre de bloc n'est à moins de 7,5 km de la seule cellule
+        let far = TileColorizer.Request(z: 6, x: 33, y: 22, mode: .score, date: "2026-10-30", tiles: layer, alt: nil, weather: weather)
+        #expect(colorizer.values(far).allSatisfy { $0.isNaN })
+        #expect(TileColorizer.blockCells(z: 6, x: 33, y: 22, weather: weather).allSatisfy { $0 == nil })
+        // Zoom 9 (blocs de 3 km) : le bloc qui contient la cellule la trouve, le coin de la tuile (50 km) non
+        let p = TileMath.tile(lon: 8.4, lat: 47.0, z: 9)
+        let cells = TileColorizer.blockCells(z: 9, x: p.x, y: p.y, weather: weather)
+        #expect(cells.count == 256)
+        #expect(cells[0] == nil)
+        #expect(cells[(p.py / TileColorizer.weatherBlock) * 16 + p.px / TileColorizer.weatherBlock]?.info.id == "c_1")
+        let i = p.py * Self.size + p.px
+        let request = TileColorizer.Request(
+            z: 9, x: p.x, y: p.y, mode: .score, date: "2026-10-30", tiles: [.init(species: "boletus_edulis", png: Self.tile([(i, 254, 255), (0, 254, 255)]))],
+            alt: nil, weather: weather
+        )
+        let values = colorizer.values(request)
+        #expect(abs(values[i] - 0.9) < 1e-9)
+        #expect(values[0].isNaN)
+        // Mode terrain : la distance aux cellules ne compte pas
+        #expect(colorizer.values(TileColorizer.Request(z: 6, x: 33, y: 22, mode: .terrain, date: nil, tiles: layer, alt: nil, weather: WeatherField()))[0] == 1.0)
     }
 
     @Test("Couche A : classe du pixel ; nodata ou alpha 0 → repli sur la médiane de la cellule")
