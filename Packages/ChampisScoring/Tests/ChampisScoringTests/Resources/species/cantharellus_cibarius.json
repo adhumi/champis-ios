@@ -179,6 +179,7 @@
     },
     "frost": {
       "tmin_c": -2,
+      "ramp_c": 2,
       "nights": 2,
       "window_days": 7,
       "factor": 0.2
@@ -237,7 +238,8 @@
         "danell1994"
       ],
       "frost": [
-        "danell1994"
+        "danell1994",
+        "gel_rampe2026"
       ],
       "heat": [
         "straatsma_egli2001",
@@ -283,7 +285,12 @@
         ]
       }
     ],
-    "photo": null,
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Cantharellus_cibarius_20090717-01.jpg/1280px-Cantharellus_cibarius_20090717-01.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Cantharellus_cibarius_20090717-01.jpg",
+      "author": "Heisenberg-pl",
+      "license": "CC BY-SA 3.0"
+    },
     "refs": [
       "courtecuisse2013",
       "eyssartier2017"
@@ -318,6 +325,7 @@
     "vonbonsdorff2015": "von Bonsdorff, Finlande 2015 (RCI) — juin frais et pluvieux idéal, juillet caniculaire interrompt",
     "tahvanainen2019": "Tahvanainen, Miina & Kurttila 2019, Forests — offre nationale = f(pluie juin+juillet), r juillet = 0,53",
     "populaire_scandinave": "Kantarellkartet (Oslo), Hurbra.se — 1-3 semaines après pluie significative, versants nord ; confiance faible",
-    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance"
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil, à affiner : la marche (≥ nights nuits ≤ tmin_c → × factor) faisait basculer deux cellules météo voisines de « bon » à « très faible » pour un dixième de degré ; aucune référence plus fine sur la sensibilité au gel partiel ; confiance faible"
   }
 }

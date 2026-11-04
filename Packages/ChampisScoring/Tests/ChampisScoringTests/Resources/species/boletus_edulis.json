@@ -177,6 +177,7 @@
     },
     "frost": {
       "tmin_c": -2,
+      "ramp_c": 2,
       "nights": 2,
       "window_days": 7,
       "factor": 0.2
@@ -235,7 +236,8 @@
       ],
       "frost": [
         "bielefeld2025",
-        "kauserud2012"
+        "kauserud2012",
+        "gel_rampe2026"
       ],
       "heat": [
         "salerni2023",
@@ -282,7 +284,12 @@
         ]
       }
     ],
-    "photo": null,
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/%28Gemeine_Steinpilz%29_Boletus_edulis.jpg/1280px-%28Gemeine_Steinpilz%29_Boletus_edulis.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:(Gemeine_Steinpilz)_Boletus_edulis.jpg",
+      "author": "Holger Krisp",
+      "license": "CC BY 3.0"
+    },
     "refs": [
       "courtecuisse2013",
       "eyssartier2017"
@@ -318,6 +325,7 @@
     "kauserud2012": "Kauserud et al. 2012, PNAS 109:14488 — recul des premières gelées = allongement de saison",
     "vcu2024": "Thèse VCU 2024, Pinar Grande 1995-2023 — saison de Boletus 32 ± 13 jours",
     "doubs2026": "Diagnostic champis-pipeline explain, Doubs, 18/10/2026 — 90 % de la forêt en excellent, facteurs d'environnement saturés (pH, altitude, couvert ≥ 0,9 sur 94 % des pixels), T = poids de l'hôte ; mélanges indéterminés abaissés pour retrouver une gradation (cible spec : ≤ 60 % excellent, 3 classes > 10 %) ; confiance moyenne",
-    "terrain_fr": "Sources de terrain françaises (Wikipédia FR, Mycocharentes) — > 50 mm/décade, premiers sporophores 6-15 j, pousse ~12 j ; confiance faible"
+    "terrain_fr": "Sources de terrain françaises (Wikipédia FR, Mycocharentes) — > 50 mm/décade, premiers sporophores 6-15 j, pousse ~12 j ; confiance faible",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil, à affiner : la marche (≥ nights nuits ≤ tmin_c → × factor) faisait basculer deux cellules météo voisines de « bon » à « très faible » pour un dixième de degré ; aucune référence plus fine sur la sensibilité au gel partiel ; confiance faible"
   }
 }

@@ -86,12 +86,29 @@ public enum WeatherIndex {
         return sp.weather.soilMoisturePct.value(mean(Array(w)))
     }
 
+    /// Sévérité d'une nuit, 0–1 (`frost_severity`) : `1 − trapèze(tmin, min = tmin_c,
+    /// opt_low = tmin_c + ramp_c, opt_high = +∞, max = +∞)`, soit 1 à `tmin_c` et en dessous, 0 dès
+    /// `tmin_c + ramp_c`, linéaire entre. Le trapèze unique du paquet, avec des bornes hautes
+    /// infinies : `x <= +∞` est toujours vrai et `max > optHigh` est faux pour +∞ = +∞, donc pas de
+    /// rampe descendante — exactement ce que fait `math.inf` dans `trapezoid` côté Python.
+    static func frostSeverity(_ tminC: Double, _ cfg: Species.Frost) -> Double {
+        let ramp = Trapezoid(min: cfg.tminC, optLow: cfg.tminC + cfg.rampC, optHigh: .infinity, max: .infinity)
+        return 1.0 - ramp.value(tminC)
+    }
+
+    /// Gel en rampe (spec › Scoring › gel en rampe, 4 nov. 2026), comme `factor_frost` :
+    ///
+    ///     S = Σ sévérité(tmin corrigée) sur les `window_days` dernières nuits
+    ///     facteur = 1 − (1 − factor) × min(1, S / nights)
+    ///
+    /// `nights` nuits à `tmin_c` ou en dessous donnent × `factor` (l'ancienne marche) ; une seule nuit
+    /// à mi-rampe donne `1 − (1 − factor) × 0,5 / nights`. Somme dans l'ordre des nuits, comme Python.
     static func factorFrost(_ sp: Species, _ s: DailySeries, _ day: CivilDate, _ altM: Double) throws -> Double {
         let cfg = sp.weather.frost
         let w = try s.window(s.tMin, end: day, days: cfg.windowDays)
         let vals = corrected(w, series: s, altM: altM)
-        let nights = vals.filter { $0 <= cfg.tminC }.count
-        return nights >= cfg.nights ? cfg.factor : 1.0
+        let severity = vals.map { frostSeverity($0, cfg) }.sumInOrder()
+        return 1.0 - (1.0 - cfg.factor) * Swift.min(1.0, severity / Double(cfg.nights))
     }
 
     static func factorWaterBalance(_ sp: Species, _ s: DailySeries, _ day: CivilDate) throws -> Double {

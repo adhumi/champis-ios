@@ -170,6 +170,7 @@
     },
     "frost": {
       "tmin_c": -1,
+      "ramp_c": 2,
       "nights": 1,
       "window_days": 7,
       "factor": 0.1
@@ -224,7 +225,8 @@
         "karavani2018"
       ],
       "frost": [
-        "kauserud2012"
+        "kauserud2012",
+        "gel_rampe2026"
       ],
       "heat": [
         "salerni2023"
@@ -269,7 +271,12 @@
         ]
       }
     ],
-    "photo": null,
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/Boletus_reticulatus_%282%29.JPG/1280px-Boletus_reticulatus_%282%29.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Boletus_reticulatus_(2).JPG",
+      "author": "Toffel",
+      "license": "CC BY-SA 3.0"
+    },
     "refs": [
       "courtecuisse2013",
       "eyssartier2017"
@@ -295,6 +302,7 @@
     "kauserud2012": "Kauserud et al. 2012, PNAS 109:14488 — recul des premières gelées = allongement de saison",
     "terrain_fr": "Sources de terrain françaises (Wikipédia FR, Mycocharentes) — > 50 mm/décade, premiers sporophores 6-15 j, pousse ~12 j ; confiance faible",
     "coolia2005": "Coolia 2005 (48:2) — B. reticulatus strictement sous chênes, amplitude de sol très large (sable sec à argile riche), stations assez sèches",
-    "wikipedia_fr_reticulatus": "Wikipédia FR, Boletus reticulatus (citant Eyssartier & Roux) — mai/juin → novembre, pic juillet et second pic octobre ; thermophile"
+    "wikipedia_fr_reticulatus": "Wikipédia FR, Boletus reticulatus (citant Eyssartier & Roux) — mai/juin → novembre, pic juillet et second pic octobre ; thermophile",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil, à affiner : la marche (≥ nights nuits ≤ tmin_c → × factor) faisait basculer deux cellules météo voisines de « bon » à « très faible » pour un dixième de degré ; aucune référence plus fine sur la sensibilité au gel partiel ; confiance faible"
   }
 }

@@ -174,6 +174,7 @@
     },
     "frost": {
       "tmin_c": -2,
+      "ramp_c": 2,
       "nights": 2,
       "window_days": 7,
       "factor": 0.2
@@ -228,7 +229,8 @@
         "karavani2018"
       ],
       "frost": [
-        "piemonte"
+        "piemonte",
+        "gel_rampe2026"
       ],
       "heat": [
         "salerni2023"
@@ -272,7 +274,12 @@
         ]
       }
     ],
-    "photo": null,
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a9/Boletus_aereus_IT.JPG/1280px-Boletus_aereus_IT.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Boletus_aereus_IT.JPG",
+      "author": "Roberto Petruzzo",
+      "license": "Public domain"
+    },
     "refs": [
       "courtecuisse2013",
       "eyssartier2017"
@@ -297,6 +304,7 @@
     "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
     "buntgen2015": "Büntgen et al. 2015, Fungal Ecology — pluies juillet-sept. positives (Espagne)",
     "olano2020": "Olano et al. 2020 — humidité du sol juillet-nov.",
-    "terrain_fr": "Sources de terrain françaises — pousse ~10-12 j ; confiance faible"
+    "terrain_fr": "Sources de terrain françaises — pousse ~10-12 j ; confiance faible",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil, à affiner : la marche (≥ nights nuits ≤ tmin_c → × factor) faisait basculer deux cellules météo voisines de « bon » à « très faible » pour un dixième de degré ; aucune référence plus fine sur la sensibilité au gel partiel ; confiance faible"
   }
 }
