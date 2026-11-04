@@ -40,8 +40,45 @@ actor TileStore {
     var hasAltitudeLayer: Bool { altReader != nil }
     var species: Set<String> { Set(terrainReaders.keys) }
 
-    /// (Re)configure les lecteurs d'après le manifeste. Pour une espèce, l'entrée dont la version de
-    /// scoring est celle de l'app est préférée ; à défaut la dernière par nom.
+    /// Entrées du manifeste à lire en ligne : pour chaque espèce un fichier `T`, et le fichier `A`.
+    ///
+    /// Le manifeste liste aussi, depuis le 1er nov. 2026, un jeu par département (champ `dept`)
+    /// pour le hors ligne : ces fichiers ne contiennent que les tuiles de leur département, la
+    /// carte en ligne doit lire le jeu complet (sans `dept`). Préférence, dans l'ordre : jeu complet
+    /// plutôt que jeu d'un département, version de scoring de l'app plutôt qu'une autre, puis le
+    /// dernier nom par ordre alphabétique. Fonction pure, testée sans réseau : le 4 nov. 2026, « le
+    /// dernier par nom » tout court choisissait le département 70 et la carte restait vide ailleurs.
+    nonisolated static func chooseEntries(
+        _ tiles: [TilesManifest.Entry], scoringVersion: String
+    ) -> (terrain: [String: TilesManifest.Entry], alt: TilesManifest.Entry?) {
+        func rank(_ e: TilesManifest.Entry) -> (Int, Int, String) {
+            (e.dept == nil ? 1 : 0, e.scoringVersion == scoringVersion ? 1 : 0, e.name)
+        }
+        func better(_ a: TilesManifest.Entry, than b: TilesManifest.Entry?) -> Bool {
+            guard let b else { return true }
+            return rank(a) > rank(b)
+        }
+        var terrain: [String: TilesManifest.Entry] = [:]
+        var alt: TilesManifest.Entry?
+        for entry in tiles {
+            switch entry.kind {
+            case "T":
+                guard let sid = entry.species else { continue }
+                if better(entry, than: terrain[sid]) {
+                    terrain[sid] = entry
+                }
+            case "A":
+                if better(entry, than: alt) {
+                    alt = entry
+                }
+            default:
+                continue
+            }
+        }
+        return (terrain, alt)
+    }
+
+    /// (Re)configure les lecteurs d'après le manifeste (voir `chooseEntries`).
     func configure(manifest: TilesManifest, api: ChampisAPI, scoringVersion: String) {
         terrainReaders = [:]
         terrainNames = [:]
@@ -49,26 +86,12 @@ actor TileStore {
         altName = ""
         cache = [:]
         order = []
-        var chosen: [String: TilesManifest.Entry] = [:]
-        for entry in manifest.tiles.sorted(by: { $0.name < $1.name }) {
-            switch entry.kind {
-            case "T":
-                guard let sid = entry.species else { continue }
-                if let current = chosen[sid], current.scoringVersion == scoringVersion,
-                   entry.scoringVersion != scoringVersion {
-                    continue
-                }
-                chosen[sid] = entry
-            case "A":
-                if let url = api.tileURL(entry) {
-                    altReader = PMTilesReader(source: RemoteRangeSource(url: url, session: session))
-                    altName = entry.name
-                }
-            default:
-                continue
-            }
+        let chosen = Self.chooseEntries(manifest.tiles, scoringVersion: scoringVersion)
+        if let entry = chosen.alt, let url = api.tileURL(entry) {
+            altReader = PMTilesReader(source: RemoteRangeSource(url: url, session: session))
+            altName = entry.name
         }
-        for (sid, entry) in chosen {
+        for (sid, entry) in chosen.terrain {
             guard let url = api.tileURL(entry) else { continue }
             terrainReaders[sid] = PMTilesReader(source: RemoteRangeSource(url: url, session: session))
             terrainNames[sid] = entry.name
