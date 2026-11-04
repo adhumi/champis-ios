@@ -226,10 +226,13 @@ struct PointSheet: View {
             DisclosureGroup("Chiffres et facteurs") {
                 LabeledContent(info.mode == .score ? "Score S" : "Potentiel T", value: Self.number(scored.value))
                 LabeledContent("Potentiel terrain T", value: Self.number(scored.terrain))
-                if let row = scored.row {
+                if let row = scored.row ?? model.pointRow {
                     LabeledContent("M_eff × Φ", value: Self.number(row.factor))
                     LabeledContent("Indice météo M_eff", value: Self.number(row.mEff))
                     LabeledContent("Fenêtre Φ", value: Self.number(row.phi))
+                } else if let factor = scored.factor {
+                    // champ compact (sous le zoom 9) : le produit seul, le détail arrive par GET /weather
+                    LabeledContent("M_eff × Φ", value: Self.number(factor))
                 }
                 LabeledContent("Classe d'altitude", value: altitudeText(scored))
                 if let cell = scored.cell {

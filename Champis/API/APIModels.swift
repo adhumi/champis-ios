@@ -154,3 +154,70 @@ nonisolated struct WeatherBBoxResponse: Codable, Sendable {
         case retryAfter = "retry_after"
     }
 }
+
+/// Réponse de `GET /weather/field` : le champ météo compact d'un seul jour sur une emprise sans
+/// plafond de cellules (la France entière ≈ 20 000 cellules), pour colorer la carte sous le zoom 9
+/// (spec › Points ouverts › Carte visible dès l'ouverture, 4 nov. 2026). `f[espèce][classe]` est
+/// `M_eff × Φ` pour `day` ; `M_eff` et `Φ` séparés passent par `GET /weather?cell=`.
+nonisolated struct WeatherFieldResponse: Codable, Sendable {
+    nonisolated struct Cell: Codable, Sendable {
+        let id: String
+        let lat: Double
+        let lon: Double
+        let elevationM: Double?
+        let altClasses: [Double]
+        /// Présent dans le JSON seulement s'il est vrai.
+        let stale: Bool
+        /// espèce → clé de classe (`"150"`) → `M_eff × Φ`.
+        let f: [String: [String: Double]]
+
+        enum CodingKeys: String, CodingKey {
+            case id, lat, lon, stale, f
+            case elevationM = "elevation_m"
+            case altClasses = "alt_classes"
+        }
+
+        init(id: String, lat: Double, lon: Double, elevationM: Double?, altClasses: [Double], stale: Bool, f: [String: [String: Double]]) {
+            self.id = id
+            self.lat = lat
+            self.lon = lon
+            self.elevationM = elevationM
+            self.altClasses = altClasses
+            self.stale = stale
+            self.f = f
+        }
+
+        init(from decoder: any Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            lat = try c.decode(Double.self, forKey: .lat)
+            lon = try c.decode(Double.self, forKey: .lon)
+            elevationM = try c.decodeIfPresent(Double.self, forKey: .elevationM)
+            altClasses = try c.decodeIfPresent([Double].self, forKey: .altClasses) ?? []
+            stale = try c.decodeIfPresent(Bool.self, forKey: .stale) ?? false
+            f = try c.decodeIfPresent([String: [String: Double]].self, forKey: .f) ?? [:]
+        }
+
+        /// La même description de cellule que `/weather/bbox`.
+        var info: WeatherCellInfo {
+            WeatherCellInfo(id: id, lat: lat, lon: lon, altClasses: altClasses, elevationM: elevationM)
+        }
+    }
+
+    let today: String
+    let computedAt: String?
+    /// Le jour demandé (ISO), le seul que `f` décrit.
+    let day: String
+    let scoringVersion: String?
+    let cells: [Cell]
+    /// Nombre de cellules de l'emprise sans précalcul : leurs pixels restent transparents.
+    let unavailable: Int
+
+    enum CodingKeys: String, CodingKey {
+        case today, day, cells, unavailable
+        case computedAt = "computed_at"
+        case scoringVersion = "scoring_version"
+    }
+
+    var anyStale: Bool { cells.contains { $0.stale } }
+}

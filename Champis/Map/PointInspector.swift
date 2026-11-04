@@ -14,6 +14,8 @@ nonisolated struct PointInfo: Identifiable, Sendable {
         let factor: Double?
         /// `T` (mode terrain) ou `S = T × M_eff × Φ` (mode score).
         let value: Double
+        /// Ligne complète (`M`, `M_eff`, `Φ`) quand la météo vient de `/weather/bbox` ; `nil` sous le
+        /// champ compact, la fiche la prend alors de `GET /weather?cell=` (`MapModel.pointRow`).
         let row: WeatherRow?
         let cell: WeatherCellInfo?
         let stale: Bool
@@ -98,12 +100,15 @@ nonisolated enum PointInspector {
                 altClass: altClass, altKey: nil, altFallback: false
             )
             if useWeather {
+                // `factor` vient de `/weather/bbox` ou du champ compact `/weather/field` (sous le zoom 9) ;
+                // la ligne complète n'existe que pour le premier, la fiche charge le reste par `GET /weather`.
                 guard let cell, let date = settings.date,
                       let alt = cell.altKey(classIndex: altClass, encoding: colorizer.palette.altEncoding),
-                      let row = cell.row(species: sid, date: date, altKey: alt.key)
+                      let factor = cell.factor(species: sid, date: date, altKey: alt.key)
                 else { continue }
                 candidate = PointInfo.Scored(
-                    species: sid, terrain: terrain, factor: row.factor, value: terrain * row.factor, row: row,
+                    species: sid, terrain: terrain, factor: factor, value: terrain * factor,
+                    row: cell.row(species: sid, date: date, altKey: alt.key),
                     cell: cell.info, stale: cell.stale, altClass: altClass, altKey: alt.key, altFallback: alt.fallback
                 )
             }

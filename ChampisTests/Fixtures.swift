@@ -151,6 +151,25 @@ nonisolated enum Fixtures {
     }
     """
 
+    /// `GET /weather/field` (champ compact d'un jour, sous le zoom 9) : la même cellule c_1 que
+    /// `weatherJSON` avec `f = M_eff × Φ` du 30 octobre, une cellule périmée c_3 à 47,5 N (55 km au
+    /// nord), deux cellules sans précalcul.
+    static let weatherFieldJSON = """
+    {
+      "today": "2026-10-30",
+      "computed_at": "2026-10-30T03:12:00+00:00",
+      "day": "2026-10-30",
+      "scoring_version": "1.0.0",
+      "cells": [
+        { "id": "c_1", "lat": 47.0, "lon": 8.4, "elevation_m": 620.0, "alt_classes": [150.0, 450.0],
+          "f": { "boletus_edulis": { "150": 0.5, "450": 0.9 }, "boletus_aereus": { "150": 0.2, "450": 0.2 } } },
+        { "id": "c_3", "lat": 47.5, "lon": 8.4, "elevation_m": 300.0, "alt_classes": [150.0], "stale": true,
+          "f": { "boletus_edulis": { "150": 0.79 } } }
+      ],
+      "unavailable": 2
+    }
+    """
+
     /// `GET /departements` (bandeau des jours) : deux départements, un groupe (max + leading) et ses espèces.
     static let departementsJSON = """
     {

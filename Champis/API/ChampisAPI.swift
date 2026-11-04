@@ -18,8 +18,8 @@ nonisolated struct BBox: Hashable, Sendable {
     }
 }
 
-/// Client de champis-api (`/species`, `/tiles`, `/weather`, `/weather/bbox`, `/departements`). Sans
-/// état ; les réponses sont décodées hors du MainActor.
+/// Client de champis-api (`/species`, `/tiles`, `/weather`, `/weather/bbox`, `/weather/field`,
+/// `/departements`). Sans état ; les réponses sont décodées hors du MainActor.
 nonisolated struct ChampisAPI: Sendable {
     nonisolated enum Failure: Error, LocalizedError, Equatable {
         case badURL
@@ -60,6 +60,21 @@ nonisolated struct ChampisAPI: Sendable {
         ]
         query += species.map { URLQueryItem(name: "species", value: $0) }
         return try await get("weather/bbox", query: query)
+    }
+
+    /// Champ météo compact d'un seul jour (`M_eff × Φ` par cellule, espèce et classe d'altitude) sur
+    /// l'emprise, sans plafond de cellules : la carte sous le zoom 9 (décision du 4 nov. 2026).
+    /// `day` hors de J−3 → J+7 : 422.
+    func weatherField(bbox: BBox, species: [String], day: String) async throws -> WeatherFieldResponse {
+        var query = species.map { URLQueryItem(name: "species", value: $0) }
+        query += [
+            URLQueryItem(name: "day", value: day),
+            URLQueryItem(name: "min_lon", value: Self.format(bbox.minLon)),
+            URLQueryItem(name: "min_lat", value: Self.format(bbox.minLat)),
+            URLQueryItem(name: "max_lon", value: Self.format(bbox.maxLon)),
+            URLQueryItem(name: "max_lat", value: Self.format(bbox.maxLat)),
+        ]
+        return try await get("weather/field", query: query)
     }
 
     /// Détail d'une cellule pour la fiche : mêmes lignes que `/weather/bbox`, avec `factors`.

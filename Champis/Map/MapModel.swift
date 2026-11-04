@@ -35,12 +35,30 @@ nonisolated struct DayDot: Identifiable, Hashable, Sendable {
     var id: Int { offset }
 }
 
-/// Dernière météo complète reçue de `GET /weather/bbox` : l'emprise demandée (avec marge), la couche
-/// et l'instant. Une emprise contenue dedans, pour la même couche, est déjà peinte : rien à demander.
+/// Dernière météo complète reçue : l'emprise demandée (avec marge), la couche, le jour et l'instant.
+/// `day` nil pour `GET /weather/bbox` (les 11 jours d'un coup), le jour ISO pour un champ compact
+/// `GET /weather/field`. Une emprise contenue dedans, pour la même couche et le même jour, est
+/// déjà peinte : rien à demander.
 nonisolated struct WeatherCoverage: Sendable {
     let bbox: BBox
     let layer: LayerKey
+    let day: String?
     let at: Date
+}
+
+/// Un champ compact reçu : le jour et la couche.
+nonisolated struct FieldCoverageKey: Hashable, Sendable {
+    let day: String
+    let layer: LayerKey
+}
+
+/// Ce que la carte demande pour la météo de l'emprise, selon le zoom (spec › Points ouverts ›
+/// Carte visible dès l'ouverture, sous le zoom 9, décision du 4 nov. 2026).
+nonisolated enum WeatherRequest: Hashable, Sendable {
+    /// `/weather/bbox` : 11 jours, emprise bornée à 5 000 cellules, au zoom 9 et au-delà.
+    case bbox
+    /// `/weather/field` : le seul jour affiché, sans plafond de cellules, sous le zoom 9.
+    case field(day: String)
 }
 
 /// Modèle de l'écran carte (MVVM, `@Observable`, MainActor). Les vues ne calculent rien : espèce
@@ -60,6 +78,10 @@ final class MapModel {
     /// contient (zoom avant, petit déplacement) ; au-delà, on redemande pour suivre la pré-chauffe
     /// et le passage de minuit.
     nonisolated static let weatherCoverageMaxAge: TimeInterval = 30 * 60
+    /// Sous ce zoom, l'emprise dépasse les 5 000 cellules de `/weather/bbox` (la France entière en
+    /// fait ≈ 20 000) : la carte demande le champ compact `/weather/field` du seul jour affiché,
+    /// et change de jour en le redemandant (décision du 4 nov. 2026).
+    nonisolated static let fieldZoom = 9.0
     /// Centre de la France, vue d'ensemble, tant qu'on n'a pas de position.
     static let initialRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 46.8, longitude: 2.4),
@@ -104,6 +126,9 @@ final class MapModel {
     private(set) var isInspecting = false
     private(set) var inspectError: String?
     private(set) var pointFactors: [String: Double]?
+    /// Ligne complète (`M`, `M_eff`, `Φ`) du point reçue par `GET /weather`, pour la fiche quand la
+    /// carte n'avait que le champ compact (sous le zoom 9).
+    private(set) var pointRow: WeatherRow?
     private(set) var factorsStatus: String?
     /// Phrases en clair de `GET /weather` › `summary` pour le point (lot 2).
     private(set) var pointSummary: [String]?
@@ -129,9 +154,14 @@ final class MapModel {
     @ObservationIgnored private let locationManager = CLLocationManager()
     @ObservationIgnored private let renderer: TileRenderer
     @ObservationIgnored private let store: TileStore
+    @ObservationIgnored private let session: URLSession
     @ObservationIgnored private(set) var api: ChampisAPI
     @ObservationIgnored private var visibleBBox: BBox?
+    /// Couverture de la dernière réponse complète de `/weather/bbox` (les 11 jours).
     @ObservationIgnored private var weatherCoverage: WeatherCoverage?
+    /// Couverture des champs compacts reçus, par jour ISO et couche : changer de jour ou de couche
+    /// sous le zoom 9 ne redemande pas un champ déjà reçu pour cette emprise.
+    @ObservationIgnored private var fieldCoverage: [FieldCoverageKey: WeatherCoverage] = [:]
     @ObservationIgnored private var weatherTask: Task<Void, Never>?
     @ObservationIgnored private var deptTask: Task<Void, Never>?
     @ObservationIgnored private var deptTaskKey: LayerKey?
@@ -139,10 +169,11 @@ final class MapModel {
     @ObservationIgnored private var isLoadingBoundaries = false
 
     init(
-        apiBaseURL: URL, diskCache: DiskTileCache? = nil, fieldDirectory: URL? = nil,
+        apiBaseURL: URL, session: URLSession = .shared, diskCache: DiskTileCache? = nil, fieldDirectory: URL? = nil,
         identityStores: [any IdentityStore]? = nil, offlineRoot: URL? = nil, downloads: DownloadManager? = nil
     ) {
-        let api = ChampisAPI(baseURL: apiBaseURL)
+        let api = ChampisAPI(baseURL: apiBaseURL, session: session)
+        self.session = session
         self.api = api
         let tileStore = TileStore(disk: diskCache)
         store = tileStore
@@ -236,9 +267,10 @@ final class MapModel {
     /// Démarre (ou redémarre, si l'adresse de l'API a changé) : espèces, palette, manifeste des tuiles.
     func start(apiBaseURL: URL) async {
         if apiBaseURL != api.baseURL {
-            api = ChampisAPI(baseURL: apiBaseURL)
+            api = ChampisAPI(baseURL: apiBaseURL, session: session)
             weather = WeatherField()
             weatherCoverage = nil
+            fieldCoverage = [:]
             weatherStatus = nil
             deptIndex = nil
             deptFeatures = []
@@ -296,9 +328,19 @@ final class MapModel {
         refreshData()
     }
 
+    /// Au zoom 9 et au-delà, les 11 jours sont déjà là : rien à recharger. Sous le zoom 9, le champ
+    /// compact du nouveau jour est demandé s'il ne l'a pas déjà été pour cette emprise.
     func setDay(_ offset: Int) {
         dayOffset = min(max(offset, Self.dayRange.lowerBound), Self.dayRange.upperBound)
         pushSettings()
+        if usesWeatherField {
+            refreshWeather()
+        }
+    }
+
+    /// Vrai sous le zoom 9 : la météo de l'emprise vient du champ compact d'un seul jour.
+    var usesWeatherField: Bool {
+        zoom.map { $0 < Self.fieldZoom } ?? false
     }
 
     func setMode(_ mode: MapMode) {
@@ -326,18 +368,33 @@ final class MapModel {
 
     // MARK: - Météo
 
-    /// `GET /weather/bbox` sur l'emprise visible (avec marge) pour les espèces de la couche ; les
-    /// 11 jours arrivent d'un coup, le curseur de jour ne recharge rien. Une emprise déjà couverte
-    /// par la dernière réponse complète (zoom avant, petit déplacement) ne redemande rien.
+    /// Météo de l'emprise visible (avec marge) pour les espèces de la couche. Au zoom 9 et au-delà,
+    /// `GET /weather/bbox` : les 11 jours arrivent d'un coup, le curseur de jour ne recharge rien.
+    /// Sous le zoom 9, `GET /weather/field` : le champ compact du seul jour affiché, sans plafond de
+    /// cellules ; les champs reçus se gardent par jour. Une emprise déjà couverte par la dernière
+    /// réponse complète (zoom avant, petit déplacement, même jour) ne redemande rien.
     private func refreshWeather(debounce: Bool = false) {
         weatherTask?.cancel()
-        guard mode == .score, let layer = selectedLayer, let bbox = visibleBBox, catalog != nil else {
+        guard mode == .score, let layer = selectedLayer, let bbox = visibleBBox, let zoom, catalog != nil else {
             weatherStatus = nil
             return
         }
         let requested = bbox.padded(by: Self.weatherPaddingDegrees)
-        if Self.weatherAlreadyCovers(weatherCoverage, layer: layer.key, bbox: requested, now: .now) {
-            return
+        // Tant que l'API n'a pas dit son `today`, le jour de l'appareil ; la réponse le corrige.
+        let request = Self.weatherRequest(zoom: zoom, day: dayDate ?? FieldModel.isoDay())
+        let now = Date.now
+        switch request {
+        case .bbox:
+            if Self.weatherAlreadyCovers(weatherCoverage, layer: layer.key, bbox: requested, day: nil, now: now) {
+                return
+            }
+        case .field(let day):
+            if Self.weatherAlreadyCovers(weatherCoverage, layer: layer.key, bbox: requested, day: day, now: now)
+                || Self.weatherAlreadyCovers(
+                    fieldCoverage[FieldCoverageKey(day: day, layer: layer.key)], layer: layer.key, bbox: requested, day: day, now: now
+                ) {
+                return
+            }
         }
         let api = api
         weatherTask = Task { [weak self] in
@@ -348,18 +405,36 @@ final class MapModel {
             isLoadingWeather = true
             defer { isLoadingWeather = false }
             do {
-                let response = try await api.weather(bbox: requested, species: layer.members)
-                guard !Task.isCancelled else { return }
-                weather.merge(response)
-                weatherStatus = Self.status(for: response)
-                weatherCoverage = Self.isComplete(response)
-                    ? WeatherCoverage(bbox: requested, layer: layer.key, at: .now) : nil
-                pushSettings()
+                switch request {
+                case .bbox:
+                    let response = try await api.weather(bbox: requested, species: layer.members)
+                    guard !Task.isCancelled else { return }
+                    forgetCoverageIfNewDay(response.today)
+                    weather.merge(response)
+                    weatherStatus = Self.status(for: response)
+                    weatherCoverage = Self.isComplete(response)
+                        ? WeatherCoverage(bbox: requested, layer: layer.key, day: nil, at: .now) : nil
+                    pushSettings()
+                case .field(let day):
+                    let response = try await api.weatherField(bbox: requested, species: layer.members, day: day)
+                    guard !Task.isCancelled else { return }
+                    forgetCoverageIfNewDay(response.today)
+                    weather.merge(response)
+                    weatherStatus = Self.status(for: response)
+                    fieldCoverage[FieldCoverageKey(day: day, layer: layer.key)] = Self.isComplete(response)
+                        ? WeatherCoverage(bbox: requested, layer: layer.key, day: day, at: .now) : nil
+                    pushSettings()
+                    // Le jour venait de l'horloge de l'appareil et l'API compte autrement : le bon jour.
+                    if let current = dayDate, current != day {
+                        refreshWeather()
+                    }
+                }
             } catch let failure as ChampisAPI.Failure {
                 guard !Task.isCancelled else { return }
                 weatherCoverage = nil
                 if case .http(let status, let detail) = failure, status == 422 {
-                    weatherStatus = detail.isEmpty ? "Zoomez pour afficher la météo" : detail
+                    let fallback = request == .bbox ? "Zoomez pour afficher la météo" : "Jour hors de la fenêtre météo"
+                    weatherStatus = detail.isEmpty ? fallback : detail
                 } else {
                     await useOfflineWeather(or: "Météo indisponible : \(failure.localizedDescription)")
                 }
@@ -373,12 +448,37 @@ final class MapModel {
         }
     }
 
-    /// Vrai si la dernière météo complète reçue couvre déjà `bbox` pour cette couche et n'a pas
-    /// dépassé `weatherCoverageMaxAge`. Fonction pure, testée sans réseau.
+    /// Minuit passé côté API : `WeatherField` jette ses cellules, les couvertures ne valent plus.
+    private func forgetCoverageIfNewDay(_ today: String) {
+        if weather.today != today {
+            weatherCoverage = nil
+            fieldCoverage = [:]
+        }
+    }
+
+    /// Attend la fin de la requête météo en cours (et de celle qu'elle relance, le cas échéant) :
+    /// pour les tests, la vue observe `isLoadingWeather`.
+    func awaitWeather() async {
+        while let task = weatherTask {
+            await task.value
+            if weatherTask == task { return }
+        }
+    }
+
+    /// `/weather/bbox` au zoom 9 et au-delà, le champ compact du jour en dessous. Fonction pure, testée.
+    nonisolated static func weatherRequest(zoom: Double, day: String) -> WeatherRequest {
+        zoom < fieldZoom ? .field(day: day) : .bbox
+    }
+
+    /// Vrai si la dernière météo complète reçue couvre déjà `bbox` pour cette couche et ce jour
+    /// (`day` nil : les 11 jours de `/weather/bbox`, qu'une couverture d'un seul jour ne remplace pas ;
+    /// une couverture des 11 jours vaut pour tout jour) et n'a pas dépassé `weatherCoverageMaxAge`.
+    /// Fonction pure, testée sans réseau.
     nonisolated static func weatherAlreadyCovers(
-        _ coverage: WeatherCoverage?, layer: LayerKey, bbox: BBox, now: Date
+        _ coverage: WeatherCoverage?, layer: LayerKey, bbox: BBox, day: String?, now: Date
     ) -> Bool {
         guard let coverage, coverage.layer == layer else { return false }
+        guard coverage.day == nil || coverage.day == day else { return false }
         guard now.timeIntervalSince(coverage.at) < weatherCoverageMaxAge else { return false }
         return coverage.bbox.contains(bbox)
     }
@@ -387,6 +487,10 @@ final class MapModel {
     /// s'en contenter un moment. Sinon, le prochain déplacement redemande.
     nonisolated static func isComplete(_ response: WeatherBBoxResponse) -> Bool {
         response.unavailable.isEmpty && !response.cells.contains { $0.stale }
+    }
+
+    nonisolated static func isComplete(_ response: WeatherFieldResponse) -> Bool {
+        response.unavailable == 0 && !response.anyStale
     }
 
     /// Sans réseau : la météo embarquée des départements complets, avec sa date affichée en clair.
@@ -418,6 +522,22 @@ final class MapModel {
                 missing += ", réessai dans \(retry) s"
             }
             parts.append(missing)
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    /// Statut d'un champ compact : cellules, date du précalcul, cellules périmées et manquantes en clair.
+    static func status(for response: WeatherFieldResponse) -> String {
+        var parts = ["\(response.cells.count) cellule(s) météo"]
+        if let at = response.computedAt {
+            parts.append("calculée le \(Self.format(timestamp: at))")
+        }
+        let stale = response.cells.count { $0.stale }
+        if stale > 0 {
+            parts.append("cache périmé pour \(stale) cellule(s)")
+        }
+        if response.unavailable > 0 {
+            parts.append("\(response.unavailable) sans météo")
         }
         return parts.joined(separator: " · ")
     }
@@ -494,6 +614,7 @@ final class MapModel {
         selection = MapSelection(latitude: latitude, longitude: longitude)
         inspectTask?.cancel()
         pointFactors = nil
+        pointRow = nil
         factorsStatus = nil
         inspectError = nil
         let settings = currentSettings()
@@ -527,6 +648,7 @@ final class MapModel {
             let detail = try await api.weatherDetail(cell: cell.id, species: [scored.species])
             let rows = detail.species[scored.species] ?? []
             let row = rows.first { $0.date == date }?.byAlt[altKey]
+            pointRow = row
             pointFactors = row?.factors
             pointSummary = row?.summary
             pointDays = Self.pointDays(rows: rows, altKey: altKey, terrain: scored.terrain, species: scored.species)
@@ -615,6 +737,7 @@ final class MapModel {
         selection = nil
         pointInfo = nil
         pointFactors = nil
+        pointRow = nil
         pointSummary = nil
         pointDays = []
         factorsStatus = nil

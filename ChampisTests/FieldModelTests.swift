@@ -7,7 +7,7 @@ import Testing
 final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     typealias Handler = @Sendable (String, String, Data?) -> (Int, String)
     typealias Binary = @Sendable (String, String) -> Data?
-    typealias Request = (method: String, path: String, user: String?, body: Data?)
+    typealias Request = (method: String, path: String, user: String?, body: Data?, query: String?)
 
     nonisolated(unsafe) private static var handlers: [String: Handler] = [:]
     nonisolated(unsafe) private static var binaries: [String: Binary] = [:]
@@ -52,7 +52,7 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         let path = request.url?.path ?? ""
         let body = request.httpBody ?? Self.read(request.httpBodyStream)
         Self.lock.lock()
-        Self.log[host, default: []].append((method, path, request.value(forHTTPHeaderField: "X-Champis-User"), body))
+        Self.log[host, default: []].append((method, path, request.value(forHTTPHeaderField: "X-Champis-User"), body, request.url?.query))
         let handler = Self.handlers[host]
         let binary = Self.binaries[host]
         Self.lock.unlock()
