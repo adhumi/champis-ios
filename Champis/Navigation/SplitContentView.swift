@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// iPad et Mac (refonte UX, lot 3, décision du 1er nov. 2026) : la barre latérale porte Mes coins
-/// dépliés, Carte et Comprendre ; la carte occupe le détail ; la fiche d'un point, d'un département
-/// ou d'un coin s'ouvre dans l'inspecteur, jamais en feuille. Choisir un coin recentre la carte.
+/// dépliés, Carte et Comprendre ; la carte occupe le détail ; la fiche d'un point ou d'un coin
+/// s'ouvre dans l'inspecteur, jamais en feuille. Choisir un coin recentre la carte.
 struct SplitContentView: View {
     nonisolated enum Item: Hashable, Sendable {
         case coin(UUID)
@@ -85,13 +85,11 @@ struct SplitContentView: View {
         }
     }
 
-    /// Le point touché l'emporte, puis le département en vue France, puis le coin choisi.
+    /// Le point touché l'emporte, puis le coin choisi.
     @ViewBuilder
     private var inspector: some View {
         if let info = model.pointInfo {
             PointSheet(info: info, model: model)
-        } else if let info = model.deptInfo {
-            DeptSheet(info: info, model: model)
         } else if case .coin(let id)? = selection {
             NavigationStack {
                 CoinDetailView(coinID: id, model: model, router: router)
@@ -103,12 +101,11 @@ struct SplitContentView: View {
         Binding(
             get: {
                 if case .coin? = selection { return true }
-                return model.pointInfo != nil || model.deptInfo != nil
+                return model.pointInfo != nil
             },
             set: { shown in
                 guard !shown else { return }
                 model.clearSelection()
-                model.clearDeptInfo()
                 if case .coin? = selection { selection = .map }
             }
         )

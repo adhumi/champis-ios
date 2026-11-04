@@ -1,12 +1,13 @@
 import ChampisScoring
 import SwiftUI
 
-/// Onglet Carte (refonte UX, lot 2) : overlay colorisé sur fond Apple (ou départements en vue
-/// France), menu de calque (groupes, espèces, potentiel toute saison), bandeau des onze jours
-/// coloré par le département sous le centre, légende, fiche au toucher en clair. Les coins ont
-/// leur onglet (`CoinsScreen`). Lot 3 : appui long pour le menu de terrain, « Noté : rien trouvé »
-/// annulable, proposition d'embarquer le département d'un nouveau coin ; sur iPad et Mac
-/// (`layout: .split`), les fiches vont dans l'inspecteur de `SplitContentView`, pas en feuille.
+/// Onglet Carte (refonte UX, lot 2) : overlay colorisé sur fond Apple, à tout zoom (plus de vue
+/// France, décision du 4 nov. 2026), menu de calque (groupes, espèces, potentiel toute saison),
+/// bandeau des onze jours coloré par l'indice du département sous le centre, légende, fiche au
+/// toucher en clair. Les coins ont leur onglet (`CoinsScreen`). Lot 3 : appui long pour le menu
+/// de terrain, « Noté : rien trouvé » annulable, proposition d'embarquer le département d'un
+/// nouveau coin ; sur iPad et Mac (`layout: .split`), les fiches vont dans l'inspecteur de
+/// `SplitContentView`, pas en feuille.
 struct MapScreen: View {
     static let defaultAPIBaseURL = "https://champis.adhumi.fr"
 
@@ -116,9 +117,6 @@ struct MapScreen: View {
         .sheet(item: pointBinding) { info in
             PointSheet(info: info, model: model)
         }
-        .sheet(item: deptBinding) { info in
-            DeptSheet(info: info, model: model)
-        }
         .sheet(isPresented: $showLegend) {
             LegendSheet(model: model)
         }
@@ -203,16 +201,12 @@ struct MapScreen: View {
     }
 
     /// Bandeau du bas : les onze jours (mode score) ou le rappel du potentiel (mode terrain),
-    /// puis les messages (vue France, météo, erreurs, envois en attente).
+    /// puis les messages (météo, erreurs, envois en attente).
     private var panel: some View {
         VStack(alignment: .leading, spacing: 6) {
             if model.mode == .score {
                 DayStrip(model: model)
-                if model.isFranceView {
-                    Text(model.deptStatus ?? "Vue par département : zoomez pour voir la parcelle")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                } else if let status = model.weatherStatus {
+                if let status = model.weatherStatus {
                     Text(status)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -282,10 +276,6 @@ struct MapScreen: View {
     /// En disposition partagée, l'inspecteur montre la fiche : la feuille ne se présente jamais.
     private var pointBinding: Binding<PointInfo?> {
         Binding(get: { layout == .compact ? model.pointInfo : nil }, set: { if $0 == nil { model.clearSelection() } })
-    }
-
-    private var deptBinding: Binding<DeptInfo?> {
-        Binding(get: { layout == .compact ? model.deptInfo : nil }, set: { if $0 == nil { model.clearDeptInfo() } })
     }
 
     static func url(from text: String) -> URL {

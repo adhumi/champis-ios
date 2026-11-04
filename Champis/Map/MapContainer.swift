@@ -15,8 +15,8 @@ private typealias PlatformColor = UIColor
 
 /// `MKMapView` dans SwiftUI. La `Map` SwiftUI n'accepte pas d'`MKTileOverlay` : l'overlay colorisé
 /// passe par MapKit classique (décision du 30 oct. 2026, spec › App iOS). Le fond Apple reste sous
-/// l'overlay, dont l'opacité est réglable. En vue France, les tuiles s'effacent et les départements
-/// (polygones du GeoJSON servi par l'API) se colorent par l'indice du jour.
+/// l'overlay, visible à tout zoom : plus de vue France par département (spec › Points ouverts ›
+/// Vue France et indice par département, 4 nov. 2026).
 struct MapContainer: PlatformRepresentable {
     let model: MapModel
 
@@ -47,13 +47,9 @@ struct MapContainer: PlatformRepresentable {
         private weak var mapView: MKMapView?
         private var tileRenderer: ScoreOverlayRenderer?
         private var shownGeneration = -1
-        private var shownFranceView: Bool?
         private var shownFollowRequest = 0
         private var shownFocusRequest = 0
         private var basemap: Basemap?
-        private var deptOverlaysInstalled = false
-        private var deptRenderers: [String: [MKOverlayPathRenderer]] = [:]
-        private var deptNames: [String: String] = [:]
         private var observationPins: [UUID: MKPointAnnotation] = [:]
         private var coinPins: [UUID: MKPointAnnotation] = [:]
         private var pinKinds: [ObjectIdentifier: PinKind] = [:]
@@ -102,7 +98,7 @@ struct MapContainer: PlatformRepresentable {
                     mapView.preferredConfiguration = MKImageryMapConfiguration()
                 }
             }
-            tileRenderer?.alpha = model.isFranceView ? 0 : model.overlayOpacity
+            tileRenderer?.alpha = model.overlayOpacity
             if shownFollowRequest != model.followRequest {
                 shownFollowRequest = model.followRequest
                 mapView.setUserTrackingMode(.follow, animated: true)
@@ -116,78 +112,11 @@ struct MapContainer: PlatformRepresentable {
                     animated: true
                 )
             }
-            if !deptOverlaysInstalled && !model.deptFeatures.isEmpty {
-                installDepartements(on: mapView)
-            }
             syncPins(on: mapView)
-            if shownGeneration != model.renderGeneration || shownFranceView != model.isFranceView {
+            if shownGeneration != model.renderGeneration {
                 shownGeneration = model.renderGeneration
-                shownFranceView = model.isFranceView
                 tileRenderer?.settingsChanged()
-                recolorDepartements()
             }
-        }
-
-        // MARK: Départements
-
-        private func installDepartements(on mapView: MKMapView) {
-            deptOverlaysInstalled = true
-            for feature in model.deptFeatures {
-                guard let properties = feature.properties,
-                      let dict = try? JSONSerialization.jsonObject(with: properties) as? [String: Any],
-                      let code = dict["code"] as? String
-                else { continue }
-                deptNames[code] = dict["nom"] as? String
-                for shape in feature.geometry {
-                    shape.title = code
-                    if let polygon = shape as? MKPolygon {
-                        mapView.addOverlay(polygon, level: .aboveRoads)
-                    } else if let multi = shape as? MKMultiPolygon {
-                        mapView.addOverlay(multi, level: .aboveRoads)
-                    }
-                }
-            }
-        }
-
-        private func deptRenderer(_ renderer: MKOverlayPathRenderer, code: String?) -> MKOverlayPathRenderer {
-            renderer.lineWidth = 0.8
-            renderer.strokeColor = PlatformColor.black.withAlphaComponent(0.35)
-            style(renderer, code: code)
-            if let code {
-                deptRenderers[code, default: []].append(renderer)
-            }
-            return renderer
-        }
-
-        private func style(_ renderer: MKOverlayPathRenderer, code: String?) {
-            if let code, let c = model.deptColor(code: code) {
-                renderer.fillColor = PlatformColor(
-                    red: CGFloat(c.r) / 255, green: CGFloat(c.g) / 255, blue: CGFloat(c.b) / 255, alpha: 0.8
-                )
-            } else {
-                renderer.fillColor = PlatformColor.clear
-            }
-            renderer.alpha = model.isFranceView ? 1 : 0
-        }
-
-        private func recolorDepartements() {
-            for (code, renderers) in deptRenderers {
-                for renderer in renderers {
-                    style(renderer, code: code)
-                    renderer.setNeedsDisplay()
-                }
-            }
-        }
-
-        /// Département sous une coordonnée, par le tracé des polygones déjà rendus.
-        private func departement(at coordinate: CLLocationCoordinate2D) -> String? {
-            let mapPoint = MKMapPoint(coordinate)
-            for (code, renderers) in deptRenderers {
-                for renderer in renderers where renderer.path?.contains(renderer.point(for: mapPoint)) == true {
-                    return code
-                }
-            }
-            return nil
         }
 
         // MARK: Épingles (mes observations, mes coins : privées, jamais celles des autres)
@@ -259,15 +188,9 @@ struct MapContainer: PlatformRepresentable {
         func mapView(_ mapView: MKMapView, rendererFor overlay: any MKOverlay) -> MKOverlayRenderer {
             if let tiles = overlay as? ScoreTileOverlay {
                 let renderer = ScoreOverlayRenderer(overlay: tiles)
-                renderer.alpha = model.isFranceView ? 0 : model.overlayOpacity
+                renderer.alpha = model.overlayOpacity
                 tileRenderer = renderer
                 return renderer
-            }
-            if let polygon = overlay as? MKPolygon {
-                return deptRenderer(MKPolygonRenderer(polygon: polygon), code: polygon.title)
-            }
-            if let multi = overlay as? MKMultiPolygon {
-                return deptRenderer(MKMultiPolygonRenderer(multiPolygon: multi), code: multi.title)
             }
             return MKOverlayRenderer(overlay: overlay)
         }
@@ -280,17 +203,12 @@ struct MapContainer: PlatformRepresentable {
             guard let mapView else { return }
             let point = gesture.location(in: mapView)
             let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
-            if model.isFranceView {
-                let code = departement(at: coordinate)
-                model.selectDepartement(code: code, name: code.flatMap { deptNames[$0] })
-            } else {
-                model.select(latitude: coordinate.latitude, longitude: coordinate.longitude)
-            }
+            model.select(latitude: coordinate.latitude, longitude: coordinate.longitude)
         }
 
         /// Appui long (lot 3) : le menu de terrain au point pressé, sans passer par la fiche.
         @objc private func handleLongPress(_ gesture: PlatformLongPressRecognizer) {
-            guard gesture.state == .began, let mapView, !model.isFranceView else { return }
+            guard gesture.state == .began, let mapView else { return }
             let point = gesture.location(in: mapView)
             let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
             model.longPress(latitude: coordinate.latitude, longitude: coordinate.longitude)
