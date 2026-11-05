@@ -374,7 +374,7 @@ struct LegendSheet: View {
                 } header: {
                     Text("Ce que montrent les couleurs")
                 } footer: {
-                    Text("Le terrain, la météo des dernières semaines et la saison de l'espèce, en un seul score. Le détail est dans l'onglet Comprendre.")
+                    Text("Le terrain, la météo des dernières semaines et la saison de l'espèce, en un seul score. Le détail est dans l'onglet Guide.")
                 }
             }
             .navigationTitle("Légende")
