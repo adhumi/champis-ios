@@ -10,7 +10,7 @@ import UIKit
 /// cinq tapes sur la version ; l'opacité est fixe ; le fond satellite est dans le menu de calque ;
 /// le hors ligne se propose à la création d'un coin.
 struct SettingsView: View {
-    static let supportURL = URL(string: "https://champis.adhumi.fr/soutenir")!
+    static let supportURL = URL(string: "https://champis.cc/soutenir")!
     static let developerTaps = 5
 
     @Bindable var model: MapModel

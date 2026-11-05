@@ -9,7 +9,7 @@ import SwiftUI
 /// nouveau coin ; sur iPad et Mac (`layout: .split`), les fiches vont dans l'inspecteur de
 /// `SplitContentView`, pas en feuille.
 struct MapScreen: View {
-    static let defaultAPIBaseURL = "https://champis.adhumi.fr"
+    static let defaultAPIBaseURL = "https://champis.cc"
 
     nonisolated enum Layout: Sendable {
         /// iPhone : les fiches sont des feuilles.
