@@ -9,7 +9,7 @@
     "fr": "Lactaire délicieux",
     "la": "Lactarius deliciosus"
   },
-  "notes": "Lactaire orangé à lait carotte, strictement lié aux pins : pin sylvestre, pin maritime (Landes), pin noir et laricio, pin d'Alep (Provence), pin à crochets en montagne. Jamais sous feuillus ni sous épicéa (c'est L. deterrimus). Préfère les pinèdes jeunes, claires, les lisières et les bords de chemin ; les éclaircies augmentent la production (Bonet 2012). Sols plutôt acides (Taye 2016, pH eau 3,5-6,5) mais présent aussi sur calcaire sous pins noirs et pins d'Alep (isolats français des Hautes-Alpes sur alluvions calcaires, Guerin-Laguette 2020) : plage pH large, confiance moyenne. Du littoral à la limite des pins (~2 000 m). Saison longue : fin août en montagne, oct.-déc. en plaine et en Méditerranée ; supporte mieux les premiers froids que les cèpes et se ramasse jusqu'en décembre (Micocyl 2021). Pluie de fin d'été et début d'automne = premier facteur (Taye 2016, Bonet 2012, Martinez-Peña 2012). Délai pluie → pousse, décalage altitudinal du début de saison et persistance : terrain, à valider (confiance faible). GBIF non consulté à l'écriture (réseau indisponible) : contrôle `champis-pipeline check` à faire avant de recalibrer le pH.",
+  "notes": "Lactaire orangé à lait carotte, strictement lié aux pins : pin sylvestre, pin maritime (Landes), pin noir et laricio, pin d'Alep (Provence), pin à crochets en montagne. Jamais sous feuillus ni sous épicéa (c'est L. deterrimus). Préfère les pinèdes jeunes, claires, les lisières et les bords de chemin ; les éclaircies augmentent la production (Bonet 2012). Sols plutôt acides (Taye 2016, pH eau 3,5-6,5) mais présent aussi sur calcaire sous pins noirs et pins d'Alep (isolats français des Hautes-Alpes sur alluvions calcaires, Guerin-Laguette 2020) : plage pH large, confiance moyenne. Du littoral à la limite des pins (~2 000 m). Saison longue : fin août en montagne, oct.-déc. en plaine et en Méditerranée ; supporte mieux les premiers froids que les cèpes et se ramasse jusqu'en décembre (Micocyl 2021). Pluie de fin d'été et début d'automne = premier facteur (Taye 2016, Bonet 2012, Martinez-Peña 2012). Délai pluie → pousse, décalage altitudinal du début de saison et persistance : terrain, à valider (confiance faible). GBIF FR (782 occ. géolocalisées, lu le 5 nov. 2026) confirme la saison : oct. 240, nov. 213, sept. 61, déc. 37 (surtout au sud de 45° N) ; altitude médiane 650 m, q90 1 230 m, q99 1 925 m, max 2 170 m ; en septembre la médiane est à 1 200 m, en novembre à 450 m (montagne d'abord). Les 81 occurrences du 1er avril viennent d'un seul jeu de données sans date réelle : ignorées. Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
   "terrain": {
     "hosts": {
       "hetre": 0.0,
@@ -103,9 +103,9 @@
         "guerin2020"
       ],
       "altitude": [
+        "gbif2026",
         "iucn2019",
-        "bonet2008",
-        "terrain_fr"
+        "bonet2008"
       ],
       "aspect": [
         "bonet2008"
@@ -132,6 +132,7 @@
       "max_days": 40
     },
     "refs": [
+      "gbif2026",
       "martinezpena2012",
       "micocyl2021",
       "terrain_fr"
@@ -277,7 +278,12 @@
         ]
       }
     ],
-    "photo": null,
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/2009-09-28_Lactarius_deliciosus.jpg/1280px-2009-09-28_Lactarius_deliciosus.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:2009-09-28_Lactarius_deliciosus.jpg",
+      "author": "furtwangl",
+      "license": "CC BY 2.0"
+    },
     "refs": [
       "courtecuisse2013",
       "eyssartier2017"
@@ -300,6 +306,7 @@
     "italianmycology_nz": "Italian Mycology (unibo), culture de L. deliciosus en Europe et Nouvelle-Zélande — sols où l'espèce fructifie bien : pH eau 3,5-6,5, calcium total 0,2-0,7 % ; confiance moyenne (document technique)",
     "micocyl2021": "Bulletin mycologique Micocyl, Castilla y León, 4 nov. 2021 — L. deliciosus moins exigeant que les autres comestibles, tolère des températures plus basses, se ramasse couramment jusqu'en décembre ; nouvelle poussée après les pluies ; confiance faible (bulletin populaire)",
     "terrain_fr": "Sources de terrain françaises (guides, sociétés mycologiques) — délai pluie → pousse de 2 à 3 semaines, sporophores persistant 2 à 3 semaines, saison août-décembre selon l'altitude ; confiance faible",
-    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; L. deliciosus tolère des gelées un peu plus fortes que les cèpes (seuil -4 °C, 3 nuits), confiance faible"
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; L. deliciosus tolère des gelées un peu plus fortes que les cèpes (seuil -4 °C, 3 nuits), confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 5 nov. 2026 — L. deliciosus FR 782 occ. géolocalisées : oct. 240, nov. 213, sept. 61, déc. 37, janv. 30 ; altitude (150 occ. renseignées) médiane 650 m, q90 1 230 m, q99 1 925 m, max 2 170 m ; médiane d'altitude 1 200 m en septembre, 800 m en octobre, 450 m en novembre ; 81 occ. datées du 1er avril d'un seul jeu de données, ignorées"
   }
 }
