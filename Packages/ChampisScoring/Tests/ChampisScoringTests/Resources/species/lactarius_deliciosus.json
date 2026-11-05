@@ -1,0 +1,312 @@
+{
+  "id": "lactarius_deliciosus",
+  "schema_version": 1,
+  "group": {
+    "id": "lactaires",
+    "fr": "Lactaires"
+  },
+  "names": {
+    "fr": "Lactaire délicieux",
+    "la": "Lactarius deliciosus"
+  },
+  "notes": "Lactaire orangé à lait carotte, strictement lié aux pins : pin sylvestre, pin maritime (Landes), pin noir et laricio, pin d'Alep (Provence), pin à crochets en montagne. Jamais sous feuillus ni sous épicéa (c'est L. deterrimus). Préfère les pinèdes jeunes, claires, les lisières et les bords de chemin ; les éclaircies augmentent la production (Bonet 2012). Sols plutôt acides (Taye 2016, pH eau 3,5-6,5) mais présent aussi sur calcaire sous pins noirs et pins d'Alep (isolats français des Hautes-Alpes sur alluvions calcaires, Guerin-Laguette 2020) : plage pH large, confiance moyenne. Du littoral à la limite des pins (~2 000 m). Saison longue : fin août en montagne, oct.-déc. en plaine et en Méditerranée ; supporte mieux les premiers froids que les cèpes et se ramasse jusqu'en décembre (Micocyl 2021). Pluie de fin d'été et début d'automne = premier facteur (Taye 2016, Bonet 2012, Martinez-Peña 2012). Délai pluie → pousse, décalage altitudinal du début de saison et persistance : terrain, à valider (confiance faible). GBIF FR (782 occ. géolocalisées, lu le 5 nov. 2026) confirme la saison : oct. 240, nov. 213, sept. 61, déc. 37 (surtout au sud de 45° N) ; altitude médiane 650 m, q90 1 230 m, q99 1 925 m, max 2 170 m ; en septembre la médiane est à 1 200 m, en novembre à 450 m (montagne d'abord). Les 81 occurrences du 1er avril viennent d'un seul jeu de données sans date réelle : ignorées. Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 0.0,
+      "sapin_epicea": 0.05,
+      "chenes_decidus": 0.0,
+      "chataignier": 0.0,
+      "mixte_feuillus_dom": 0.2,
+      "mixte_coniferes_dom": 0.5,
+      "melange_feuillus": 0.0,
+      "melange_coniferes": 0.5,
+      "feuillus_indet": 0.0,
+      "coniferes_indet": 0.5,
+      "mixte_indet": 0.3,
+      "pin_sylvestre": 1.0,
+      "pin_crochets_cembro": 0.8,
+      "pin_maritime": 1.0,
+      "melange_pins": 0.9,
+      "autre_feuillu": 0.0,
+      "pin_laricio_noir": 0.9,
+      "autre_pin": 0.9,
+      "meleze": 0.05,
+      "chenes_sempervirents": 0.1,
+      "douglas": 0.05,
+      "autre_conifere": 0.1,
+      "pin_alep": 0.8,
+      "lande": 0.3,
+      "sans_couvert": 0.1,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.05,
+      "melange_coniferes_hors_pins": 0.1
+    },
+    "cover": {
+      "fermee": 0.8,
+      "ouverte": 1.0,
+      "sans_couvert": 0.1,
+      "plantation": 0.0,
+      "non_foret": 0.2
+    },
+    "ph": {
+      "min": 3.5,
+      "opt_low": 4.5,
+      "opt_high": 7.0,
+      "max": 8.2
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 1600,
+      "max": 2200
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.85,
+      "SW": 0.8,
+      "S": 0.8,
+      "flat": 0.95
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.25,
+      "ph": 0.3,
+      "altitude": 0.2,
+      "aspect": 0.15,
+      "slope": 0.1
+    },
+    "refs": {
+      "hosts": [
+        "iucn2019",
+        "guerin2020",
+        "martinezpena2012",
+        "taye2016"
+      ],
+      "cover": [
+        "bonet2012",
+        "martinezpena2012"
+      ],
+      "ph": [
+        "taye2016",
+        "italianmycology_nz",
+        "guerin2020"
+      ],
+      "altitude": [
+        "gbif2026",
+        "iucn2019",
+        "bonet2008"
+      ],
+      "aspect": [
+        "bonet2008"
+      ],
+      "slope": [
+        "bonet2008"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "08-15",
+      "end": "12-31"
+    },
+    "peak": {
+      "start": "09-20",
+      "end": "11-15"
+    },
+    "ramp_days": 25,
+    "altitude_shift": {
+      "reference_m": 600,
+      "start_days_per_100m": 0,
+      "end_days_per_100m": -4,
+      "max_days": 40
+    },
+    "refs": [
+      "gbif2026",
+      "martinezpena2012",
+      "micocyl2021",
+      "terrain_fr"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 3,
+        "opt_low": 8,
+        "opt_high": 16,
+        "max": 22
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 150,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 7,
+        "opt_low": 12,
+        "opt_high": 22,
+        "max": 35
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -4,
+      "ramp_c": 2,
+      "nights": 3,
+      "window_days": 7,
+      "factor": 0.35
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 18
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.3,
+      "trigger": 0.25,
+      "soil_moisture": 0.2
+    },
+    "refs": {
+      "temp_mean": [
+        "delavarga2013",
+        "micocyl2021",
+        "karavani2018"
+      ],
+      "rain": [
+        "taye2016",
+        "bonet2012",
+        "martinezpena2012"
+      ],
+      "trigger": [
+        "micocyl2021",
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "taye2016",
+        "karavani2018"
+      ],
+      "frost": [
+        "micocyl2021",
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "delavarga2013",
+        "micocyl2021"
+      ],
+      "memory": [
+        "taye2016",
+        "bonet2012"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "karavani2018"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Lactaire orangé à chapeau déprimé au centre, souvent zoné de cercles plus sombres, qui laisse couler un lait couleur carotte quand on le casse et dont la chair verdit aux blessures.",
+    "habitat": "Toujours sous les pins : pinèdes de pin sylvestre, de pin maritime dans les Landes, de pin noir ou de pin d'Alep en Provence, du littoral à la montagne. Il aime les pinèdes jeunes et claires, les lisières et les bords de chemin, sur sols acides comme calcaires.",
+    "season": "De la fin août en montagne à décembre en plaine et en Méditerranée, avec le gros de la pousse d'octobre à mi-novembre. Il supporte mieux les premiers froids que les cèpes.",
+    "confusions": [
+      {
+        "name": "Lactaire à toison",
+        "latin": "Lactarius torminosus",
+        "risk": "Toxique : nausées, vomissements et diarrhées violentes.",
+        "tell": "Lait blanc et très âcre, chapeau rose pâle à marge laineuse, sous les bouleaux. Le lactaire délicieux a un lait orange carotte, jamais blanc, et pousse sous les pins.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Lactaires à lait blanc âcre (lactaire à lait jaunissant et proches)",
+        "latin": "Lactarius chrysorrheus, Lactarius zonarius",
+        "risk": "Toxiques : troubles digestifs.",
+        "tell": "Lait blanc, parfois jaunissant à l'air, saveur brûlante, sous les chênes. Chez le lactaire délicieux le lait est orange dès la coupe et la chair verdit.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/2009-09-28_Lactarius_deliciosus.jpg/1280px-2009-09-28_Lactarius_deliciosus.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:2009-09-28_Lactarius_deliciosus.jpg",
+      "author": "furtwangl",
+      "license": "CC BY 2.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — lactaires à lait orange sous pins et épicéas, lactaires à lait blanc âcre toxiques",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes"
+    }
+  },
+  "references": {
+    "taye2016": "Taye Z.M. et al. 2016, Fungal Ecology 23:30-41 — pinèdes de P. pinaster, Espagne centrale, 17 ans : pluie de fin d'été et début d'automne = premier facteur de l'émergence et de la production ; acidité du sol positive pour Lactarius groupe deliciosus",
+    "bonet2012": "Bonet J.A. et al. 2012, Forest Ecology and Management 265:211-217 — effet immédiat de l'éclaircie sur Lactarius groupe deliciosus (P. pinaster, Catalogne) : production accrue dans les peuplements éclaircis ; pluie d'août-septembre = facteur météo principal",
+    "martinezpena2012": "Martínez-Peña F. et al. 2012, Forest Ecology and Management 282:63-69 — modèles de production à Pinar Grande (P. sylvestris, 15 ans, 18 placettes) ; Lactarius groupe deliciosus : forte production dans les jeunes peuplements (11-20 ans), pluie d'automne",
+    "delavarga2013": "de la Varga H. et al. 2013, Mycorrhiza 23:391-402 — dynamique saisonnière du mycélium de B. edulis et L. deliciosus en pinèdes d'Espagne centrale : sporophores de L. deliciosus corrélés positivement à la pluie et l'humidité, négativement aux T max et min",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pinèdes méditerranéennes (Catalogne) : pluie et humidité du sol à 1 mois, T max sept.-oct. négatives, production de champignons comestibles dont Lactarius",
+    "agreda2015": "Ágreda et al. 2015, GCB — le bilan hydrique (P-ETP) prédit mieux que la pluie brute ; base du facteur water_balance",
+    "bonet2008": "Bonet et al. 2008, Ann. For. Sci. 65:206 — pinèdes des Pyrénées (P. sylvestris, P. uncinata, 1 000-2 000 m) : expositions nord et altitude positives, pente forte négative",
+    "iucn2019": "Liste rouge UICN, fiche Lactarius deliciosus (2019) — hôtes : Pinus sylvestris, P. pinaster, P. nigra et autres pins ; sols acides préférés ; largement répandu en Europe",
+    "guerin2020": "Guerin-Laguette A. et al. 2020, Advances in the cultivation of Lactarius deliciosus in New Zealand, in Mushrooms, Humans and Nature in a Changing World, Springer — isolats français sous P. sylvestris, P. nigra, P. pinaster, dont un sur sol brun calcique sur alluvions calcaires (Hautes-Alpes) : présent aussi sur calcaire",
+    "italianmycology_nz": "Italian Mycology (unibo), culture de L. deliciosus en Europe et Nouvelle-Zélande — sols où l'espèce fructifie bien : pH eau 3,5-6,5, calcium total 0,2-0,7 % ; confiance moyenne (document technique)",
+    "micocyl2021": "Bulletin mycologique Micocyl, Castilla y León, 4 nov. 2021 — L. deliciosus moins exigeant que les autres comestibles, tolère des températures plus basses, se ramasse couramment jusqu'en décembre ; nouvelle poussée après les pluies ; confiance faible (bulletin populaire)",
+    "terrain_fr": "Sources de terrain françaises (guides, sociétés mycologiques) — délai pluie → pousse de 2 à 3 semaines, sporophores persistant 2 à 3 semaines, saison août-décembre selon l'altitude ; confiance faible",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; L. deliciosus tolère des gelées un peu plus fortes que les cèpes (seuil -4 °C, 3 nuits), confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 5 nov. 2026 — L. deliciosus FR 782 occ. géolocalisées : oct. 240, nov. 213, sept. 61, déc. 37, janv. 30 ; altitude (150 occ. renseignées) médiane 650 m, q90 1 230 m, q99 1 925 m, max 2 170 m ; médiane d'altitude 1 200 m en septembre, 800 m en octobre, 450 m en novembre ; 81 occ. datées du 1er avril d'un seul jeu de données, ignorées"
+  }
+}
