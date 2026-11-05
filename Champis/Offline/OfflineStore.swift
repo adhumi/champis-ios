@@ -110,7 +110,9 @@ actor OfflineStore {
     func localFiles() -> [OfflineLocalFile] {
         departments.filter(\.complete).flatMap { department in
             department.files.map {
-                OfflineLocalFile(kind: $0.kind, species: $0.species, url: fileURL(code: department.code, name: $0.name))
+                OfflineLocalFile(
+                    kind: $0.kind, species: $0.species, url: fileURL(code: department.code, name: $0.name), channels: $0.channels
+                )
             }
         }
     }

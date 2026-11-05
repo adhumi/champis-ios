@@ -3,12 +3,15 @@ import Foundation
 /// Un fichier PMTiles d'un département téléchargé (skill `offline`).
 nonisolated struct OfflineFile: Codable, Hashable, Sendable {
     let name: String
-    /// `T` (une espèce) ou `A` (classes d'altitude).
+    /// `T` (une espèce), `G` (un groupe, un canal par espèce) ou `A` (classes d'altitude).
     let kind: String
     let species: String?
     let url: String
     var bytes: Int64
     var done: Bool
+    /// Espèces d'un `G` dans l'ordre des canaux (manifeste `species`) ; absent pour `T` et `A`, et
+    /// dans les `offline.json` antérieurs au 5 nov. 2026.
+    var channels: [String]? = nil
 }
 
 /// Un département embarqué : ses fichiers, la météo du moment du téléchargement et les dates.
@@ -43,6 +46,8 @@ nonisolated struct OfflineLocalFile: Hashable, Sendable {
     let kind: String
     let species: String?
     let url: URL
+    /// Espèces d'un `G` dans l'ordre des canaux.
+    var channels: [String]? = nil
 }
 
 nonisolated extension BBox {

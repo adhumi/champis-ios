@@ -37,7 +37,7 @@ struct APIModelsTests {
         )
         let presigned = TilesManifest.Entry(
             kind: "A", name: "A-300m-d000000.pmtiles", url: "https://bucket.example/a.pmtiles?sig=1", bytes: nil,
-            species: nil, hash: nil, scoringVersion: nil, deptsHash: "000000", classM: 300, dept: nil
+            species: nil, hash: nil, scoringVersion: nil, deptsHash: "000000", classM: 300, dept: nil, group: nil, channels: nil, part: nil
         )
         #expect(api.tileURL(presigned)?.host() == "bucket.example")
     }

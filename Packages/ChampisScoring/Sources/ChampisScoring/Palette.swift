@@ -27,17 +27,36 @@ public struct Palette: Codable, Hashable, Sendable {
         }
     }
 
+    /// Encodage des PMTiles par groupe (`G-<groupe>-…`, spec › Points ouverts › PMTiles par groupe,
+    /// 4 nov. 2026) : un canal par espèce dans l'ordre de `species` du manifeste, `channels` nomme
+    /// l'ordre des octets du pixel (`"rgba"`), canal = `T × scale`, `nodata` = pas de forêt pour ce
+    /// canal. L'alpha est un canal de données, jamais une transparence.
+    public struct GroupTileEncoding: Codable, Hashable, Sendable {
+        public let channels: String
+        public let scale: Double
+        public let nodata: Int
+
+        public init(channels: String, scale: Double, nodata: Int) {
+            self.channels = channels
+            self.scale = scale
+            self.nodata = nodata
+        }
+    }
+
     public let version: Int
     public let thresholds: [Threshold]
     public let nodataHex: String
     public let tileEncoding: TileEncoding
     public let altEncoding: AltEncoding
+    /// Absent sur une API antérieure au 5 nov. 2026 : l'app lit alors les `T`, jamais un `G`.
+    public let groupTileEncoding: GroupTileEncoding?
 
     enum CodingKeys: String, CodingKey {
         case version, thresholds
         case nodataHex = "nodata_hex"
         case tileEncoding = "tile_encoding"
         case altEncoding = "alt_encoding"
+        case groupTileEncoding = "group_tile_encoding"
     }
 
     /// Clés `snake_case` explicites : pas de conversion automatique (voir `Species`).

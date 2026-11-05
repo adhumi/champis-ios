@@ -100,6 +100,65 @@ struct OfflineStoreTests {
         #expect(choices[0].bytes(for: ["boletus_edulis", "boletus_aereus"]) == 1000 + 2000 + 300)
     }
 
+    @Test("Avec des G par département : le G du groupe et A, le T des seules espèces sans G ; taille = somme des fichiers retenus")
+    func downloadableWithGroups() throws {
+        let manifest = try Fixtures.decode(TilesManifest.self, Fixtures.manifestGroupsJSON)
+        let choices = OfflineModel.downloadable(from: manifest, names: [:])
+        #expect(choices.map(\.code) == ["25"])
+        let doubs = try #require(choices.first)
+        #expect(doubs.groups.map(\.name) == ["G-cepes-c0ffee00-p1.0.0-d222222.pmtiles"])
+        #expect(doubs.species == ["boletus_aereus", "boletus_edulis", "cantharellus_cibarius"])
+        #expect(doubs.altitude?.name == "A-300m-d222222.pmtiles")
+
+        // une seule espèce du groupe : son G entier plutôt que son T
+        #expect(doubs.files(for: ["boletus_edulis"]).map(\.name) == ["G-cepes-c0ffee00-p1.0.0-d222222.pmtiles", "A-300m-d222222.pmtiles"])
+        #expect(doubs.bytes(for: ["boletus_edulis"]) == 2500 + 300)
+        // espèce sans G : son T
+        #expect(doubs.files(for: ["cantharellus_cibarius"]).map(\.kind) == ["T", "A"])
+        #expect(doubs.bytes(for: ["cantharellus_cibarius"]) == 1500 + 300)
+        // tout : G, T de la girolle, A ; jamais deux fois le G
+        let all = doubs.files(for: doubs.species)
+        #expect(all.map(\.kind) == ["G", "T", "A"])
+        #expect(all[1].species == "cantharellus_cibarius")
+        #expect(doubs.bytes(for: doubs.species) == 2500 + 1500 + 300)
+        #expect(doubs.files(for: []).map(\.kind) == ["A"])
+
+        // sans G dans le manifeste : les T, comme avant
+        let plain = try #require(OfflineModel.downloadable(from: try Fixtures.decode(TilesManifest.self, Fixtures.manifestPerDeptJSON), names: [:]).first)
+        #expect(plain.groups.isEmpty)
+        #expect(plain.files(for: ["boletus_edulis", "boletus_aereus"]).map(\.kind) == ["T", "T", "A"])
+    }
+
+    @Test("Un fichier G embarqué garde ses espèces (ordre des canaux) jusqu'au lecteur de tuiles")
+    func groupFileRoundTrip() async throws {
+        let root = Self.temporaryRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = OfflineStore(root: root)
+        try await store.load()
+        var department = Self.department()
+        department.files = [
+            OfflineFile(
+                name: "G-cepes-c0ffee00-p1.0.0-d111111.pmtiles", kind: "G", species: nil, url: "https://api.test/tiles/G", bytes: 0, done: false,
+                channels: ["boletus_aereus", "boletus_edulis"]
+            ),
+            OfflineFile(name: "A-300m-d111111.pmtiles", kind: "A", species: nil, url: "https://api.test/tiles/A", bytes: 0, done: false),
+        ]
+        try await store.begin(department)
+        try await store.markDone(code: "25", name: department.files[0].name, bytes: 10)
+        try await store.markDone(code: "25", name: department.files[1].name, bytes: 5)
+        try await store.saveWeather(code: "25", responses: [try Fixtures.decode(WeatherBBoxResponse.self, Fixtures.weatherJSON)], fetchedAt: "2026-11-05T08:00:00Z")
+
+        let again = OfflineStore(root: root)
+        try await again.load()
+        let files = await again.localFiles()
+        #expect(files.map(\.kind) == ["G", "A"])
+        #expect(files[0].channels == ["boletus_aereus", "boletus_edulis"] && files[0].species == nil)
+        #expect(files[1].channels == nil)
+        // un offline.json d'avant les G (sans `channels`) se relit
+        let legacy = try JSONDecoder().decode(OfflineFile.self, from: Data(#"{"name": "T-x.pmtiles", "kind": "T", "species": "x", "url": "u", "bytes": 1, "done": true}"#.utf8))
+        #expect(legacy.channels == nil && legacy.species == "x")
+    }
+
     @Test("Lecteur de tuiles : les fichiers embarqués passent avant la source distante, même sans réseau")
     func localFirst() async throws {
         let root = Self.temporaryRoot()

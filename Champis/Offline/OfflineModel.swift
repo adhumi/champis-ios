@@ -8,14 +8,51 @@ nonisolated struct DownloadableDepartment: Identifiable, Hashable, Sendable {
     let name: String?
     /// Espèce → entrée `T` du manifeste.
     let terrain: [String: TilesManifest.Entry]
+    /// Entrées `G` du département (un canal par espèce), triées par nom.
+    let groups: [TilesManifest.Entry]
     let altitude: TilesManifest.Entry?
+
+    init(code: String, name: String?, terrain: [String: TilesManifest.Entry], groups: [TilesManifest.Entry] = [], altitude: TilesManifest.Entry?) {
+        self.code = code
+        self.name = name
+        self.terrain = terrain
+        self.groups = groups
+        self.altitude = altitude
+    }
 
     var id: String { code }
     var title: String { name.map { "\($0) (\(code))" } ?? "Département \(code)" }
 
+    /// Espèces proposées : celles qui ont un `T` ou un canal dans un `G`, triées.
+    var species: [String] {
+        Set(terrain.keys).union(groups.flatMap { $0.channels ?? [] }).sorted()
+    }
+
+    /// Fichiers à embarquer pour des espèces (spec › Points ouverts › Les clients lisent les PMTiles
+    /// par groupe, 5 nov. 2026) : le `G` de chaque groupe touché, le `T` des seules espèces sans `G`,
+    /// et `A`. Un `G` porte tout son groupe, même si une seule de ses espèces est choisie.
+    func files(for species: [String]) -> [TilesManifest.Entry] {
+        let wanted = Set(species)
+        var out: [TilesManifest.Entry] = []
+        var covered: Set<String> = []
+        for group in groups where !wanted.isDisjoint(with: group.channels ?? []) {
+            out.append(group)
+            covered.formUnion(group.channels ?? [])
+        }
+        for sid in species.sorted() where !covered.contains(sid) {
+            if let entry = terrain[sid] {
+                out.append(entry)
+            }
+        }
+        if let altitude {
+            out.append(altitude)
+        }
+        return out
+    }
+
+    /// Taille annoncée = somme des fichiers retenus.
     func bytes(for species: [String]) -> Int64 {
-        let t = species.compactMap { terrain[$0]?.bytes }.reduce(0, +)
-        return Int64(t + (altitude?.bytes ?? 0))
+        Int64(files(for: species).reduce(0) { $0 + ($1.bytes ?? 0) })
     }
 }
 
@@ -93,34 +130,42 @@ final class OfflineModel {
 
     /// Départements du manifeste ayant un jeu propre (`dept`), avec les noms connus.
     nonisolated static func downloadable(from manifest: TilesManifest, names: [String: String]) -> [DownloadableDepartment] {
-        var byCode: [String: (terrain: [String: TilesManifest.Entry], altitude: TilesManifest.Entry?)] = [:]
+        var byCode: [String: (terrain: [String: TilesManifest.Entry], groups: [TilesManifest.Entry], altitude: TilesManifest.Entry?)] = [:]
         for entry in manifest.tiles {
             guard let dept = entry.dept else { continue }
-            var current = byCode[dept] ?? ([:], nil)
+            var current = byCode[dept] ?? ([:], [], nil)
             if entry.kind == "T", let species = entry.species {
                 current.terrain[species] = entry
+            } else if entry.kind == "G", let channels = entry.channels, !channels.isEmpty {
+                current.groups.append(entry)
             } else if entry.kind == "A" {
                 current.altitude = entry
             }
             byCode[dept] = current
         }
         return byCode
-            .map { DownloadableDepartment(code: $0.key, name: names[$0.key], terrain: $0.value.terrain, altitude: $0.value.altitude) }
+            .map {
+                DownloadableDepartment(
+                    code: $0.key, name: names[$0.key], terrain: $0.value.terrain,
+                    groups: $0.value.groups.sorted { $0.name < $1.name }, altitude: $0.value.altitude
+                )
+            }
             .sorted { $0.code < $1.code }
     }
 
     // MARK: Téléchargement
 
-    /// Lance le téléchargement d'un département pour les espèces choisies ; rien n'est marqué
+    /// Lance le téléchargement d'un département pour les espèces choisies (`G` des groupes touchés,
+    /// `T` des espèces sans `G`, couche `A` : `DownloadableDepartment.files`) ; rien n'est marqué
     /// disponible tant que tuiles, couche A et météo ne sont pas tous écrits.
     func download(_ choice: DownloadableDepartment, species: [String], manifest: TilesManifest, scoringVersion: String) async {
         var files: [OfflineFile] = []
-        for sid in species.sorted() {
-            guard let entry = choice.terrain[sid], let url = api.tileURL(entry) else { continue }
-            files.append(OfflineFile(name: entry.name, kind: "T", species: sid, url: url.absoluteString, bytes: Int64(entry.bytes ?? 0), done: false))
-        }
-        if let alt = choice.altitude, let url = api.tileURL(alt) {
-            files.append(OfflineFile(name: alt.name, kind: "A", species: nil, url: url.absoluteString, bytes: Int64(alt.bytes ?? 0), done: false))
+        for entry in choice.files(for: species) {
+            guard let url = api.tileURL(entry) else { continue }
+            files.append(OfflineFile(
+                name: entry.name, kind: entry.kind, species: entry.kind == "T" ? entry.species : nil, url: url.absoluteString,
+                bytes: Int64(entry.bytes ?? 0), done: false, channels: entry.kind == "G" ? entry.channels : nil
+            ))
         }
         guard !files.isEmpty else {
             status = "Rien à télécharger pour ce département."
