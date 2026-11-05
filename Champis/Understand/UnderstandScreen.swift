@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Onglet Comprendre (refonte UX, lot 4) : la réponse à « pourquoi ? ». Cinq articles embarqués
+/// Onglet Guide (refonte UX, lot 4) : la réponse à « pourquoi ? ». Cinq articles embarqués
 /// (`shared/texts/`, lisibles hors ligne) ; « Les espèces » ouvre les fiches de `GET /species`.
 /// Les réglages, réduits, sont ici et dans chaque onglet.
 struct UnderstandScreen: View {
@@ -24,7 +24,7 @@ struct UnderstandScreen: View {
                     Text("Les mêmes textes que le site champis.adhumi.fr, lisibles sans réseau.")
                 }
             }
-            .navigationTitle("Comprendre")
+            .navigationTitle("Guide")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {

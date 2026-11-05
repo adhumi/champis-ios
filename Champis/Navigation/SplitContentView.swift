@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// iPad et Mac (refonte UX, lot 3, décision du 1er nov. 2026) : la barre latérale porte Mes coins
-/// dépliés, Carte et Comprendre ; la carte occupe le détail ; la fiche d'un point ou d'un coin
+/// dépliés, Carte et Guide ; la carte occupe le détail ; la fiche d'un point ou d'un coin
 /// s'ouvre dans l'inspecteur, jamais en feuille. Choisir un coin recentre la carte.
 struct SplitContentView: View {
     nonisolated enum Item: Hashable, Sendable {
@@ -64,7 +64,7 @@ struct SplitContentView: View {
             }
             Section {
                 Label("Carte", systemImage: "map").tag(Item.map)
-                Label("Comprendre", systemImage: "book").tag(Item.understand)
+                Label("Guide", systemImage: "book").tag(Item.understand)
             }
         }
         .navigationTitle("Champis")

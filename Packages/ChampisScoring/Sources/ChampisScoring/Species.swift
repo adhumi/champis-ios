@@ -182,7 +182,7 @@ public struct Species: Codable, Hashable, Sendable {
         }
     }
 
-    /// Fiche en mots de l'onglet Comprendre et du site (lot 4) : jamais d'aide à l'identification.
+    /// Fiche en mots de l'onglet Guide et du site (lot 4) : jamais d'aide à l'identification.
     /// Autoporteuse (`references`) et hors de l'empreinte d'espèce : la relire ne régénère rien.
     public struct About: Codable, Hashable, Sendable {
         public struct Confusion: Codable, Hashable, Sendable {

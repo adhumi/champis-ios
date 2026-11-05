@@ -16,7 +16,7 @@ struct OnboardingView: View {
         Card(id: 0, icon: "map", title: "Ce que montrent les couleurs",
              text: "La carte estime, pour chaque carré de forêt et chaque jour, si les conditions sont réunies : le terrain, la météo des dernières semaines et la saison. Cinq mots, du vert foncé au rouge. Transparent : hors forêt ou sans donnée."),
         Card(id: 1, icon: "tree", title: "Cueillir sans nuire",
-             text: "Champis indique un potentiel, pas une autorisation. En forêt privée, il faut l'accord du propriétaire ; en forêt publique, la cueillette familiale est tolérée et peut être restreinte par arrêté. Le détail est dans Comprendre."),
+             text: "Champis indique un potentiel, pas une autorisation. En forêt privée, il faut l'accord du propriétaire ; en forêt publique, la cueillette familiale est tolérée et peut être restreinte par arrêté. Le détail est dans le Guide."),
         Card(id: 2, icon: "lock", title: "Rien n'est collecté",
              text: "Pas de compte. Vos coins et vos observations restent liés à un identifiant anonyme créé par l'app, jamais partagés, effaçables d'un geste. L'app ne tourne pas en arrière-plan."),
     ]
