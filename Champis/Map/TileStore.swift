@@ -213,9 +213,12 @@ actor TileStore {
         groupBySpecies = [:]
         groupEncoding = palette?.groupTileEncoding
         tileEncoding = palette?.tileEncoding
-        for file in groups {
-            for sid in file.species where groupBySpecies[sid] == nil {
-                groupBySpecies[sid] = file
+        // Sans encodage des G (vieille palette), les G sont ignorés et les T lus, comme `configure`.
+        if groupEncoding != nil {
+            for file in groups {
+                for sid in file.species where groupBySpecies[sid] == nil {
+                    groupBySpecies[sid] = file
+                }
             }
         }
         altReader = alt
