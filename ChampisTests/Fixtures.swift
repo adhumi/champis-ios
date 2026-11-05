@@ -16,6 +16,20 @@ nonisolated enum Fixtures {
       ],
       "nodata_hex": "#00000000",
       "tile_encoding": { "channel": "luminance", "scale": 254, "nodata": 255 },
+      "alt_encoding": { "channel": "luminance", "class_m": 300, "nodata": 255 },
+      "group_tile_encoding": { "channels": "rgba", "scale": 254, "nodata": 255 }
+    }
+    """
+
+    /// Palette d'une API antérieure au 5 nov. 2026 : sans `group_tile_encoding`, les `G` sont ignorés.
+    static let legacyPaletteJSON = """
+    {
+      "version": 1,
+      "thresholds": [
+        { "min": 0.0, "label": "tres_faible", "fr": "Très faible", "hex": "#B8402E" }
+      ],
+      "nodata_hex": "#00000000",
+      "tile_encoding": { "channel": "luminance", "scale": 254, "nodata": 255 },
       "alt_encoding": { "channel": "luminance", "class_m": 300, "nodata": 255 }
     }
     """
@@ -119,6 +133,40 @@ nonisolated enum Fixtures {
           "name": "A-300m-d222222.pmtiles", "key": "tiles/x", "bytes": 300, "url": "/tiles/A-300m-d222222.pmtiles" },
         { "kind": "T", "species": "boletus_edulis", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "333333", "dept": "39",
           "name": "T-boletus_edulis-af34c16e-p1.0.0-d333333.pmtiles", "key": "tiles/x", "bytes": 900, "url": "/tiles/T-boletus_edulis-af34c16e-p1.0.0-d333333.pmtiles" }
+      ]
+    }
+    """
+
+    /// `GET /tiles` avec des PMTiles par groupe (`kind: "G"`, décision du 5 nov. 2026) : le jeu complet
+    /// (`T` des trois espèces, `G` des cèpes, `A`) et le jeu du département 25 (`T`, `G`, `A`). Les
+    /// girolles n'ont pas de `G` : repli sur le `T`.
+    static let manifestGroupsJSON = """
+    {
+      "configured": true,
+      "mode": "proxy",
+      "generated": "2026-11-05T03:00:00Z",
+      "depts_by_hash": { "a1b2c3": ["25", "39"], "222222": ["25"] },
+      "tiles": [
+        { "kind": "A", "class_m": 300, "depts_hash": "a1b2c3",
+          "name": "A-300m-da1b2c3.pmtiles", "key": "tiles/x", "bytes": 4567, "url": "/tiles/A-300m-da1b2c3.pmtiles" },
+        { "kind": "A", "class_m": 300, "depts_hash": "222222", "dept": "25",
+          "name": "A-300m-d222222.pmtiles", "key": "tiles/x", "bytes": 300, "url": "/tiles/A-300m-d222222.pmtiles" },
+        { "kind": "G", "group": "cepes", "species": ["boletus_aereus", "boletus_edulis"], "hash": "c0ffee00", "scoring_version": "1.0.0", "depts_hash": "a1b2c3",
+          "name": "G-cepes-c0ffee00-p1.0.0-da1b2c3.pmtiles", "key": "tiles/x", "bytes": 9000, "url": "/tiles/G-cepes-c0ffee00-p1.0.0-da1b2c3.pmtiles" },
+        { "kind": "G", "group": "cepes", "species": ["boletus_aereus", "boletus_edulis"], "hash": "c0ffee00", "scoring_version": "1.0.0", "depts_hash": "222222", "dept": "25",
+          "name": "G-cepes-c0ffee00-p1.0.0-d222222.pmtiles", "key": "tiles/x", "bytes": 2500, "url": "/tiles/G-cepes-c0ffee00-p1.0.0-d222222.pmtiles" },
+        { "kind": "T", "species": "boletus_aereus", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "a1b2c3",
+          "name": "T-boletus_aereus-af34c16e-p1.0.0-da1b2c3.pmtiles", "key": "tiles/x", "bytes": 6000, "url": "/tiles/T-boletus_aereus-af34c16e-p1.0.0-da1b2c3.pmtiles" },
+        { "kind": "T", "species": "boletus_aereus", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "222222", "dept": "25",
+          "name": "T-boletus_aereus-af34c16e-p1.0.0-d222222.pmtiles", "key": "tiles/x", "bytes": 2000, "url": "/tiles/T-boletus_aereus-af34c16e-p1.0.0-d222222.pmtiles" },
+        { "kind": "T", "species": "boletus_edulis", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "a1b2c3",
+          "name": "T-boletus_edulis-af34c16e-p1.0.0-da1b2c3.pmtiles", "key": "tiles/x", "bytes": 5000, "url": "/tiles/T-boletus_edulis-af34c16e-p1.0.0-da1b2c3.pmtiles" },
+        { "kind": "T", "species": "boletus_edulis", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "222222", "dept": "25",
+          "name": "T-boletus_edulis-af34c16e-p1.0.0-d222222.pmtiles", "key": "tiles/x", "bytes": 1000, "url": "/tiles/T-boletus_edulis-af34c16e-p1.0.0-d222222.pmtiles" },
+        { "kind": "T", "species": "cantharellus_cibarius", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "a1b2c3",
+          "name": "T-cantharellus_cibarius-af34c16e-p1.0.0-da1b2c3.pmtiles", "key": "tiles/x", "bytes": 4000, "url": "/tiles/T-cantharellus_cibarius-af34c16e-p1.0.0-da1b2c3.pmtiles" },
+        { "kind": "T", "species": "cantharellus_cibarius", "hash": "af34c16e", "scoring_version": "1.0.0", "depts_hash": "222222", "dept": "25",
+          "name": "T-cantharellus_cibarius-af34c16e-p1.0.0-d222222.pmtiles", "key": "tiles/x", "bytes": 1500, "url": "/tiles/T-cantharellus_cibarius-af34c16e-p1.0.0-d222222.pmtiles" }
       ]
     }
     """

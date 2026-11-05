@@ -16,15 +16,19 @@ nonisolated struct SpeciesCatalog: Codable, Sendable {
     }
 }
 
-/// Manifeste `GET /tiles` : un PMTiles par espèce (`T-<espèce>-<hash>-p<version>-d<dh>.pmtiles`) et
-/// la couche des classes d'altitude (`A-300m-d<dh>.pmtiles`). `url` est absolue (mode presign) ou
-/// relative à l'API (mode proxy, `/tiles/<nom>`) : le client suit le manifeste, il ne choisit pas.
+/// Manifeste `GET /tiles` : un PMTiles par espèce (`T-<espèce>-<hash>-p<version>-d<dh>.pmtiles`),
+/// la couche des classes d'altitude (`A-300m-d<dh>.pmtiles`) et, depuis le 5 nov. 2026, un PMTiles
+/// par groupe d'affichage (`G-<groupe>-<hash>-p<version>-d<dh>[-<partie>].pmtiles`, un canal par
+/// espèce, spec › Points ouverts › Les clients lisent les PMTiles par groupe). `url` est absolue
+/// (mode presign) ou relative à l'API (mode proxy, `/tiles/<nom>`) : le client suit le manifeste,
+/// il ne choisit pas.
 nonisolated struct TilesManifest: Codable, Sendable {
     nonisolated struct Entry: Codable, Hashable, Sendable {
         let kind: String
         let name: String
         let url: String
         let bytes: Int?
+        /// Espèce d'un `T` (clé JSON `species`, une chaîne) ; `nil` pour `A` et `G`.
         let species: String?
         let hash: String?
         let scoringVersion: String?
@@ -32,12 +36,25 @@ nonisolated struct TilesManifest: Codable, Sendable {
         let classM: Int?
         /// Jeu d'un seul département (hors ligne de l'app), sinon absent.
         let dept: String?
+        /// Groupe d'affichage d'un `G` (`group.id` des fichiers d'espèces).
+        let group: String?
+        /// Espèces d'un `G` dans l'ordre des canaux (même clé JSON `species`, un tableau) ; `nil` sinon.
+        let channels: [String]?
+        /// Seconde partie d'un groupe de plus de quatre espèces (suffixe `-2`) ; absent sinon.
+        let part: Int?
 
         enum CodingKeys: String, CodingKey {
-            case kind, name, url, bytes, species, hash, dept
+            case kind, name, url, bytes, species, hash, dept, group, part
             case scoringVersion = "scoring_version"
             case deptsHash = "depts_hash"
             case classM = "class_m"
+        }
+
+        var isGroup: Bool { kind == "G" }
+
+        /// Espèces servies par l'entrée : celle du `T`, celles des canaux du `G`.
+        var coveredSpecies: [String] {
+            channels ?? species.map { [$0] } ?? []
         }
     }
 
@@ -45,6 +62,53 @@ nonisolated struct TilesManifest: Codable, Sendable {
     let mode: String?
     let generated: String?
     let tiles: [Entry]
+}
+
+/// `species` est une chaîne pour un `T`, un tableau pour un `G` : décodé selon le type JSON, réécrit
+/// de la même façon (le manifeste est gardé sur disque pour démarrer sans réseau). L'init de
+/// décodage vit dans une extension pour garder l'init membre à membre (tests).
+nonisolated extension TilesManifest.Entry {
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.decode(String.self, forKey: .kind)
+        name = try c.decode(String.self, forKey: .name)
+        url = try c.decode(String.self, forKey: .url)
+        bytes = try c.decodeIfPresent(Int.self, forKey: .bytes)
+        hash = try c.decodeIfPresent(String.self, forKey: .hash)
+        scoringVersion = try c.decodeIfPresent(String.self, forKey: .scoringVersion)
+        deptsHash = try c.decodeIfPresent(String.self, forKey: .deptsHash)
+        classM = try c.decodeIfPresent(Int.self, forKey: .classM)
+        dept = try c.decodeIfPresent(String.self, forKey: .dept)
+        group = try c.decodeIfPresent(String.self, forKey: .group)
+        part = try c.decodeIfPresent(Int.self, forKey: .part)
+        if let list = try? c.decodeIfPresent([String].self, forKey: .species) {
+            species = nil
+            channels = list
+        } else {
+            species = try c.decodeIfPresent(String.self, forKey: .species)
+            channels = nil
+        }
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(kind, forKey: .kind)
+        try c.encode(name, forKey: .name)
+        try c.encode(url, forKey: .url)
+        try c.encodeIfPresent(bytes, forKey: .bytes)
+        try c.encodeIfPresent(hash, forKey: .hash)
+        try c.encodeIfPresent(scoringVersion, forKey: .scoringVersion)
+        try c.encodeIfPresent(deptsHash, forKey: .deptsHash)
+        try c.encodeIfPresent(classM, forKey: .classM)
+        try c.encodeIfPresent(dept, forKey: .dept)
+        try c.encodeIfPresent(group, forKey: .group)
+        try c.encodeIfPresent(part, forKey: .part)
+        if let channels {
+            try c.encode(channels, forKey: .species)
+        } else {
+            try c.encodeIfPresent(species, forKey: .species)
+        }
+    }
 }
 
 /// Cellule de la grille météo (~5 km) telle que l'API la décrit.

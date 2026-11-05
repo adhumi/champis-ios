@@ -250,7 +250,7 @@ struct MapScreen: View {
     }
 
     static func sizeText(_ choice: DownloadableDepartment) -> String {
-        choice.bytes(for: Array(choice.terrain.keys)).formatted(.byteCount(style: .file))
+        choice.bytes(for: choice.species).formatted(.byteCount(style: .file))
     }
 
     private var longPressBinding: Binding<Bool> {

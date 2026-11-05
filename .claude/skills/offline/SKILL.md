@@ -12,6 +12,7 @@ Indispensable en forêt : pas de réseau, et c'est là qu'on consulte la carte. 
 | Contenu | Taille approx. | Source |
 | --- | --- | --- |
 | Tuiles `T` des espèces choisies, niveaux 10–15 | de quelques dizaines à quelques centaines de Mo selon la forêt | PMTiles du bucket via `GET /tiles` |
+| Depuis le 5 nov. 2026 : le `G` de chaque groupe touché par les espèces choisies (`kind: "G"` avec `dept`, un canal par espèce, `species` conservé dans `OfflineFile.channels`), et le `T` des seules espèces sans `G` (`DownloadableDepartment.files`) ; taille annoncée = somme des fichiers retenus | un `G` pèse moins que la somme de ses `T` | idem ; `TileStore.setLocalFiles` lit les `G` locaux avant les `T` locaux puis la source distante, un département téléchargé en `T` reste lisible |
 | Couche `A` (classes d'altitude), niveaux 10–15 | idem, une fois | PMTiles `A-300m-…` |
 | Météo : `GET /weather/bbox` sur l'emprise du département, 11 jours, toutes classes d'altitude | quelques centaines de Ko | API, à l'heure du téléchargement |
 | `GET /species` (espèces, palette, seuils) | négligeable | API |

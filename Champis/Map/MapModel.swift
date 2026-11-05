@@ -289,7 +289,9 @@ final class MapModel {
             self.catalog = catalog
             self.manifest = manifest
             layers = LayerCatalog.layers(from: catalog)
-            await store.configure(manifest: manifest, api: api, scoringVersion: ChampisScoring.supportedScoringVersion)
+            await store.configure(
+                manifest: manifest, api: api, scoringVersion: ChampisScoring.supportedScoringVersion, palette: catalog.palette
+            )
             if !manifest.configured {
                 loadError = "Le serveur n'a pas de tuiles configurées (GET /tiles)."
             }
@@ -822,7 +824,7 @@ final class MapModel {
     func acceptOfflineSuggestion() {
         guard let choice = offlineSuggestion, let manifest else { return }
         offlineSuggestion = nil
-        let species = choice.terrain.keys.sorted()
+        let species = choice.species
         let version = catalog?.scoringVersion ?? ""
         let offline = offline
         Task { await offline.download(choice, species: species, manifest: manifest, scoringVersion: version) }

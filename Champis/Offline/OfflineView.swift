@@ -120,7 +120,7 @@ struct DownloadDepartmentView: View {
                     }
                     if let choice {
                         Section("Espèces") {
-                            ForEach(choice.terrain.keys.sorted(), id: \.self) { sid in
+                            ForEach(choice.species, id: \.self) { sid in
                                 Toggle(model.speciesName(sid), isOn: Binding(
                                     get: { selectedSpecies.contains(sid) },
                                     set: { on in
@@ -154,7 +154,7 @@ struct DownloadDepartmentView: View {
                 }
             }
             .onChange(of: selectedCode) { _, _ in
-                selectedSpecies = Set(choice?.terrain.keys.map { $0 } ?? [])
+                selectedSpecies = Set(choice?.species ?? [])
             }
         }
     }
