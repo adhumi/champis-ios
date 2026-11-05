@@ -21,7 +21,7 @@ struct UnderstandScreen: View {
                         }
                     }
                 } footer: {
-                    Text("Les mêmes textes que le site champis.cc, lisibles sans réseau.")
+                    Text("Les mêmes textes que le site champis.app, lisibles sans réseau.")
                 }
             }
             .navigationTitle("Comprendre")
