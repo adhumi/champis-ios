@@ -9,5 +9,6 @@
   ],
   "nodata_hex": "#00000000",
   "tile_encoding": { "channel": "luminance", "scale": 254, "nodata": 255 },
-  "alt_encoding": { "channel": "luminance", "class_m": 300, "nodata": 255 }
+  "alt_encoding": { "channel": "luminance", "class_m": 300, "nodata": 255 },
+  "group_tile_encoding": { "channels": "rgba", "scale": 254, "nodata": 255 }
 }

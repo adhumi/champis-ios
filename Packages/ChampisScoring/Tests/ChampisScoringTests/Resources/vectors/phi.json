@@ -1,7 +1,7 @@
 {
  "generated_by": {
   "scoring_version": "1.0.0",
-  "species_hash": "cff7e536"
+  "species_hash": "6e3beb52"
  },
  "cases": [
   {
@@ -6720,6 +6720,966 @@
   },
   {
    "species": "cantharellus_pallens",
+   "date": "2028-02-29",
+   "alt_m": 500,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-01",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-08",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-15",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-22",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-29",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-05",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-12",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-19",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-26",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-05",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-12",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-19",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-26",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-02",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-09",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-16",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-23",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-30",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-07",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-14",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-21",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-28",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-04",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-11",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-18",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-25",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-02",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-09",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-16",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-23",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-30",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-06",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-13",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-20",
+   "alt_m": 100,
+   "expected": 0.25
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-27",
+   "alt_m": 100,
+   "expected": 0.28
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-03",
+   "alt_m": 100,
+   "expected": 0.49
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-10",
+   "alt_m": 100,
+   "expected": 0.7
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-17",
+   "alt_m": 100,
+   "expected": 0.91
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-24",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-01",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-08",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-15",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-22",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-29",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-05",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-12",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-19",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-26",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-03",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-10",
+   "alt_m": 100,
+   "expected": 0.85
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-17",
+   "alt_m": 100,
+   "expected": 0.64
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-24",
+   "alt_m": 100,
+   "expected": 0.43
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-31",
+   "alt_m": 100,
+   "expected": 0.25
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-01",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-08",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-15",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-22",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-29",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-05",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-12",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-19",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-26",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-05",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-12",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-19",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-26",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-02",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-09",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-16",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-23",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-30",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-07",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-14",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-21",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-28",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-04",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-11",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-18",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-25",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-02",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-09",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-16",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-23",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-30",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-06",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-13",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-20",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-27",
+   "alt_m": 700,
+   "expected": 0.28
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-03",
+   "alt_m": 700,
+   "expected": 0.49
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-10",
+   "alt_m": 700,
+   "expected": 0.7
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-17",
+   "alt_m": 700,
+   "expected": 0.91
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-24",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-01",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-08",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-15",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-22",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-29",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-05",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-12",
+   "alt_m": 700,
+   "expected": 0.97
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-19",
+   "alt_m": 700,
+   "expected": 0.76
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-26",
+   "alt_m": 700,
+   "expected": 0.55
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-03",
+   "alt_m": 700,
+   "expected": 0.34
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-10",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-17",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-24",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-31",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-01",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-08",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-15",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-22",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-01-29",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-05",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-12",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-19",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-02-26",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-05",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-12",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-19",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-03-26",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-02",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-09",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-16",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-23",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-04-30",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-07",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-14",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-21",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-05-28",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-04",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-11",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-18",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-06-25",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-02",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-09",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-16",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-23",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-07-30",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-06",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-13",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-20",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-08-27",
+   "alt_m": 1400,
+   "expected": 0.28
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-03",
+   "alt_m": 1400,
+   "expected": 0.49
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-10",
+   "alt_m": 1400,
+   "expected": 0.7
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-17",
+   "alt_m": 1400,
+   "expected": 0.91
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-09-24",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-01",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-08",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-15",
+   "alt_m": 1400,
+   "expected": 0.97
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-22",
+   "alt_m": 1400,
+   "expected": 0.76
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-10-29",
+   "alt_m": 1400,
+   "expected": 0.55
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-05",
+   "alt_m": 1400,
+   "expected": 0.34
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-12",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-19",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-11-26",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-03",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-10",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-17",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-24",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
+   "date": "2026-12-31",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "lactarius_deliciosus",
    "date": "2028-02-29",
    "alt_m": 500,
    "expected": 0.0
