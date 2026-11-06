@@ -13,6 +13,8 @@ struct SettingsView: View {
     /// La page Soutenir du site (`/soutenir` répondait 404 : le site est servi sous `/web/`).
     static let supportURL = URL(string: "https://champis.app/web/soutenir.html")!
     static let developerTaps = 5
+    /// Adresse de contact de l'éditeur (spec › Points encore ouverts, tranché le 6 nov. 2026).
+    static let contactURL = URL(string: "mailto:hello@champis.app")!
     /// Confidentialité et mentions légales du Guide, dans cet ordre, quand les textes les portent.
     static var legalArticles: [Article] {
         let index = Texts.index()
@@ -105,6 +107,9 @@ struct SettingsView: View {
                         NavigationLink(article.title) {
                             ArticleView(article: article, model: model)
                         }
+                    }
+                    Link(destination: Self.contactURL) {
+                        LabeledContent("Écrire à Champis", value: "hello@champis.app")
                     }
                 }
                 if developerSettings {

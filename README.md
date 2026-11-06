@@ -75,7 +75,7 @@ Observations (trouvé / rien trouvé, espèce, position, date, quantité, sans p
 ## Préparer la publication (étape C, 6 nov. 2026)
 
 - Accueil : l'accroche « La météo des champignons, forêt par forêt. » et la promesse en tête (`OnboardingView.tagline`, `.promise`), les mêmes que le site et l'App Store.
-- Réglages › À propos : « Confidentialité » et « Mentions légales » (articles du Guide synchronisés depuis `shared/texts/`), « Soutenir Champis » vers `https://champis.app/web/soutenir.html` (l'ancienne adresse `/soutenir` répondait 404).
+- Réglages › À propos : « Confidentialité » et « Mentions légales » (articles du Guide synchronisés depuis `shared/texts/`), « Écrire à Champis » (`mailto:hello@champis.app`), « Soutenir Champis » vers `https://champis.app/web/soutenir.html` (l'ancienne adresse `/soutenir` répondait 404).
 - `Champis/PrivacyInfo.xcprivacy` : aucun suivi ; position précise, identifiant pseudonyme et contenu saisi liés à l'utilisateur ; raisons d'API `UserDefaults` (`CA92.1`) et métadonnées de fichiers (`C617.1`). Testé dans `PrivacyManifestTests`.
 - `docs/app-store.md` : les champs de la fiche App Store, les captures à produire, les étiquettes de confidentialité (alignées sur le manifeste et sur l'article Confidentialité) et les notes pour la revue.
 - Texte d'autorisation de localisation : il dit aussi « noter une observation là où vous êtes ».
