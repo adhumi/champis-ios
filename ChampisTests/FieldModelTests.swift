@@ -122,7 +122,7 @@ struct FieldModelTests {
         await model.record(species: "boletus_edulis", latitude: 47.0, longitude: 6.0, accuracyM: 12, date: "2026-10-31", found: true, quantity: 2)
         #expect(model.observations.count == 1)
         #expect(model.pendingCount == 0)
-        #expect(model.status == nil)
+        #expect(model.problem == nil)
         let post = try #require(StubURLProtocol.requests(host: host).first { $0.method == "POST" })
         #expect(post.path == "/observations")
         #expect(post.user == user.uuidString.lowercased())
@@ -132,20 +132,23 @@ struct FieldModelTests {
         #expect(sent?[0]["accuracy_m"] as? Double == 12)
         #expect(sent?[0]["quantity"] as? Int == 2)
 
-        // serveur indisponible : l'observation reste en attente, le statut le dit
+        // serveur indisponible : l'observation reste en attente, le message le dit en clair (étape B4)
         StubURLProtocol.set(host: host) { _, _, _ in (503, #"{"detail": "observations non configurées"}"#) }
         await model.record(species: "boletus_aereus", latitude: 47.0, longitude: 6.0, accuracyM: nil, date: "2026-10-31", found: false, quantity: nil)
         #expect(model.observations.count == 2)
         #expect(model.pendingCount == 1)
-        #expect(model.status?.contains("non configurées") == true)
+        let problem = try #require(model.problem)
+        #expect(problem.text == "Observations pas encore envoyées, elles restent sur l'appareil : le serveur est momentanément indisponible")
+        #expect(problem.detail == "HTTP 503 : observations non configurées")
+        #expect(problem.retryable)
 
-        // retour du réseau : l'envoi reprend
+        // retour du réseau : « Réessayer » relance l'envoi
         StubURLProtocol.set(host: host) { method, path, _ in
             (method, path) == ("POST", "/observations") ? (201, #"{"inserted": 1, "duplicates": 0}"#) : (404, "{}")
         }
-        await model.sync()
+        await model.retry()
         #expect(model.pendingCount == 0)
-        #expect(model.status == nil)
+        #expect(model.problem == nil)
     }
 
     @Test("Rien trouvé en une tape : une négative par espèce, retenue pendant le délai, annulable, puis envoyée")
@@ -173,8 +176,8 @@ struct FieldModelTests {
         #expect(model.undoable.isEmpty)
         #expect(model.pendingCount == 0)
 
-        // laissé passer : envoyé à la fin du délai
-        await model.recordNotFound(species: ["boletus_edulis"], latitude: 47, longitude: 6)
+        // laissé passer : envoyé à la fin du délai, avec la précision GPS de « Noter » (étape B4)
+        await model.recordNotFound(species: ["boletus_edulis"], latitude: 47, longitude: 6, accuracyM: 8)
         #expect(model.undoable.count == 1)
         try await Task.sleep(for: .milliseconds(600))
         #expect(model.undoable.isEmpty)
@@ -183,6 +186,7 @@ struct FieldModelTests {
         let sent = StubURLProtocol.json(post.body)["observations"] as? [[String: Any]]
         #expect(sent?.count == 1)
         #expect(sent?[0]["found"] as? Bool == false)
+        #expect(sent?[0]["accuracy_m"] as? Double == 8)
 
         // aucune espèce : rien de noté, rien à annuler
         await model.recordNotFound(species: [], latitude: 47, longitude: 6)
@@ -207,6 +211,7 @@ struct FieldModelTests {
                 {"today": "2026-10-31", "coins": [{"id": "\(id)", "name": "Col", "lat": 47.0, "lon": 6.0, "target": "cepes",
                   "alt_class": 750, "t": {"boletus_edulis": 0.8}, "score": 0.7, "leading": "boletus_edulis",
                   "best_day": null, "best": null,
+                  "summary": ["grosse pluie il y a 8 jours : en plein dans le délai de pousse", "pleine saison"],
                   "days": [{"date": "2026-10-31", "value": 0.7, "leading": "boletus_edulis"},
                            {"date": "2026-11-01", "value": null, "leading": null}]}]}
                 """)
@@ -230,8 +235,10 @@ struct FieldModelTests {
         #expect(coins?[0]["alt_class"] as? Int == 750)
         #expect(coins?[0]["target"] as? String == "cepes")
         let coin = try #require(model.coins.first)
-        #expect(model.coinScores[coin.id]?.score == 0.7, "\(model.status ?? "")")
+        #expect(model.coinScores[coin.id]?.score == 0.7, "\(model.problem?.detail ?? "")")
         #expect(model.coinsToday == "2026-10-31")
+        // phrases du jour du coin (étape B2)
+        #expect(model.coinScores[coin.id]?.summary == ["grosse pluie il y a 8 jours : en plein dans le délai de pousse", "pleine saison"])
         #expect(model.coinScores[coin.id]?.days.count == 2)
         #expect(model.coinScores[coin.id]?.days.last?.value == nil)
 
@@ -249,7 +256,8 @@ struct FieldModelTests {
         await model.addCoin(name: "Autre", latitude: 47.0, longitude: 6.0, target: "cepes", altClass: 450, t: ["boletus_edulis": 0.5])
         await model.deleteAll()
         #expect(StubURLProtocol.requests(host: host).contains { $0.method == "DELETE" && $0.path == "/observations" })
-        #expect(model.coins.isEmpty, "\(model.status ?? "")")
+        #expect(model.coins.isEmpty, "\(model.problem?.detail ?? "")")
+        #expect(model.status == "Observations et coins effacés")
         #expect(model.observations.isEmpty)
         #expect(model.coinScores.isEmpty)
     }

@@ -65,6 +65,13 @@ Observations (trouvé / rien trouvé, espèce, position, date, quantité, sans p
 - Nouveau coin dans un département non embarqué dont le serveur publie un jeu : `MapModel.addCoin` propose une fois « Embarquer … ? » (`suggestOffline`, refus mémorisé dans `UserDefaults`).
 - iPad en largeur régulière et Mac : `SplitContentView` (barre latérale Mes coins · Carte · Comprendre, carte en détail, fiches dans l'inspecteur) ; `MapScreen(layout: .split)` ne présente pas de feuille. La carte reste sur aujourd'hui (étape A) : plus de raccourci de jour.
 
+## Fiches, Noter, erreurs en clair, forêts publiques (étape B, 6 nov. 2026)
+
+- Fiche d'un point et d'un coin : sous les onze pastilles, « Tendance : mieux samedi 7 », « stable toute la semaine » ou « en baisse » (`CoinTrend`, seuil « bon » de la palette). Fiche d'un coin : ses phrases du jour (`GET /coins` › `summary`, pour l'espèce qui porte le score, à la classe du coin) et « Itinéraire » vers Plans (`CoinDetailView.directionsURL`).
+- « Noter » : bouton flottant de la carte, présent quand le point bleu est connu (`MapContainer` › `didUpdate userLocation` → `MapModel.userLocationChanged` ; seul `hasUserFix` est observé, la position reste en mémoire). `NoteSheet` : trouvé (espèce du calque, trois quantités) et rien trouvé (une négative par espèce de la couche, annulable) à ma position, précision GPS comprise.
+- Erreurs : `Problem` (phrase en clair, cause en mots pour le réseau et le serveur, détail technique à part) et `ProblemView` (« Réessayer », « Détails »). `MapModel.problem` (chargement, point, cache) et `weatherProblem`, `FieldModel.problem` et `OfflineModel.problem` portent chacun leur reprise (`Retry`) ; un département incomplet se reprend là où il s'est arrêté (`OfflineModel.resume`).
+- Statut de la forêt dans la fiche d'un point : `PublicForest` interroge le WFS `ONF.FORETS_PUBLIQUES:ONF_FORETS_PUBLIQUES` de la Géoplateforme IGN (`data.geopf.fr`, sans clé) sur un carré de quelques mètres ; « forêt domaniale », « forêt publique » ou « sans doute privée, accord du propriétaire nécessaire ». En ligne seulement : sans réponse, la ligne n'apparaît pas. Mêmes phrases que le site.
+
 ## Comprendre, première ouverture, réglages (refonte UX, lot 4)
 
 - `Champis/Resources/Texts/` : copie de `shared/texts/` du monorepo (`index.json` + Markdown) par `scripts/sync-texts.sh`, seule façon de les mettre à jour ; `Texts` les lit, `MarkdownBlocks` (fonction pure, testée) les découpe, `ArticleView` les affiche. Lisibles hors ligne, les mêmes mots que le site.

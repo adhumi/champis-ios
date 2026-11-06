@@ -80,7 +80,10 @@ final class OfflineModel {
 
     private(set) var departments: [OfflineDepartment] = []
     private(set) var progress: [String: Progress] = [:]
+    /// Information en clair (« Rien à télécharger ») ; les échecs vont dans `problem`.
     private(set) var status: String?
+    /// Échec en clair avec sa reprise (étape B4, 6 nov. 2026).
+    private(set) var problem: Problem?
     private(set) var totalBytes: Int64 = 0
 
     @ObservationIgnored let store: OfflineStore
@@ -90,6 +93,15 @@ final class OfflineModel {
     @ObservationIgnored private var written: [String: [String: Int64]] = [:]
     /// Appelé quand la liste des fichiers lisibles hors ligne change (le lecteur de tuiles s'y branche).
     @ObservationIgnored var onLocalFilesChanged: (@MainActor ([OfflineLocalFile]) async -> Void)?
+    /// Ce que « Réessayer » relance pour `problem`.
+    @ObservationIgnored private var problemRetry: Retry?
+
+    /// Ce que « Réessayer » relance (étape B4).
+    nonisolated enum Retry: Equatable, Sendable {
+        case start
+        case resume(code: String)
+        case delete(code: String)
+    }
 
     init(api: ChampisAPI, store: OfflineStore, downloads: DownloadManager) {
         self.api = api
@@ -102,7 +114,7 @@ final class OfflineModel {
         do {
             try await store.load()
         } catch {
-            status = "Hors ligne : manifeste illisible (\(error.localizedDescription))"
+            fail(Problem("La liste des départements embarqués n'a pas pu être lue", error: error), retry: .start)
         }
         await refresh()
         await publishLocalFiles()
@@ -178,7 +190,7 @@ final class OfflineModel {
         do {
             try await store.begin(department)
         } catch {
-            status = "Téléchargement impossible : \(error.localizedDescription)"
+            fail(Problem("Le téléchargement n'a pas pu commencer : espace disque ou stockage indisponible", error: error, retryable: false))
             return
         }
         progress[choice.code] = Progress(filesTotal: files.count, bytesExpected: department.bytes)
@@ -204,7 +216,7 @@ final class OfflineModel {
         case .failed(let message):
             try? await store.markError(code: code, "\(name) : \(message)")
             progress[code] = nil
-            status = "Téléchargement de \(code) interrompu : \(message)"
+            fail(Problem("Téléchargement du département \(code) interrompu", detail: "\(name) : \(message)"), retry: .resume(code: code))
             await refresh()
         case .finished(let url):
             let size = (try? FileManager.default.attributesOfItem(atPath: url.path(percentEncoded: false))[.size] as? Int64) ?? 0
@@ -238,11 +250,14 @@ final class OfflineModel {
             }
             try await store.saveWeather(code: department.code, responses: responses, fetchedAt: ISO8601DateFormatter().string(from: .now))
             status = nil
+            if problemRetry == .resume(code: department.code) {
+                fail(nil)
+            }
             await refresh()
             await publishLocalFiles()
         } catch {
-            try? await store.markError(code: department.code, "météo : \(error.localizedDescription)")
-            status = "Météo de \(department.code) non récupérée : \(error.localizedDescription)"
+            try? await store.markError(code: department.code, "météo : \(Problem.technical(error))")
+            fail(Problem("Météo du département \(department.code) non récupérée", error: error), retry: .resume(code: department.code))
             await refresh()
         }
     }
@@ -257,11 +272,50 @@ final class OfflineModel {
         do {
             try await store.remove(code: code)
         } catch {
-            status = "Suppression impossible : \(error.localizedDescription)"
+            fail(Problem("Le département \(code) n'a pas pu être supprimé", error: error), retry: .delete(code: code))
         }
         progress[code] = nil
         await refresh()
         await publishLocalFiles()
+    }
+
+    /// « Réessayer » sur un département incomplet (étape B4) : relance les fichiers qui manquent,
+    /// puis la météo ; un département aux tuiles complètes ne redemande que la météo.
+    func resume(code: String) async {
+        guard progress[code] == nil, let department = await store.department(code) else { return }
+        if department.filesDone {
+            await fetchWeather(for: department)
+            return
+        }
+        let missing = department.files.filter { !$0.done }
+        progress[code] = Progress(
+            filesDone: department.files.count - missing.count, filesTotal: department.files.count,
+            bytesExpected: missing.reduce(0) { $0 + $1.bytes }
+        )
+        written[code] = [:]
+        for file in missing {
+            guard let url = URL(string: file.url) else { continue }
+            let destination = await store.fileURL(code: code, name: file.name)
+            downloads.download(url, to: destination, tag: Self.tag(code: code, name: file.name))
+        }
+        await refresh()
+    }
+
+    private func fail(_ problem: Problem?, retry: Retry? = nil) {
+        self.problem = problem
+        problemRetry = problem == nil ? nil : retry
+    }
+
+    /// « Réessayer » sous le message de l'écran Hors ligne.
+    func retry() async {
+        let retry = problemRetry
+        fail(nil)
+        switch retry {
+        case .start: await start(api: api)
+        case .resume(let code): await resume(code: code)
+        case .delete(let code): await delete(code: code)
+        case nil: break
+        }
     }
 
     /// Météo embarquée de tous les départements complets, pour la carte sans réseau.
