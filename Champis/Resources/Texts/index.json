@@ -31,6 +31,12 @@
       "title": "Confidentialité",
       "file": "confidentialite.md",
       "icon": "lock"
+    },
+    {
+      "id": "mentions-legales",
+      "title": "Mentions légales",
+      "file": "mentions-legales.md",
+      "icon": "info.circle"
     }
   ]
 }

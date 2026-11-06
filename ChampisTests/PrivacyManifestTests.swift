@@ -33,7 +33,7 @@ struct PrivacyManifestTests {
     func settingsLinks() {
         #expect(SettingsView.supportURL.absoluteString == "https://champis.app/web/soutenir.html")
         #expect(SettingsView.contactURL.absoluteString == "mailto:hello@champis.app")
-        #expect(SettingsView.legalArticles.first?.id == "confidentialite")
+        #expect(SettingsView.legalArticles.map(\.id) == ["confidentialite", "mentions-legales"])
     }
 
     @Test("Accueil : l'accroche et la promesse décidées, les mêmes que le site")
