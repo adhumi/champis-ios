@@ -34,10 +34,12 @@ struct TextsTests {
         #expect(MarkdownBlocks.parse("").isEmpty)
     }
 
-    @Test("Textes embarqués : les cinq articles de shared/texts, chacun avec son fichier et son titre")
+    @Test("Textes embarqués : les six articles de shared/texts, chacun avec son fichier et son titre")
     func bundledTexts() {
         let articles = Texts.index()
-        #expect(articles.map(\.id) == ["comment-ca-marche", "donnees-et-sources", "especes", "cueillir-sans-nuire", "confidentialite"])
+        #expect(articles.map(\.id) == [
+            "comment-ca-marche", "donnees-et-sources", "especes", "cueillir-sans-nuire", "confidentialite", "mentions-legales",
+        ])
         #expect(articles.first { $0.listsSpecies }?.id == "especes")
         for article in articles {
             let body = Texts.body(of: article)
@@ -83,6 +85,16 @@ struct HonestTextsTests {
         let markdown = try #require(Texts.body(of: article))
         #expect(markdown.contains("pseudonyme"))
         #expect(!markdown.contains("anonyme créé"))
+    }
+
+    @Test("Mentions légales (étape C) : l'éditeur et l'adresse de contact, en lien")
+    func legalNotice() throws {
+        let article = try #require(Texts.index().first { $0.id == "mentions-legales" })
+        let markdown = try #require(Texts.body(of: article))
+        #expect(markdown.contains("Adrien Humilière"))
+        #expect(markdown.contains("[hello@champis.app](mailto:hello@champis.app)"))
+        let link = MarkdownView.inline("Contact : [hello@champis.app](mailto:hello@champis.app).").runs.compactMap { $0.link }.first
+        #expect(link?.absoluteString == "mailto:hello@champis.app")
     }
 }
 

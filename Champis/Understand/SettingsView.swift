@@ -10,8 +10,16 @@ import UIKit
 /// cinq tapes sur la version ; l'opacité est fixe ; le fond satellite est dans le menu de calque ;
 /// le hors ligne se propose à la création d'un coin.
 struct SettingsView: View {
-    static let supportURL = URL(string: "https://champis.app/soutenir")!
+    /// La page Soutenir du site (`/soutenir` répondait 404 : le site est servi sous `/web/`).
+    static let supportURL = URL(string: "https://champis.app/web/soutenir.html")!
     static let developerTaps = 5
+    /// Adresse de contact de l'éditeur (spec › Points encore ouverts, tranché le 6 nov. 2026).
+    static let contactURL = URL(string: "mailto:hello@champis.app")!
+    /// Confidentialité et mentions légales du Guide, dans cet ordre, quand les textes les portent.
+    static var legalArticles: [Article] {
+        let index = Texts.index()
+        return ["confidentialite", "mentions-legales"].compactMap { id in index.first { $0.id == id } }
+    }
 
     @Bindable var model: MapModel
     @Binding var apiBaseURL: String
@@ -93,6 +101,15 @@ struct SettingsView: View {
                         NavigationLink("Licences des données") {
                             ArticleView(article: article, model: model)
                         }
+                    }
+                    // étape C, lot C1 : confidentialité complète et mentions légales, les mêmes textes que le site
+                    ForEach(Self.legalArticles) { article in
+                        NavigationLink(article.title) {
+                            ArticleView(article: article, model: model)
+                        }
+                    }
+                    Link(destination: Self.contactURL) {
+                        LabeledContent("Écrire à Champis", value: "hello@champis.app")
                     }
                 }
                 if developerSettings {
