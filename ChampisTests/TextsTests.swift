@@ -61,3 +61,28 @@ struct TextsTests {
         #expect(about.photo == nil)
     }
 }
+
+/// Étape A (spec › Produit, 6 nov. 2026) : plus rien de faux à l'écran. Les coins et les
+/// observations partent sur le serveur sous un identifiant pseudonyme : ni « rien n'est collecté »,
+/// ni « anonyme », dans l'accueil comme dans les textes du Guide embarqués.
+@MainActor
+struct HonestTextsTests {
+    @Test("Accueil : « Vos coins restent à vous », identifiant pseudonyme, jamais « anonyme »")
+    func onboarding() {
+        let cards = OnboardingView.cards
+        #expect(cards.count == 3)
+        #expect(cards.contains { $0.title == "Vos coins restent à vous" })
+        #expect(!cards.contains { $0.title.localizedCaseInsensitiveContains("rien n'est collecté") })
+        #expect(!cards.contains { $0.text.localizedCaseInsensitiveContains("anonyme") })
+        #expect(cards.contains { $0.text.contains("pseudonyme") })
+    }
+
+    @Test("Textes du Guide embarqués : la confidentialité parle d'identifiant pseudonyme")
+    func guideTexts() throws {
+        let article = try #require(Texts.index().first { $0.id == "confidentialite" })
+        let markdown = try #require(Texts.body(of: article))
+        #expect(markdown.contains("pseudonyme"))
+        #expect(!markdown.contains("anonyme créé"))
+    }
+}
+

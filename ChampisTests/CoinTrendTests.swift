@@ -17,7 +17,8 @@ struct CoinTrendTests {
         let goodMin = 0.55
         let better = Self.days([0.2, 0.3, 0.3, 0.3, 0.4, 0.5, 0.7, 0.6, 0.3, 0.2, 0.2])
         #expect(CoinTrend.kind(days: better, today: Self.today, goodMin: goodMin) == .better(day: "2026-11-04"))
-        #expect(CoinTrend.phrase(.better(day: "2026-11-04")) == "mieux mercredi")
+        // le jour et son numéro (étape A) : « mieux mercredi » seul était ambigu à une semaine près
+        #expect(CoinTrend.phrase(.better(day: "2026-11-04")) == "mieux mercredi 4")
 
         // meilleur jour à venir sous « bon » : pas une raison d'y aller
         let underGood = Self.days([0.2, 0.3, 0.3, 0.3, 0.4, 0.5, 0.5, 0.4, 0.3, 0.2, 0.2])
@@ -49,6 +50,12 @@ struct CoinTrendTests {
         #expect(CoinTrend.weekdayName(iso: "2026-10-31") == "samedi")
         #expect(CoinTrend.shortDay(iso: "2026-11-07") == "sam. 7")
         #expect(CoinTrend.initial(iso: "2026-11-05") == "j")
+        // sous chaque pastille, le jour abrégé et son numéro (étape A, 6 nov. 2026)
+        #expect(CoinTrend.shortWeekday(iso: "2026-11-07") == "sam.")
+        #expect(CoinTrend.shortWeekday(iso: "2026-11-03") == "mar.")
+        #expect(CoinTrend.dayOfMonth(iso: "2026-11-07") == 7)
+        #expect(CoinTrend.dayOfMonth(iso: "2026-11-10") == 10)
+        #expect(CoinTrend.dayOfMonth(iso: "illisible") == 0)
         #expect(CoinTrend.weekdayIndex(iso: "n'importe quoi") == 0)
     }
 

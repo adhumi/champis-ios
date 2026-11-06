@@ -28,4 +28,4 @@ La météo est recalculée chaque matin. Les cartes de terrain sont régénéré
 
 ## Le modèle lui-même
 
-Les règles de chaque espèce (arbres hôtes, sol, altitude, saison, seuils de pluie et de température) sont écrites dans des fichiers lisibles, chaque valeur appuyée sur une publication citée. Ils sont publics dans le dépôt du projet.
+Les règles de chaque espèce (arbres hôtes, sol, altitude, saison, seuils de pluie et de température) sont écrites dans des fichiers lisibles, chaque valeur appuyée sur une publication citée. Ils seront publiés avec le code de Champis, ouvert avant la sortie des apps.

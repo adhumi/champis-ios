@@ -3,11 +3,12 @@ import SwiftUI
 
 /// Onglet Carte (refonte UX, lot 2) : overlay colorisé sur fond Apple, à tout zoom (plus de vue
 /// France, décision du 4 nov. 2026), menu de calque (groupes, espèces, potentiel toute saison),
-/// bandeau des onze jours coloré par l'indice du département sous le centre, légende, fiche au
-/// toucher en clair. Les coins ont leur onglet (`CoinsScreen`). Lot 3 : appui long pour le menu
-/// de terrain, « Noté : rien trouvé » annulable, proposition d'embarquer le département d'un
-/// nouveau coin ; sur iPad et Mac (`layout: .split`), les fiches vont dans l'inspecteur de
-/// `SplitContentView`, pas en feuille.
+/// légende, fiche au toucher en clair. Les coins ont leur onglet (`CoinsScreen`). Lot 3 : appui
+/// long pour le menu de terrain, « Noté : rien trouvé » annulable, proposition d'embarquer le
+/// département d'un nouveau coin ; sur iPad et Mac (`layout: .split`), les fiches vont dans
+/// l'inspecteur de `SplitContentView`, pas en feuille. Étape A (6 nov. 2026) : la carte montre
+/// toujours aujourd'hui, le bandeau des jours est retiré (les onze jours sont dans la fiche d'un
+/// point, en lecture seule), et les réglages s'ouvrent aussi d'ici.
 struct MapScreen: View {
     static let defaultAPIBaseURL = "https://champis.app"
 
@@ -22,6 +23,9 @@ struct MapScreen: View {
     let model: MapModel
     var layout: Layout = .compact
     @State private var showLegend = false
+    @State private var showSettings = false
+    @State private var showLegalNotice = false
+    @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
     @State private var observationRequest: ObservationFormRequest?
     @State private var quickFound: MapSelection?
 
@@ -61,16 +65,6 @@ struct MapScreen: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
             #endif
-            .background {
-                // ⌘← et ⌘→ changent de jour (Mac, iPad avec clavier)
-                Group {
-                    Button("Jour précédent") { model.setDay(model.dayOffset - 1) }
-                        .keyboardShortcut(.leftArrow, modifiers: .command)
-                    Button("Jour suivant") { model.setDay(model.dayOffset + 1) }
-                        .keyboardShortcut(.rightArrow, modifiers: .command)
-                }
-                .hidden()
-            }
             .toolbar {
                 // le menu de calque à gauche, la légende et le retour terrain à droite : tout en
                 // Liquid Glass dans la barre, plus rien de flottant en haut de la carte
@@ -87,6 +81,13 @@ struct MapScreen: View {
                         showLegend = true
                     } label: {
                         Label("Légende", systemImage: "info")
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Label("Réglages", systemImage: "slider.horizontal.3")
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
@@ -119,6 +120,14 @@ struct MapScreen: View {
         }
         .sheet(isPresented: $showLegend) {
             LegendSheet(model: model)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(model: model, apiBaseURL: $apiBaseURL, showLegalNotice: $showLegalNotice)
+        }
+        .alert(LegalNotice.title, isPresented: $showLegalNotice) {
+            Button("OK") {}
+        } message: {
+            Text(LegalNotice.text)
         }
         .sheet(item: $quickFound) { point in
             QuickFoundSheet(model: model, point: point, initialSpecies: nil)
@@ -205,7 +214,9 @@ struct MapScreen: View {
     private var panel: some View {
         VStack(alignment: .leading, spacing: 6) {
             if model.mode == .score {
-                DayStrip(model: model)
+                // la carte montre toujours aujourd'hui : on le dit, à la place du bandeau des jours
+                Text(model.dayLabel)
+                    .font(.subheadline.weight(.semibold))
                 if let status = model.weatherStatus {
                     Text(status)
                         .font(.footnote)
@@ -305,43 +316,6 @@ struct LegendView: View {
                 .accessibilityElement(children: .combine)
             }
         }
-    }
-}
-
-/// Bandeau des onze jours (lot 2) : une pastille par jour, colorée par l'indice du département sous
-/// le centre de la carte, l'initiale du jour dessous, aujourd'hui en gras ; les jours passés restent
-/// consultables. Remplace le curseur J−3 → J+7 : on choisit une date, pas un décalage.
-struct DayStrip: View {
-    let model: MapModel
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(model.dayDots) { dot in
-                Button {
-                    model.setDay(dot.offset)
-                } label: {
-                    VStack(spacing: 4) {
-                        ScoreDot(value: dot.value, model: model, size: 14, selected: dot.offset == model.dayOffset)
-                        Text(dot.date.map { CoinTrend.initial(iso: $0) } ?? "·")
-                            .font(.caption2)
-                            .fontWeight(dot.offset == 0 ? .bold : .regular)
-                            .foregroundStyle(dot.offset == 0 ? .primary : .secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(label(dot))
-                .accessibilityAddTraits(dot.offset == model.dayOffset ? .isSelected : [])
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Jour : \(model.dayLabel)")
-    }
-
-    private func label(_ dot: DayDot) -> String {
-        let day = dot.date.map { CoinTrend.shortDay(iso: $0) } ?? (dot.offset == 0 ? "aujourd'hui" : "J\(dot.offset > 0 ? "+" : "")\(dot.offset)")
-        let state = dot.value.flatMap { model.classify($0)?.fr } ?? "pas d'indice"
-        return "\(day) : \(state)"
     }
 }
 

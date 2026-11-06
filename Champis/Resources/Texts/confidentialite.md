@@ -8,7 +8,7 @@ Vos **coins** (un nom, une position, une espèce ou un groupe) et vos **observat
 
 ## Où
 
-Sur votre appareil d'abord, puis sur le serveur de Champis, liés à un identifiant anonyme créé par l'app et conservé dans votre trousseau iCloud. Aucun nom, aucune adresse, aucun numéro de téléphone.
+Sur votre appareil d'abord, puis sur le serveur de Champis, liés à un identifiant pseudonyme : un code tiré au hasard par l'app et conservé dans votre trousseau iCloud. Aucun nom, aucune adresse, aucun numéro de téléphone.
 
 ## Pour quoi
 
