@@ -4,15 +4,18 @@ import Foundation
 /// `weather`). Les espèces reprennent le gabarit de `species/boletus_edulis.json` ; les blocs
 /// `terrain` sont omis, l'app ne les lit pas.
 nonisolated enum Fixtures {
+    /// Palette version 2 (échelle linéaire, 6 nov. 2026) : `scale` et les hex de pastille de
+    /// `shared/palette.json`.
     static let paletteJSON = """
     {
-      "version": 1,
+      "version": 2,
+      "scale": { "hex": "#633179", "alpha_min": 0.0, "alpha_max": 1.0 },
       "thresholds": [
-        { "min": 0.75, "label": "excellent", "fr": "Excellent", "hex": "#1B6B3A" },
-        { "min": 0.55, "label": "bon", "fr": "Bon", "hex": "#4CA64C" },
-        { "min": 0.35, "label": "moyen", "fr": "Moyen", "hex": "#E3C64B" },
-        { "min": 0.15, "label": "faible", "fr": "Faible", "hex": "#E88A3C" },
-        { "min": 0.0, "label": "tres_faible", "fr": "Très faible", "hex": "#B8402E" }
+        { "min": 0.75, "label": "excellent", "fr": "Excellent", "hex": "#774B8A" },
+        { "min": 0.55, "label": "bon", "fr": "Bon", "hex": "#9A79A8" },
+        { "min": 0.35, "label": "moyen", "fr": "Moyen", "hex": "#B9A2C3" },
+        { "min": 0.15, "label": "faible", "fr": "Faible", "hex": "#D8CCDE" },
+        { "min": 0.0, "label": "tres_faible", "fr": "Très faible", "hex": "#F3F0F5" }
       ],
       "nodata_hex": "#00000000",
       "tile_encoding": { "channel": "luminance", "scale": 254, "nodata": 255 },
@@ -21,7 +24,8 @@ nonisolated enum Fixtures {
     }
     """
 
-    /// Palette d'une API antérieure au 5 nov. 2026 : sans `group_tile_encoding`, les `G` sont ignorés.
+    /// Palette d'une API antérieure au 5 nov. 2026 : sans `group_tile_encoding`, les `G` sont ignorés ;
+    /// sans `scale` (avant le 6 nov. 2026), les pixels prennent la couleur de leur classe.
     static let legacyPaletteJSON = """
     {
       "version": 1,

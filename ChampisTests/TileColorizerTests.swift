@@ -4,8 +4,9 @@ import Foundation
 import Testing
 @testable import Champis
 
-/// La fonction de couleur est testée sans MapKit, contre les seuils exacts de la palette et sur les
-/// cas limites : nodata, alpha 0, cellule absente, classe d'altitude inconnue, groupe.
+/// La fonction de couleur est testée sans MapKit, contre l'échelle linéaire de la palette (alpha =
+/// score, arrondi floor(x + 0,5)) et sur les cas limites : nodata, alpha 0, cellule absente, classe
+/// d'altitude inconnue, groupe, palette ancienne sans échelle.
 struct TileColorizerTests {
     static let size = TileMath.tileSize
     // Tuile 15/17148/11525 : elle contient la cellule c_1 de la fixture (47,0 N, 8,4 E), tous ses
@@ -59,21 +60,34 @@ struct TileColorizerTests {
         #expect(RGBA(hex: "#123") == nil)
     }
 
-    @Test("Seuils exacts : 0,75 excellent, 0,55 bon, 0,35 moyen, 0,15 faible, sinon très faible")
-    func thresholds() throws {
+    /// Le violet de l'échelle de la fixture (`#633179`) avec l'alpha donné.
+    static func violet(_ a: UInt8) -> RGBA { RGBA(r: 99, g: 49, b: 121, a: a) }
+
+    @Test("Échelle linéaire : un seul violet, l'alpha est le score, arrondi floor(x + 0,5), borné à [0, 1]")
+    func linearScale() throws {
         let colorizer = TileColorizer(palette: try Self.palette())
-        let excellent = RGBA(hex: "#1B6B3A"), bon = RGBA(hex: "#4CA64C"), moyen = RGBA(hex: "#E3C64B")
-        let faible = RGBA(hex: "#E88A3C"), tresFaible = RGBA(hex: "#B8402E")
-        #expect(colorizer.color(for: 1.0) == excellent)
-        #expect(colorizer.color(for: 0.75) == excellent)
-        #expect(colorizer.color(for: 0.7499) == bon)
-        #expect(colorizer.color(for: 0.55) == bon)
-        #expect(colorizer.color(for: 0.5499) == moyen)
-        #expect(colorizer.color(for: 0.35) == moyen)
-        #expect(colorizer.color(for: 0.3499) == faible)
-        #expect(colorizer.color(for: 0.15) == faible)
-        #expect(colorizer.color(for: 0.1499) == tresFaible)
+        #expect(colorizer.color(for: 0) == Self.violet(0))
+        #expect(colorizer.color(for: 0.5 / 255) == Self.violet(1))  // 1, là où un arrondi au pair donnerait 0
+        #expect(colorizer.color(for: 0.5) == Self.violet(128))  // 127,5 → 128
+        #expect(colorizer.color(for: 0.75) == Self.violet(191))
+        #expect(colorizer.color(for: 1.0) == Self.violet(255))
+        #expect(colorizer.color(for: -0.2) == Self.violet(0))
+        #expect(colorizer.color(for: 1.5) == Self.violet(255))
+        // même résultat que le paquet, validé par les vecteurs de parité
+        let fixture = try Self.palette()
+        let px = try #require(fixture.pixelColor(0.37))
+        #expect(colorizer.color(for: 0.37) == RGBA(r: px.r, g: px.g, b: px.b, a: px.a))
+    }
+
+    @Test("Palette sans échelle (API ancienne) : couleur de la classe, seuils exacts")
+    func withoutScale() throws {
+        let colorizer = TileColorizer(palette: try Palette.decode(Data(Fixtures.legacyPaletteJSON.utf8)))
+        let tresFaible = RGBA(hex: "#B8402E")
+        #expect(colorizer.color(for: 1.0) == tresFaible)
         #expect(colorizer.color(for: 0) == tresFaible)
+        let request = Self.request(mode: .terrain, date: nil, tiles: [.init(species: "boletus_edulis", png: Self.tile([(0, 254, 255)]))])
+        let bytes = try #require(colorizer.render(request))
+        #expect(Self.rgba(bytes, at: 0) == tresFaible)
     }
 
     @Test("Mode terrain : T = gris / 254 ; alpha 0 et nodata 255 transparents")
@@ -91,11 +105,11 @@ struct TileColorizerTests {
         #expect(values[1].isNaN && values[2].isNaN && values[5].isNaN)
         let bytes = try #require(colorizer.render(request))
         #expect(bytes.count == Self.size * Self.size * 4)
-        #expect(Self.rgba(bytes, at: 0) == RGBA(hex: "#1B6B3A"))
+        #expect(Self.rgba(bytes, at: 0) == Self.violet(255))
         #expect(Self.rgba(bytes, at: 1) == .clear)
         #expect(Self.rgba(bytes, at: 2) == .clear)
-        #expect(Self.rgba(bytes, at: 3) == RGBA(hex: "#E3C64B"))
-        #expect(Self.rgba(bytes, at: 4) == RGBA(hex: "#E88A3C"))  // 39 / 254 ≈ 0,154
+        #expect(Self.rgba(bytes, at: 3) == Self.violet(128))  // 127 / 254 = 0,5 → 127,5 + 0,5 → 128
+        #expect(Self.rgba(bytes, at: 4) == Self.violet(39))  // 39 / 254 ≈ 0,154 → 39,15 + 0,5 → 39
         #expect(colorizer.render(Self.request(mode: .terrain, date: nil, tiles: [])) == nil)
     }
 

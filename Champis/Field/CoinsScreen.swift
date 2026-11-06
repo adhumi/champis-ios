@@ -136,7 +136,8 @@ struct ScoreDot: View {
     var body: some View {
         Circle()
             .fill(fill)
-            .overlay(Circle().strokeBorder(selected ? Color.primary : Color.secondary.opacity(value == nil ? 0.6 : 0), lineWidth: 1.5))
+            // liseré toujours visible : « très faible » est presque blanc depuis l'échelle linéaire (6 nov. 2026)
+            .overlay(Circle().strokeBorder(selected ? Color.primary : Color.secondary.opacity(0.6), lineWidth: selected ? 1.5 : 1))
             .frame(width: size, height: size)
             .accessibilityHidden(true)
     }

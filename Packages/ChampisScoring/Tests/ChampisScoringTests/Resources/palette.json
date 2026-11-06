@@ -1,14 +1,56 @@
 {
-  "version": 1,
+  "version": 2,
+  "scale": {
+    "hex": "#633179",
+    "alpha_min": 0.0,
+    "alpha_max": 1.0
+  },
   "thresholds": [
-    { "min": 0.75, "label": "excellent", "fr": "Excellent", "hex": "#1B6B3A" },
-    { "min": 0.55, "label": "bon", "fr": "Bon", "hex": "#4CA64C" },
-    { "min": 0.35, "label": "moyen", "fr": "Moyen", "hex": "#E3C64B" },
-    { "min": 0.15, "label": "faible", "fr": "Faible", "hex": "#E88A3C" },
-    { "min": 0.0, "label": "tres_faible", "fr": "Très faible", "hex": "#B8402E" }
+    {
+      "min": 0.75,
+      "label": "excellent",
+      "fr": "Excellent",
+      "hex": "#774B8A"
+    },
+    {
+      "min": 0.55,
+      "label": "bon",
+      "fr": "Bon",
+      "hex": "#9A79A8"
+    },
+    {
+      "min": 0.35,
+      "label": "moyen",
+      "fr": "Moyen",
+      "hex": "#B9A2C3"
+    },
+    {
+      "min": 0.15,
+      "label": "faible",
+      "fr": "Faible",
+      "hex": "#D8CCDE"
+    },
+    {
+      "min": 0.0,
+      "label": "tres_faible",
+      "fr": "Très faible",
+      "hex": "#F3F0F5"
+    }
   ],
   "nodata_hex": "#00000000",
-  "tile_encoding": { "channel": "luminance", "scale": 254, "nodata": 255 },
-  "alt_encoding": { "channel": "luminance", "class_m": 300, "nodata": 255 },
-  "group_tile_encoding": { "channels": "rgba", "scale": 254, "nodata": 255 }
+  "tile_encoding": {
+    "channel": "luminance",
+    "scale": 254,
+    "nodata": 255
+  },
+  "alt_encoding": {
+    "channel": "luminance",
+    "class_m": 300,
+    "nodata": 255
+  },
+  "group_tile_encoding": {
+    "channels": "rgba",
+    "scale": 254,
+    "nodata": 255
+  }
 }

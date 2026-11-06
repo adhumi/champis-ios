@@ -94,7 +94,9 @@ final class MapModel {
     private(set) var dayOffset = 0
     private(set) var mode: MapMode = .score
     var basemap: Basemap = .standard
-    var overlayOpacity = 0.75
+    /// Opacité du renderer : 1, l'alpha est dans la donnée depuis l'échelle linéaire (6 nov. 2026 :
+    /// `Palette.scale`, alpha du pixel = score) ; le fond reste lisible là où le score est bas.
+    var overlayOpacity = 1.0
 
     // État
     private(set) var catalog: SpeciesCatalog?

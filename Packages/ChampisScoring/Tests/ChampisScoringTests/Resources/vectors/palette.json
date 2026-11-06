@@ -8,70 +8,273 @@
    "score": 0.0,
    "expected": {
     "label": "tres_faible",
-    "hex": "#B8402E"
+    "hex": "#F3F0F5",
+    "rgba": [
+     99,
+     49,
+     121,
+     0
+    ]
    }
   },
   {
    "score": 0.1499,
    "expected": {
     "label": "tres_faible",
-    "hex": "#B8402E"
+    "hex": "#F3F0F5",
+    "rgba": [
+     99,
+     49,
+     121,
+     38
+    ]
    }
   },
   {
    "score": 0.15,
    "expected": {
     "label": "faible",
-    "hex": "#E88A3C"
+    "hex": "#D8CCDE",
+    "rgba": [
+     99,
+     49,
+     121,
+     38
+    ]
    }
   },
   {
    "score": 0.3499,
    "expected": {
     "label": "faible",
-    "hex": "#E88A3C"
+    "hex": "#D8CCDE",
+    "rgba": [
+     99,
+     49,
+     121,
+     89
+    ]
    }
   },
   {
    "score": 0.35,
    "expected": {
     "label": "moyen",
-    "hex": "#E3C64B"
+    "hex": "#B9A2C3",
+    "rgba": [
+     99,
+     49,
+     121,
+     89
+    ]
    }
   },
   {
    "score": 0.5499,
    "expected": {
     "label": "moyen",
-    "hex": "#E3C64B"
+    "hex": "#B9A2C3",
+    "rgba": [
+     99,
+     49,
+     121,
+     140
+    ]
    }
   },
   {
    "score": 0.55,
    "expected": {
     "label": "bon",
-    "hex": "#4CA64C"
+    "hex": "#9A79A8",
+    "rgba": [
+     99,
+     49,
+     121,
+     140
+    ]
    }
   },
   {
    "score": 0.7499,
    "expected": {
     "label": "bon",
-    "hex": "#4CA64C"
+    "hex": "#9A79A8",
+    "rgba": [
+     99,
+     49,
+     121,
+     191
+    ]
    }
   },
   {
    "score": 0.75,
    "expected": {
     "label": "excellent",
-    "hex": "#1B6B3A"
+    "hex": "#774B8A",
+    "rgba": [
+     99,
+     49,
+     121,
+     191
+    ]
    }
   },
   {
    "score": 1.0,
    "expected": {
     "label": "excellent",
-    "hex": "#1B6B3A"
+    "hex": "#774B8A",
+    "rgba": [
+     99,
+     49,
+     121,
+     255
+    ]
+   }
+  },
+  {
+   "score": 0.00196078431372549,
+   "expected": {
+    "label": "tres_faible",
+    "hex": "#F3F0F5",
+    "rgba": [
+     99,
+     49,
+     121,
+     1
+    ]
+   }
+  },
+  {
+   "score": 0.0058823529411764705,
+   "expected": {
+    "label": "tres_faible",
+    "hex": "#F3F0F5",
+    "rgba": [
+     99,
+     49,
+     121,
+     2
+    ]
+   }
+  },
+  {
+   "score": 0.1,
+   "expected": {
+    "label": "tres_faible",
+    "hex": "#F3F0F5",
+    "rgba": [
+     99,
+     49,
+     121,
+     26
+    ]
+   }
+  },
+  {
+   "score": 0.25,
+   "expected": {
+    "label": "faible",
+    "hex": "#D8CCDE",
+    "rgba": [
+     99,
+     49,
+     121,
+     64
+    ]
+   }
+  },
+  {
+   "score": 0.45,
+   "expected": {
+    "label": "moyen",
+    "hex": "#B9A2C3",
+    "rgba": [
+     99,
+     49,
+     121,
+     115
+    ]
+   }
+  },
+  {
+   "score": 0.5,
+   "expected": {
+    "label": "moyen",
+    "hex": "#B9A2C3",
+    "rgba": [
+     99,
+     49,
+     121,
+     128
+    ]
+   }
+  },
+  {
+   "score": 0.65,
+   "expected": {
+    "label": "bon",
+    "hex": "#9A79A8",
+    "rgba": [
+     99,
+     49,
+     121,
+     166
+    ]
+   }
+  },
+  {
+   "score": 0.875,
+   "expected": {
+    "label": "excellent",
+    "hex": "#774B8A",
+    "rgba": [
+     99,
+     49,
+     121,
+     223
+    ]
+   }
+  },
+  {
+   "score": 0.999,
+   "expected": {
+    "label": "excellent",
+    "hex": "#774B8A",
+    "rgba": [
+     99,
+     49,
+     121,
+     255
+    ]
+   }
+  },
+  {
+   "score": -0.1,
+   "expected": {
+    "label": "tres_faible",
+    "hex": "#F3F0F5",
+    "rgba": [
+     99,
+     49,
+     121,
+     0
+    ]
+   }
+  },
+  {
+   "score": 1.2,
+   "expected": {
+    "label": "excellent",
+    "hex": "#774B8A",
+    "rgba": [
+     99,
+     49,
+     121,
+     255
+    ]
    }
   }
  ]
