@@ -72,6 +72,14 @@ Observations (trouvé / rien trouvé, espèce, position, date, quantité, sans p
 - Erreurs : `Problem` (phrase en clair, cause en mots pour le réseau et le serveur, détail technique à part) et `ProblemView` (« Réessayer », « Détails »). `MapModel.problem` (chargement, point, cache) et `weatherProblem`, `FieldModel.problem` et `OfflineModel.problem` portent chacun leur reprise (`Retry`) ; un département incomplet se reprend là où il s'est arrêté (`OfflineModel.resume`).
 - Statut de la forêt dans la fiche d'un point : `PublicForest` interroge le WFS `ONF.FORETS_PUBLIQUES:ONF_FORETS_PUBLIQUES` de la Géoplateforme IGN (`data.geopf.fr`, sans clé) sur un carré de quelques mètres ; « forêt domaniale », « forêt publique » ou « sans doute privée, accord du propriétaire nécessaire ». En ligne seulement : sans réponse, la ligne n'apparaît pas. Mêmes phrases que le site.
 
+## Préparer la publication (étape C, 6 nov. 2026)
+
+- Accueil : l'accroche « La météo des champignons, forêt par forêt. » et la promesse en tête (`OnboardingView.tagline`, `.promise`), les mêmes que le site et l'App Store.
+- Réglages › À propos : « Confidentialité » et « Mentions légales » (articles du Guide synchronisés depuis `shared/texts/`), « Soutenir Champis » vers `https://champis.app/web/soutenir.html` (l'ancienne adresse `/soutenir` répondait 404).
+- `Champis/PrivacyInfo.xcprivacy` : aucun suivi ; position précise, identifiant pseudonyme et contenu saisi liés à l'utilisateur ; raisons d'API `UserDefaults` (`CA92.1`) et métadonnées de fichiers (`C617.1`). Testé dans `PrivacyManifestTests`.
+- `docs/app-store.md` : les champs de la fiche App Store, les captures à produire, les étiquettes de confidentialité (alignées sur le manifeste et sur l'article Confidentialité) et les notes pour la revue.
+- Texte d'autorisation de localisation : il dit aussi « noter une observation là où vous êtes ».
+
 ## Comprendre, première ouverture, réglages (refonte UX, lot 4)
 
 - `Champis/Resources/Texts/` : copie de `shared/texts/` du monorepo (`index.json` + Markdown) par `scripts/sync-texts.sh`, seule façon de les mettre à jour ; `Texts` les lit, `MarkdownBlocks` (fonction pure, testée) les découpe, `ArticleView` les affiche. Lisibles hors ligne, les mêmes mots que le site.

@@ -4,7 +4,11 @@ import SwiftUI
 /// Première ouverture (refonte UX, lot 4) : trois cartes à balayer à la place de la fenêtre
 /// légale, un bouton « Commencer », pas de case à cocher. Les couleurs viennent de la palette
 /// servie par l'API ; sans réseau au premier lancement, la carte des couleurs reste en mots.
+/// Étape C (6 nov. 2026) : l'accroche et la promesse en tête, les mêmes que le site et l'App Store.
 struct OnboardingView: View {
+    static let tagline = "La météo des champignons, forêt par forêt."
+    static let promise = "Où et quand poussent cèpes et girolles, forêt par forêt, jour par jour. Gratuit, sans compte."
+
     nonisolated struct Card: Identifiable, Sendable {
         let id: Int
         let icon: String
@@ -27,6 +31,19 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 20) {
+            VStack(spacing: 6) {
+                Text(Self.tagline)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Text(Self.promise)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
             #if os(iOS)
             TabView(selection: $page) {
                 ForEach(Self.cards) { card in
@@ -79,7 +96,7 @@ struct OnboardingView: View {
             Image(systemName: card.icon)
                 .font(.system(size: 44))
                 .foregroundStyle(.tint)
-                .padding(.top, 32)
+                .padding(.top, 16)
             Text(card.title).font(.title2).fontWeight(.semibold).multilineTextAlignment(.center)
             Text(card.text).multilineTextAlignment(.center).foregroundStyle(.secondary)
             if card.id == 0, !model.legend.isEmpty {
