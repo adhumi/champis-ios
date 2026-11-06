@@ -354,7 +354,7 @@ struct LegendSheet: View {
         NavigationStack {
             List {
                 Section {
-                    ForEach(model.legend, id: \.label) { threshold in
+                    ForEach(model.paintedLegend, id: \.label) { threshold in
                         HStack(spacing: 10) {
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(Color(hex: threshold.hex))
@@ -367,7 +367,7 @@ struct LegendSheet: View {
                         RoundedRectangle(cornerRadius: 4)
                             .strokeBorder(.secondary, lineWidth: 1)
                             .frame(width: 22, height: 16)
-                        Text("Transparent : hors forêt ou sans donnée")
+                        Text(model.transparentLegendText)
                     }
                     .accessibilityElement(children: .combine)
                 } header: {

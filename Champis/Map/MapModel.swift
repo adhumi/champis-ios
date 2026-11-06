@@ -94,7 +94,9 @@ final class MapModel {
     private(set) var dayOffset = 0
     private(set) var mode: MapMode = .score
     var basemap: Basemap = .standard
-    var overlayOpacity = 0.75
+    /// Opacité du calque : 1 depuis l'étape B1 (6 nov. 2026), l'opacité de chaque classe est dans la
+    /// palette (`#RRGGBBAA`, « très faible » transparent) ; une opacité de calque la diluerait.
+    var overlayOpacity = 1.0
 
     // État
     private(set) var catalog: SpeciesCatalog?
@@ -215,6 +217,14 @@ final class MapModel {
 
     var palette: Palette? { catalog?.palette }
     var legend: [Palette.Threshold] { catalog?.palette.thresholds ?? [] }
+    /// Classes peintes sur la carte (alpha non nul) ; une classe transparente, comme « très faible »
+    /// depuis l'étape B1, n'a pas de pastille : elle rejoint la ligne « Transparent ».
+    var paintedLegend: [Palette.Threshold] { legend.filter { (RGBA(hex: $0.hex)?.a ?? 255) > 0 } }
+    /// « Transparent : très faible, hors forêt ou sans donnée ».
+    var transparentLegendText: String {
+        let clear = legend.filter { (RGBA(hex: $0.hex)?.a ?? 255) == 0 }.map { $0.fr.lowercased() }
+        return "Transparent : " + (clear + ["hors forêt ou sans donnée"]).joined(separator: ", ")
+    }
     /// Seuil « bon » de la palette (notification et tendance des coins) ; `nil` tant que rien n'est chargé.
     var goodThreshold: Double? { palette?.thresholds.first { $0.label == "bon" }?.min }
 

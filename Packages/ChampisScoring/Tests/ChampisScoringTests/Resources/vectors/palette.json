@@ -8,70 +8,70 @@
    "score": 0.0,
    "expected": {
     "label": "tres_faible",
-    "hex": "#B8402E"
+    "hex": "#E8CFED00"
    }
   },
   {
    "score": 0.1499,
    "expected": {
     "label": "tres_faible",
-    "hex": "#B8402E"
+    "hex": "#E8CFED00"
    }
   },
   {
    "score": 0.15,
    "expected": {
     "label": "faible",
-    "hex": "#E88A3C"
+    "hex": "#E8CFED73"
    }
   },
   {
    "score": 0.3499,
    "expected": {
     "label": "faible",
-    "hex": "#E88A3C"
+    "hex": "#E8CFED73"
    }
   },
   {
    "score": 0.35,
    "expected": {
     "label": "moyen",
-    "hex": "#E3C64B"
+    "hex": "#CA9BD599"
    }
   },
   {
    "score": 0.5499,
    "expected": {
     "label": "moyen",
-    "hex": "#E3C64B"
+    "hex": "#CA9BD599"
    }
   },
   {
    "score": 0.55,
    "expected": {
     "label": "bon",
-    "hex": "#4CA64C"
+    "hex": "#9961B0BF"
    }
   },
   {
    "score": 0.7499,
    "expected": {
     "label": "bon",
-    "hex": "#4CA64C"
+    "hex": "#9961B0BF"
    }
   },
   {
    "score": 0.75,
    "expected": {
     "label": "excellent",
-    "hex": "#1B6B3A"
+    "hex": "#633179E6"
    }
   },
   {
    "score": 1.0,
    "expected": {
     "label": "excellent",
-    "hex": "#1B6B3A"
+    "hex": "#633179E6"
    }
   }
  ]
