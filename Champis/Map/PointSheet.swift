@@ -103,7 +103,8 @@ struct PointSheet: View {
                 ProgressView().controlSize(.small)
             }
             if info.mode == .score, !model.pointDays.isEmpty, let today = model.today {
-                CoinDaysView(days: model.pointDays, today: today, selected: dayBinding, model: model)
+                // en lecture seule : la carte montre toujours aujourd'hui (étape A, 6 nov. 2026)
+                CoinDaysView(days: model.pointDays, today: today, selected: .constant(today), model: model, interactive: false)
                     .padding(.vertical, 4)
             }
         }
@@ -147,19 +148,6 @@ struct PointSheet: View {
         case nil: "terrain inconnu"
         default: "terrain peu favorable"
         }
-    }
-
-    /// Choisir un jour dans la fiche change le jour de la carte : la fiche suit.
-    private var dayBinding: Binding<String> {
-        Binding(
-            get: { info.date ?? model.today ?? "" },
-            set: { iso in
-                if let today = model.today, let t = try? CivilDate(iso: today), let d = try? CivilDate(iso: iso) {
-                    model.setDay(d.ordinal - t.ordinal)
-                    model.select(latitude: info.latitude, longitude: info.longitude)
-                }
-            }
-        )
     }
 
     // MARK: - Retour terrain

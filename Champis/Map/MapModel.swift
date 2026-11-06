@@ -163,8 +163,6 @@ final class MapModel {
     /// sous le zoom 9 ne redemande pas un champ déjà reçu pour cette emprise.
     @ObservationIgnored private var fieldCoverage: [FieldCoverageKey: WeatherCoverage] = [:]
     @ObservationIgnored private var weatherTask: Task<Void, Never>?
-    @ObservationIgnored private var deptTask: Task<Void, Never>?
-    @ObservationIgnored private var deptTaskKey: LayerKey?
     @ObservationIgnored private var inspectTask: Task<Void, Never>?
     @ObservationIgnored private var isLoadingBoundaries = false
 
@@ -362,9 +360,12 @@ final class MapModel {
         refreshData(debounce: true)
     }
 
-    /// L'indice par département (bandeau des jours, lot 2) et la météo de l'emprise, à tout zoom.
+    /// La météo de l'emprise, à tout zoom. L'indice par département ne se charge plus : le bandeau
+    /// des jours, son seul lecteur, a quitté la carte (spec › Produit › étape A, 6 nov. 2026). Les
+    /// limites des départements, elles, restent chargées une fois : elles nomment le département
+    /// d'un nouveau coin pour la proposition d'embarquer.
     private func refreshData(debounce: Bool = false) {
-        refreshDeptIndex()
+        loadBoundariesIfNeeded()
         refreshWeather(debounce: debounce)
     }
 
@@ -544,38 +545,7 @@ final class MapModel {
         return parts.joined(separator: " · ")
     }
 
-    // MARK: - Indice par département (bandeau des jours)
-
-    /// `GET /departements` pour la couche : 11 jours d'un coup, le curseur ne recharge rien, un
-    /// déplacement non plus. Les limites (GeoJSON servi avec le site) se chargent une fois. Sans
-    /// indice, les pastilles du bandeau restent vides : rien d'inventé, et pas de message.
-    private func refreshDeptIndex() {
-        guard mode == .score, let layer = selectedLayer, catalog != nil else { return }
-        if deptFeatures.isEmpty {
-            loadBoundaries()
-        }
-        if let deptIndex, deptIndex.layerKey == layer.key {
-            return
-        }
-        if deptTask != nil, deptTaskKey == layer.key {
-            return  // déjà en cours pour cette couche
-        }
-        deptTaskKey = layer.key
-        deptTask?.cancel()
-        let api = api
-        deptTask = Task { [weak self] in
-            guard let self else { return }
-            defer { deptTaskKey = nil }
-            do {
-                let response = try await api.departements(species: layer.members)
-                guard !Task.isCancelled else { return }
-                deptIndex = DeptIndex(response: response, layer: layer)
-            } catch {
-                // bandeau sans indice ; la météo de l'emprise a son propre statut
-                return
-            }
-        }
-    }
+    // MARK: - Limites des départements (proposition d'embarquer)
 
     func loadBoundariesIfNeeded() {
         if deptFeatures.isEmpty {

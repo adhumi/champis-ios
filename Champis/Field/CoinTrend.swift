@@ -32,7 +32,7 @@ nonisolated enum CoinTrend {
     static func phrase(_ kind: Kind) -> String? {
         switch kind {
         case .better(let day):
-            return "mieux \(weekdayName(iso: day))"
+            return "mieux \(weekdayName(iso: day)) \(dayOfMonth(iso: day))"
         case .stable:
             return "stable toute la semaine"
         case .falling:
@@ -73,7 +73,17 @@ nonisolated enum CoinTrend {
         return "\(shortWeekdays[weekdayIndex(iso: iso)]) \(day)"
     }
 
-    /// `2026-11-01` → `d` (l'initiale sous chaque pastille).
+    /// `2026-11-07` → `sam.` (sous une pastille, au-dessus du numéro du jour).
+    static func shortWeekday(iso: String) -> String {
+        shortWeekdays[weekdayIndex(iso: iso)]
+    }
+
+    /// `2026-11-07` → `7` ; une date illisible renvoie 0.
+    static func dayOfMonth(iso: String) -> Int {
+        Int(iso.suffix(2)) ?? 0
+    }
+
+    /// `2026-11-01` → `d` (l'initiale sous chaque pastille, avant l'étape A).
     static func initial(iso: String) -> String {
         initials[weekdayIndex(iso: iso)]
     }

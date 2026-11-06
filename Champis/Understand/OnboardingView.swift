@@ -17,8 +17,8 @@ struct OnboardingView: View {
              text: "La carte estime, pour chaque carré de forêt et chaque jour, si les conditions sont réunies : le terrain, la météo des dernières semaines et la saison. Cinq mots, du vert foncé au rouge. Transparent : hors forêt ou sans donnée."),
         Card(id: 1, icon: "tree", title: "Cueillir sans nuire",
              text: "Champis indique un potentiel, pas une autorisation. En forêt privée, il faut l'accord du propriétaire ; en forêt publique, la cueillette familiale est tolérée et peut être restreinte par arrêté. Le détail est dans le Guide."),
-        Card(id: 2, icon: "lock", title: "Rien n'est collecté",
-             text: "Pas de compte. Vos coins et vos observations restent liés à un identifiant anonyme créé par l'app, jamais partagés, effaçables d'un geste. L'app ne tourne pas en arrière-plan."),
+        Card(id: 2, icon: "lock", title: "Vos coins restent à vous",
+             text: "Pas de compte. Vos coins et vos observations sont liés à un identifiant pseudonyme tiré au hasard par l'app, jamais partagés, effaçables d'un geste. L'app ne tourne pas en arrière-plan."),
     ]
 
     let model: MapModel
@@ -46,7 +46,13 @@ struct OnboardingView: View {
             }
             #endif
             Button {
-                done()
+                // « Suivant » avance d'une carte ; seul « Commencer », sur la dernière, ferme l'accueil
+                // (étape A, 6 nov. 2026 : l'accueil se fermait au premier bouton et sautait le cadre légal)
+                if isLast {
+                    done()
+                } else {
+                    withAnimation { page += 1 }
+                }
             } label: {
                 Text(isLast ? "Commencer" : "Suivant")
                     .frame(maxWidth: .infinity)

@@ -17,7 +17,7 @@ La carte est la raison d'être de l'app. Elle affiche le potentiel terrain `T` o
 | `M_eff`, `Φ` | `GET /weather/bbox` sur l'emprise visible (+ 0,1° de marge), 11 jours J−3 → J+7, par cellule 5 km et par classe d'altitude, **au zoom 9 et au-delà** | servi depuis la météo précalculée à chaque pré-chauffe (décision du 2 nov. 2026) : une emprise d'écran entière à tout zoom, `computed_at` affiché dans le statut ; 422 « zoomez » seulement au-delà de 5 000 cellules ; cellules `unavailable` listées à part ; `stale` si cache périmé. Une emprise contenue dans la dernière réponse complète (zoom avant, petit déplacement, moins de 30 min) ne redemande rien (`MapModel.weatherAlreadyCovers`) |
 | `M_eff × Φ` du jour | `GET /weather/field?species=&day=&min_lon=…` sur l'emprise visible (+ 0,1°), **sous le zoom 9** (`MapModel.fieldZoom`) : un seul jour, sans plafond de cellules (France entière ≈ 20 000), `f[espèce][classe]` par cellule, `stale` seulement si vrai, `unavailable` compté | spec › Points ouverts › Carte visible dès l'ouverture (4 nov. 2026) : fusionné dans le même `WeatherField` que bbox (`WeatherFactor`, `row` nil : `M_eff` et `Φ` séparés viennent de `GET /weather?cell=` pour la fiche) ; changer de jour sous le seuil redemande le champ de ce jour, gardé par (jour, couche) ; même règle de couverture ; statut : cellules, `computed_at`, périmées et manquantes en clair |
 | Espèces, groupes, palette, seuils | `GET /species` | JSON tel quel ; rien n'est embarqué dans l'app |
-| Indice par département | `GET /departements?species=` | 11 jours par département, pour le seul bandeau des jours (pastille = indice du département sous le centre, trouvé dans le GeoJSON `/web/departements.geojson` chargé une fois) ; les notifications des coins le lisent côté backend |
+| Indice par département | `GET /departements?species=` | Plus lu par l'app depuis l'étape A (6 nov. 2026) : le bandeau des jours, son seul lecteur, a quitté la carte. Le GeoJSON `/web/departements.geojson` reste chargé une fois (`loadBoundariesIfNeeded`) pour nommer le département d'un coin (proposition d'embarquer) |
 
 ## Règles d'affichage (ne pas en inventer d'autres)
 
@@ -55,9 +55,11 @@ Groupes puis espèces, le potentiel toute saison en bascule, et depuis le lot 4 
 
 Un appui long (0,5 s) sur la carte donne `MapModel.longPress` ; `MapScreen` ouvre le menu de terrain au point pressé (skill `field-feedback`). « Ajouter à mes coins » passe par la fiche (`requestCoin` → `select` ; `PointSheet` ouvre directement le nom). Sur iPad en largeur régulière et sur Mac, `SplitContentView` remplace les onglets : barre latérale, carte en détail, fiches (`PointSheet`, `CoinDetailView`) dans `.inspector`. `MapScreen(layout: .split)` ne présente aucune feuille de fiche : c'est la sélection du modèle qui commande, et le bouton OK de la fiche appelle `clearSelection`, jamais `dismiss`.
 
-## Bandeau des jours et plus de vue France (4 nov. 2026)
+## Plus de vue France (4 nov. 2026), plus de bandeau des jours (6 nov. 2026)
 
 La vue France (départements colorés par l'indice `I = Σ T × M_eff × Φ / Σ T` sous le zoom 9) est retirée, de l'app comme du site : l'indice n'était pas à l'échelle de `S` et la couche de tuiles reste visible à tout zoom. `GET /departements` ne sert plus qu'au bandeau des onze jours : `MapModel.dayDots` colore chaque pastille par l'indice du département sous le centre de la carte (`centerDeptCode`, point dans polygone sur le GeoJSON `/web/departements.geojson` décodé par `MKGeoJSONDecoder`, chargé une fois, sans appel réseau par déplacement). Département ou jour sans indice : pastille vide, jamais une valeur inventée. Le GeoJSON donne aussi les noms des départements (écran hors ligne, proposition d'embarquer).
+
+Étape A (spec › Produit, 6 nov. 2026) : le bandeau des jours est retiré à son tour. La carte montre toujours aujourd'hui (`dayOffset` reste à 0, plus de raccourci ⌘← ⌘→) et le dit dans le panneau du bas (`dayLabel`) ; `GET /departements` n'est plus chargé (`dayDots` n'a plus de lecteur). Les onze jours d'un point sont dans sa fiche, en lecture seule (`CoinDaysView(interactive: false)`) : choisir un jour ne change plus la carte.
 
 ## Accessibilité et performance
 

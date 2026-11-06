@@ -56,7 +56,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Mes données")
                 } footer: {
-                    Text("Privées, liées à un identifiant anonyme de l'app. La suppression efface tout sur le serveur et sur l'appareil.")
+                    Text("Privées, liées à un identifiant pseudonyme tiré au hasard par l'app. La suppression efface tout sur le serveur et sur l'appareil.")
                 }
                 Section {
                     Link(destination: Self.supportURL) {

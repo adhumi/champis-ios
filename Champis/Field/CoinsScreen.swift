@@ -139,33 +139,49 @@ struct ScoreDot: View {
     }
 }
 
-/// Les onze pastilles J−3 → J+7, l'initiale du jour sous chacune, aujourd'hui marqué.
+/// Les onze pastilles J−3 → J+7, le jour abrégé et son numéro sous chacune (« sam. » / « 7 »,
+/// étape A : plus d'initiale ambiguë), aujourd'hui marqué. `interactive: false` dans la fiche d'un
+/// point : la carte reste sur aujourd'hui, les pastilles se lisent sans changer de jour.
 struct CoinDaysView: View {
     let days: [CoinDay]
     let today: String
     @Binding var selected: String
     let model: MapModel
+    var interactive = true
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach(days, id: \.date) { day in
-                Button {
-                    selected = day.date
-                } label: {
-                    VStack(spacing: 4) {
-                        ScoreDot(value: day.value, model: model, size: 14, selected: day.date == selected)
-                        Text(CoinTrend.initial(iso: day.date))
-                            .font(.caption2)
-                            .fontWeight(day.date == today ? .bold : .regular)
-                            .foregroundStyle(day.date == today ? .primary : .secondary)
+                if interactive {
+                    Button {
+                        selected = day.date
+                    } label: {
+                        dayLabel(day)
                     }
-                    .frame(maxWidth: .infinity)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(accessibilityLabel(day))
+                    .accessibilityAddTraits(day.date == selected ? .isSelected : [])
+                } else {
+                    dayLabel(day)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(accessibilityLabel(day))
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(accessibilityLabel(day))
-                .accessibilityAddTraits(day.date == selected ? .isSelected : [])
             }
         }
+    }
+
+    private func dayLabel(_ day: CoinDay) -> some View {
+        VStack(spacing: 2) {
+            ScoreDot(value: day.value, model: model, size: 14, selected: interactive && day.date == selected)
+                .padding(.bottom, 2)
+            Text(CoinTrend.shortWeekday(iso: day.date))
+            Text("\(CoinTrend.dayOfMonth(iso: day.date))")
+        }
+        .font(.caption2)
+        .fontWeight(day.date == today ? .bold : .regular)
+        .foregroundStyle(day.date == today ? .primary : .secondary)
+        .opacity(day.date < today ? 0.6 : 1)
+        .frame(maxWidth: .infinity)
     }
 
     private func accessibilityLabel(_ day: CoinDay) -> String {
@@ -305,7 +321,7 @@ struct EmptyCoinsView: View {
         } description: {
             Text(
                 "Ajoutez vos coins depuis la carte : touchez un endroit, puis « Ajouter à mes coins ». " +
-                "Ils restent sur cet appareil et sur le serveur sous un identifiant anonyme, jamais partagés."
+                "Ils restent sur cet appareil et sur le serveur sous un identifiant pseudonyme, jamais partagés."
             )
         } actions: {
             Button("Ouvrir la carte", action: openMap)
