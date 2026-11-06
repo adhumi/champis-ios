@@ -28,6 +28,7 @@ struct MapScreen: View {
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
     @State private var observationRequest: ObservationFormRequest?
     @State private var quickFound: MapSelection?
+    @State private var note: NoteRequest?
 
     var body: some View {
         NavigationStack {
@@ -41,6 +42,21 @@ struct MapScreen: View {
                     Spacer(minLength: 0)
                     HStack {
                         Spacer()
+                        if model.hasUserFix, model.catalog != nil {
+                            // étape B4 : noter à ma position, sans viser la carte
+                            Button {
+                                if let fix = model.currentFix {
+                                    note = NoteRequest(fix: fix)
+                                }
+                            } label: {
+                                Label("Noter", systemImage: "square.and.pencil")
+                                    .font(.body.weight(.semibold))
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 2)
+                            }
+                            .buttonStyle(.glassProminent)
+                            .accessibilityHint("Trouvé ou rien trouvé, à votre position")
+                        }
                         Button {
                             model.locateMe()
                         } label: {
@@ -132,6 +148,9 @@ struct MapScreen: View {
         .sheet(item: $quickFound) { point in
             QuickFoundSheet(model: model, point: point, initialSpecies: nil)
         }
+        .sheet(item: $note) { request in
+            NoteSheet(model: model, fix: request.fix)
+        }
         .confirmationDialog(
             "À cet endroit", isPresented: longPressBinding, titleVisibility: .visible, presenting: model.longPressPoint
         ) { point in
@@ -217,7 +236,9 @@ struct MapScreen: View {
                 // la carte montre toujours aujourd'hui : on le dit, à la place du bandeau des jours
                 Text(model.dayLabel)
                     .font(.subheadline.weight(.semibold))
-                if let status = model.weatherStatus {
+                if let problem = model.weatherProblem {
+                    ProblemView(problem: problem) { model.retryWeather() }
+                } else if let status = model.weatherStatus {
                     Text(status)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -227,10 +248,8 @@ struct MapScreen: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
-            if let error = model.loadError ?? model.inspectError {
-                Label(error, systemImage: "exclamationmark.triangle")
-                    .font(.footnote)
-                    .foregroundStyle(.red)
+            if let problem = model.problem {
+                ProblemView(problem: problem) { model.retryProblem() }
             }
         }
         .padding(12)
@@ -296,6 +315,12 @@ struct MapScreen: View {
         }
         return URL(string: defaultAPIBaseURL)!
     }
+}
+
+/// « Noter » à ma position (étape B4) : la position est figée au moment de l'appui.
+nonisolated struct NoteRequest: Identifiable, Sendable {
+    let id = UUID()
+    let fix: LocationProvider.Fix
 }
 
 /// Légende : seuils et couleurs de la palette servie par l'API. La couleur ne porte jamais seule

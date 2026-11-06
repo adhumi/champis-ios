@@ -55,8 +55,18 @@ struct CoinsScreen: View {
         }
     }
 
+    private func retry() {
+        let field = field
+        Task { await field.retry() }
+    }
+
     private var coinsList: some View {
         List {
+            if let problem = field.problem {
+                Section {
+                    ProblemView(problem: problem) { retry() }
+                }
+            }
             Section {
                 ForEach(CoinTrend.order(field.coins, scores: field.coinScores)) { coin in
                     NavigationLink(value: coin.id) {
@@ -72,8 +82,6 @@ struct CoinsScreen: View {
             } footer: {
                 if field.pendingCount > 0 {
                     Text("\(field.pendingCount) observation(s) à envoyer")
-                } else if let status = field.status {
-                    Text(status)
                 }
             }
         }
@@ -220,11 +228,18 @@ struct CoinDetailView: View {
                     }
                     .accessibilityElement(children: .combine)
                     Text(subtitle).foregroundStyle(.secondary)
+                    // phrases du jour (étape B2) : pour l'espèce qui porte le score, à la classe du coin
+                    if isToday {
+                        ForEach(score?.summary ?? [], id: \.self) { phrase in
+                            Text(phrase)
+                        }
+                    }
                     if let score, !score.days.isEmpty {
                         CoinDaysView(days: score.days, today: today, selected: selectionBinding, model: model)
                             .padding(.vertical, 4)
-                    } else if let trend = trendPhrase {
-                        Text(trend).foregroundStyle(.secondary)
+                    }
+                    if let trend = trendPhrase {
+                        Text("Tendance : \(trend)").fontWeight(.semibold)
                     }
                 }
                 Section {
@@ -233,6 +248,11 @@ struct CoinDetailView: View {
                         router.tab = .map
                     } label: {
                         Label("Voir sur la carte", systemImage: "map")
+                    }
+                    if let directions = Self.directionsURL(latitude: coin.lat, longitude: coin.lon) {
+                        Link(destination: directions) {
+                            Label("Itinéraire", systemImage: "arrow.triangle.turn.up.right.diamond")
+                        }
                     }
                 }
                 Section("Détails") {
@@ -280,6 +300,18 @@ struct CoinDetailView: View {
             Text("Le coin est retiré de l'appareil et du serveur.")
         }
         .task { await field.refreshCoinScores() }
+    }
+
+    /// Le jour affiché est aujourd'hui : les phrases de `GET /coins` ne valent que pour lui.
+    private var isToday: Bool {
+        selectedDay.isEmpty || selectedDay == today
+    }
+
+    /// Itinéraire vers le coin dans Plans (étape B2) : la destination seule, Plans choisit le trajet.
+    nonisolated static func directionsURL(latitude: Double, longitude: Double) -> URL? {
+        var components = URLComponents(string: "https://maps.apple.com/")
+        components?.queryItems = [URLQueryItem(name: "daddr", value: String(format: "%.6f,%.6f", latitude, longitude))]
+        return components?.url
     }
 
     private var selectionBinding: Binding<String> {

@@ -103,7 +103,10 @@ final class MapModel {
     private(set) var weatherStatus: String?
     private(set) var isLoading = false
     private(set) var isLoadingWeather = false
-    private(set) var loadError: String?
+    /// Erreur en clair de la carte (chargement, lecture d'un point, cache), avec sa reprise (étape B4).
+    private(set) var problem: Problem?
+    /// Météo de l'emprise indisponible, en clair ; la reprise redemande la météo.
+    private(set) var weatherProblem: Problem?
     /// Zoom Web Mercator de la vue ; `nil` tant que la carte n'a pas donné sa première région.
     private(set) var zoom: Double?
     /// Incrémenté à chaque réglage poussé au rendu : la vue carte redessine les tuiles.
@@ -124,12 +127,16 @@ final class MapModel {
     private(set) var offlineSuggestion: DownloadableDepartment?
     private(set) var pointInfo: PointInfo?
     private(set) var isInspecting = false
-    private(set) var inspectError: String?
     private(set) var pointFactors: [String: Double]?
     /// Ligne complète (`M`, `M_eff`, `Φ`) du point reçue par `GET /weather`, pour la fiche quand la
     /// carte n'avait que le champ compact (sous le zoom 9).
     private(set) var pointRow: WeatherRow?
     private(set) var factorsStatus: String?
+    /// `GET /weather?cell=` du point a échoué : en clair, avec « Réessayer » dans la fiche (étape B4).
+    private(set) var factorsProblem: Problem?
+    /// Statut de la forêt au point (étape B5) : forêt publique de l'ONF ou sans doute privée ;
+    /// `nil` hors ligne ou si le service de l'IGN ne répond pas (la fiche n'a alors pas de ligne).
+    private(set) var pointForest: String?
     /// Phrases en clair de `GET /weather` › `summary` pour le point (lot 2).
     private(set) var pointSummary: [String]?
     /// Les onze jours du point : `T × M_eff × Φ` par jour pour l'espèce porteuse (lot 2).
@@ -143,6 +150,11 @@ final class MapModel {
     /// Demande de recentrage sur un point (un coin ouvert depuis Mes coins) : (numéro, coordonnée).
     private(set) var focusRequest: (id: Int, latitude: Double, longitude: Double)?
     private(set) var tileCacheSize: Int64?
+    /// La carte connaît ma position (point bleu) : le bouton « Noter » apparaît (étape B4).
+    private(set) var hasUserFix = false
+    /// Dernière position de la carte, gardée en mémoire seulement et hors observation : elle bouge
+    /// souvent, la vue ne la suit pas (seul `hasUserFix` est observé).
+    @ObservationIgnored private(set) var currentFix: LocationProvider.Fix?
 
     let overlay: ScoreTileOverlay
     /// Observations et coins (skill `field-feedback`).
@@ -165,6 +177,14 @@ final class MapModel {
     @ObservationIgnored private var weatherTask: Task<Void, Never>?
     @ObservationIgnored private var inspectTask: Task<Void, Never>?
     @ObservationIgnored private var isLoadingBoundaries = false
+    /// Ce que « Réessayer » relance pour `problem`.
+    @ObservationIgnored private var problemRetry: Retry?
+
+    /// Ce que « Réessayer » relance (étape B4).
+    nonisolated enum Retry: Equatable, Sendable {
+        case load
+        case inspect(latitude: Double, longitude: Double)
+    }
 
     init(
         apiBaseURL: URL, session: URLSession = .shared, diskCache: DiskTileCache? = nil, fieldDirectory: URL? = nil,
@@ -280,7 +300,7 @@ final class MapModel {
 
     func load() async {
         isLoading = true
-        loadError = nil
+        setProblem(nil)
         defer { isLoading = false }
         do {
             let (catalog, manifest) = try await fetchCatalogAndManifest()
@@ -291,7 +311,10 @@ final class MapModel {
                 manifest: manifest, api: api, scoringVersion: ChampisScoring.supportedScoringVersion, palette: catalog.palette
             )
             if !manifest.configured {
-                loadError = "Le serveur n'a pas de tuiles configurées (GET /tiles)."
+                setProblem(
+                    Problem("La carte n'est pas encore disponible : le serveur n'a pas de tuiles", detail: "GET /tiles : aucun jeu configuré"),
+                    retry: .load
+                )
             }
             if selectedLayer == nil || !layers.contains(where: { $0.key == selectedLayer?.key }) {
                 selectedLayer = layers.first
@@ -299,7 +322,7 @@ final class MapModel {
             pushSettings()
             refreshData()
         } catch {
-            loadError = error.localizedDescription
+            setProblem(Problem("Impossible de charger la carte", error: error), retry: .load)
         }
     }
 
@@ -315,7 +338,10 @@ final class MapModel {
             guard let catalog = await offline.store.cachedCatalog(),
                   let manifest = await offline.store.cachedTilesManifest()
             else { throw error }
-            loadError = "Hors ligne : espèces et tuiles du dernier démarrage."
+            setProblem(
+                Problem("Sans réseau : la carte montre ce qui a été chargé au dernier démarrage", detail: Problem.technical(error)),
+                retry: .load
+            )
             return (catalog, manifest)
         }
     }
@@ -415,6 +441,7 @@ final class MapModel {
                     forgetCoverageIfNewDay(response.today)
                     weather.merge(response)
                     weatherStatus = Self.status(for: response)
+                    weatherProblem = nil
                     weatherCoverage = Self.isComplete(response)
                         ? WeatherCoverage(bbox: requested, layer: layer.key, day: nil, at: .now) : nil
                     pushSettings()
@@ -424,6 +451,7 @@ final class MapModel {
                     forgetCoverageIfNewDay(response.today)
                     weather.merge(response)
                     weatherStatus = Self.status(for: response)
+                    weatherProblem = nil
                     fieldCoverage[FieldCoverageKey(day: day, layer: layer.key)] = Self.isComplete(response)
                         ? WeatherCoverage(bbox: requested, layer: layer.key, day: day, at: .now) : nil
                     pushSettings()
@@ -438,15 +466,16 @@ final class MapModel {
                 if case .http(let status, let detail) = failure, status == 422 {
                     let fallback = request == .bbox ? "Zoomez pour afficher la météo" : "Jour hors de la fenêtre météo"
                     weatherStatus = detail.isEmpty ? fallback : detail
+                    weatherProblem = nil
                 } else {
-                    await useOfflineWeather(or: "Météo indisponible : \(failure.localizedDescription)")
+                    await useOfflineWeather(or: Problem("Météo indisponible", error: failure))
                 }
             } catch is CancellationError {
                 return
             } catch {
                 guard !Task.isCancelled else { return }
                 weatherCoverage = nil
-                await useOfflineWeather(or: "Météo indisponible : \(error.localizedDescription)")
+                await useOfflineWeather(or: Problem("Météo indisponible", error: error))
             }
         }
     }
@@ -498,12 +527,14 @@ final class MapModel {
 
     /// Sans réseau : la météo embarquée des départements complets, avec sa date affichée en clair.
     /// Rien d'inventé : un pixel hors de ces départements reste transparent.
-    private func useOfflineWeather(or message: String) async {
+    private func useOfflineWeather(or problem: Problem) async {
         let snapshots = await offline.offlineWeather()
         guard !snapshots.isEmpty else {
-            weatherStatus = message
+            weatherStatus = nil
+            weatherProblem = problem
             return
         }
+        weatherProblem = nil
         for response in snapshots {
             weather.merge(response)
         }
@@ -588,7 +619,11 @@ final class MapModel {
         pointFactors = nil
         pointRow = nil
         factorsStatus = nil
-        inspectError = nil
+        factorsProblem = nil
+        pointForest = nil
+        if case .inspect? = problemRetry {
+            setProblem(nil)
+        }
         let settings = currentSettings()
         let store = store
         isInspecting = true
@@ -605,7 +640,7 @@ final class MapModel {
                 return
             } catch {
                 guard !Task.isCancelled else { return }
-                inspectError = "Lecture du point impossible : \(error.localizedDescription)"
+                setProblem(Problem("Ce point n'a pas pu être lu", error: error), retry: .inspect(latitude: latitude, longitude: longitude))
             }
         }
     }
@@ -616,6 +651,7 @@ final class MapModel {
               let altKey = scored.altKey
         else { return }
         factorsStatus = nil
+        factorsProblem = nil
         do {
             let detail = try await api.weatherDetail(cell: cell.id, species: [scored.species])
             let rows = detail.species[scored.species] ?? []
@@ -628,7 +664,24 @@ final class MapModel {
                 factorsStatus = "Facteurs indisponibles pour ce jour."
             }
         } catch {
-            factorsStatus = "Facteurs indisponibles : \(error.localizedDescription)"
+            factorsProblem = Problem("Météo de ce point indisponible", error: error)
+        }
+    }
+
+    /// Statut de la forêt au point touché (étape B5, 6 nov. 2026) : la couche ONF des forêts
+    /// publiques, interrogée à l'ouverture de la fiche par le WFS de l'IGN. En ligne seulement :
+    /// sans réponse, rien ne s'affiche (jamais « privée » par défaut faute de réseau).
+    func loadForest(for info: PointInfo) async {
+        guard !info.isNoData, let url = PublicForest.url(latitude: info.latitude, longitude: info.longitude) else { return }
+        do {
+            let (data, response) = try await session.data(from: url)
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else { return }
+            let phrase = try PublicForest.phrase(from: data)
+            // un autre point a pu être touché entre-temps
+            guard pointInfo?.id == info.id else { return }
+            pointForest = phrase
+        } catch {
+            return
         }
     }
 
@@ -713,6 +766,8 @@ final class MapModel {
         pointSummary = nil
         pointDays = []
         factorsStatus = nil
+        factorsProblem = nil
+        pointForest = nil
     }
 
     // MARK: - Position et cache
@@ -828,6 +883,42 @@ final class MapModel {
         followRequest += 1
     }
 
+    /// Position du point bleu de la carte (`MKMapView`), pour « Noter » : en mémoire seulement.
+    func userLocationChanged(_ fix: LocationProvider.Fix?) {
+        currentFix = fix
+        if hasUserFix != (fix != nil) {
+            hasUserFix = fix != nil
+        }
+    }
+
+    // MARK: - Erreurs en clair (étape B4)
+
+    private func setProblem(_ problem: Problem?, retry: Retry? = nil) {
+        self.problem = problem
+        problemRetry = problem == nil ? nil : retry
+    }
+
+    /// « Réessayer » sous un message de la carte.
+    func retryProblem() {
+        let retry = problemRetry
+        setProblem(nil)
+        switch retry {
+        case .load:
+            Task { await load() }
+        case .inspect(let latitude, let longitude):
+            select(latitude: latitude, longitude: longitude)
+        case nil:
+            break
+        }
+    }
+
+    /// « Réessayer » sous le message de météo.
+    func retryWeather() {
+        weatherProblem = nil
+        weatherCoverage = nil
+        refreshWeather()
+    }
+
     var locationDenied: Bool {
         switch locationManager.authorizationStatus {
         case .denied, .restricted: true
@@ -843,7 +934,7 @@ final class MapModel {
         do {
             try await store.clearDisk()
         } catch {
-            loadError = "Cache impossible à vider : \(error.localizedDescription)"
+            setProblem(Problem("Le cache n'a pas pu être vidé", error: error, retryable: false))
         }
         await refreshTileCacheSize()
     }

@@ -14,7 +14,9 @@ struct OfflineView: View {
                     .foregroundStyle(.secondary)
             }
             ForEach(offline.departments) { department in
-                OfflineDepartmentRow(department: department, progress: offline.progress[department.code], model: model)
+                OfflineDepartmentRow(department: department, progress: offline.progress[department.code], model: model) {
+                    Task { await offline.resume(code: department.code) }
+                }
                     .swipeActions {
                         Button(role: .destructive) {
                             Task { await offline.delete(code: department.code) }
@@ -41,6 +43,9 @@ struct OfflineView: View {
                 if let status = offline.status {
                     Text(status).font(.footnote).foregroundStyle(.secondary)
                 }
+                if let problem = offline.problem {
+                    ProblemView(problem: problem) { Task { await offline.retry() } }
+                }
             } footer: {
                 Text("Un département pèse de quelques dizaines à quelques centaines de Mo : préférez le Wi‑Fi. Le fond de carte Apple garde un cache limité et peut manquer hors couverture.")
             }
@@ -58,7 +63,29 @@ struct OfflineDepartmentRow: View {
     let progress: OfflineModel.Progress?
     let model: MapModel
 
+    /// « Réessayer » sur un département incomplet (étape B4).
+    var resume: (() -> Void)?
+
     var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            summary
+                .accessibilityElement(children: .combine)
+            if progress == nil, !department.complete {
+                ProblemView(problem: Self.problem(for: department), retry: resume)
+            }
+        }
+    }
+
+    /// Un département incomplet, en clair : tuiles ou météo, le message brut derrière « Détails ».
+    static func problem(for department: OfflineDepartment) -> Problem {
+        Problem(
+            department.filesDone ? "Météo pas encore récupérée : le département ne se lit pas hors ligne"
+                : "Téléchargement incomplet : le département ne se lit pas hors ligne",
+            detail: department.error
+        )
+    }
+
+    private var summary: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(department.name.map { "\($0) (\(department.code))" } ?? "Département \(department.code)")
@@ -78,13 +105,8 @@ struct OfflineDepartmentRow: View {
                 Text("Météo du \(MapModel.format(iso: department.weatherToday ?? "")) · tuiles du \(department.tilesGenerated.map { MapModel.format(timestamp: $0) } ?? "?")")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
-            } else {
-                Label(department.error ?? "Incomplet", systemImage: "exclamationmark.triangle")
-                    .font(.footnote)
-                    .foregroundStyle(.orange)
             }
         }
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -130,7 +152,7 @@ struct DownloadDepartmentView: View {
                             }
                             LabeledContent("Poids estimé", value: choice.bytes(for: Array(selectedSpecies)).formatted(.byteCount(style: .file)))
                             if choice.altitude == nil {
-                                Text("Pas de couche d'altitude pour ce département : classe prise sur la médiane de la cellule.")
+                                Text("Pas de couche d'altitude pour ce département : la météo sera prise à l'altitude habituelle de la forêt de chaque secteur.")
                                     .font(.footnote).foregroundStyle(.secondary)
                             }
                         }

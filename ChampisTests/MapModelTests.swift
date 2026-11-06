@@ -314,6 +314,42 @@ struct MapModelTests {
         #expect(model.weather.cells["c_1"]?.row(species: "boletus_edulis", date: "2026-10-31", altKey: "150")?.mEff == 0.6)
     }
 
+    @Test("Étape B4 : chargement raté dit en clair, détail technique à part, reprise propre")
+    func loadProblemInPlainWords() async throws {
+        let (model, host, directory) = Self.stubModel()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        StubURLProtocol.set(host: host) { _, _, _ in (503, #"{"detail": "base indisponible"}"#) }
+        await model.load()
+        let problem = try #require(model.problem)
+        #expect(problem.text == "Impossible de charger la carte : le serveur est momentanément indisponible")
+        #expect(problem.detail == "HTTP 503 : base indisponible")
+        #expect(problem.retryable)
+
+        StubURLProtocol.set(host: host) { _, path, _ in
+            switch path {
+            case "/species": (200, Fixtures.catalogJSON)
+            case "/tiles": (200, Fixtures.manifestJSON)
+            default: (404, #"{"detail": "inconnu"}"#)
+            }
+        }
+        await model.load()
+        #expect(model.problem == nil)
+        #expect(model.catalog != nil)
+    }
+
+    @Test("Étape B4 : « Noter » n'apparaît que quand la carte connaît ma position")
+    func userFixShowsNote() {
+        let (model, _, directory) = Self.stubModel()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        #expect(!model.hasUserFix)
+        model.userLocationChanged(LocationProvider.Fix(latitude: 46.9, longitude: 6.35, accuracyM: 12))
+        #expect(model.hasUserFix)
+        #expect(model.currentFix?.accuracyM == 12)
+        model.userLocationChanged(nil)
+        #expect(!model.hasUserFix)
+        #expect(model.currentFix == nil)
+    }
+
     @Test("Mode terrain : aucune météo demandée, à aucun zoom")
     func terrainAsksNothing() async throws {
         let (model, host, directory) = Self.stubModel()

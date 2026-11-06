@@ -15,7 +15,10 @@ final class FieldModel {
     private(set) var coins: [Coin] = []
     private(set) var coinScores: [UUID: ScoredCoin] = [:]
     private(set) var coinsToday: String?
+    /// Confirmation en clair (« Observations et coins effacés ») ; les échecs vont dans `problem`.
     private(set) var status: String?
+    /// Échec en clair avec sa reprise (étape B4, 6 nov. 2026) : rien n'est perdu, « Réessayer » relance.
+    private(set) var problem: Problem?
     private(set) var isSyncing = false
     private(set) var userID: UUID?
     /// Observations annulables (« Noté : rien trouvé », lot 3) : pas encore envoyées, retirables.
@@ -29,6 +32,18 @@ final class FieldModel {
     @ObservationIgnored private(set) var api: ChampisAPI
     /// Désactivé par les tests : la demande système attendrait une réponse.
     @ObservationIgnored var asksNotificationPermission = true
+    /// Ce que « Réessayer » relance pour `problem`.
+    @ObservationIgnored private var problemRetry: Retry?
+
+    /// Ce que « Réessayer » relance (étape B4).
+    nonisolated enum Retry: Equatable, Sendable {
+        case start
+        case sync
+        case pull
+        case delete
+        case pushCoins
+        case coinScores
+    }
 
     init(api: ChampisAPI, store: LocalStore, identityStores: [any IdentityStore]) {
         self.api = api
@@ -51,12 +66,15 @@ final class FieldModel {
         do {
             try await store.load()
         } catch {
-            status = "Stockage local illisible : \(error.localizedDescription)"
+            fail(Problem("Les observations de l'appareil n'ont pas pu être lues", error: error), retry: .start)
         }
         if userID == nil {
             userID = Identity.userID(from: identityStores)
             if userID == nil {
-                status = "Identifiant de l'app impossible à créer"
+                fail(
+                    Problem("L'app n'a pas pu créer son identifiant : observations et coins restent sur l'appareil", detail: "trousseau et UserDefaults indisponibles"),
+                    retry: .start
+                )
             }
         }
         await refreshFromStore()
@@ -83,7 +101,7 @@ final class FieldModel {
         do {
             try await store.add(observation)
         } catch {
-            status = "Observation non enregistrée : \(error.localizedDescription)"
+            fail(Problem("L'observation n'a pas pu être enregistrée sur l'appareil", error: error, retryable: false))
             return
         }
         await refreshFromStore()
@@ -92,18 +110,19 @@ final class FieldModel {
 
     /// « Rien trouvé ici » en une tape (lot 3) : une observation négative par espèce, enregistrée
     /// tout de suite, annulable pendant `undoWindow`, envoyée ensuite.
-    func recordNotFound(species: [String], latitude: Double, longitude: Double) async {
+    /// `accuracyM` : précision GPS quand le point est ma position (« Noter », étape B4).
+    func recordNotFound(species: [String], latitude: Double, longitude: Double, accuracyM: Double? = nil) async {
         var ids: [UUID] = []
         for sid in species {
             let observation = FieldObservation(
-                species: sid, lat: latitude, lon: longitude, accuracyM: nil, date: Self.isoDay(),
+                species: sid, lat: latitude, lon: longitude, accuracyM: accuracyM, date: Self.isoDay(),
                 found: false, quantity: nil
             )
             do {
                 try await store.add(observation)
                 ids.append(observation.id)
             } catch {
-                status = "Observation non enregistrée : \(error.localizedDescription)"
+                fail(Problem("L'observation n'a pas pu être enregistrée sur l'appareil", error: error, retryable: false))
             }
         }
         await refreshFromStore()
@@ -147,9 +166,9 @@ final class FieldModel {
                 try await store.markSynced(batch.map(\.id))
                 start += Self.batchSize
             }
-            status = nil
+            clear(.sync)
         } catch {
-            status = "Envoi différé : \(error.localizedDescription)"
+            fail(Problem("Observations pas encore envoyées, elles restent sur l'appareil", error: error), retry: .sync)
         }
         await refreshFromStore()
     }
@@ -160,9 +179,10 @@ final class FieldModel {
         do {
             let response = try await api.observations(user: userID)
             try await store.mergeRemote(response.observations)
+            clear(.pull)
             await refreshFromStore()
         } catch {
-            status = "Observations du serveur indisponibles : \(error.localizedDescription)"
+            fail(Problem("Vos observations n'ont pas pu être reprises du serveur", error: error), retry: .pull)
         }
     }
 
@@ -173,9 +193,10 @@ final class FieldModel {
             _ = try await api.deleteObservations(user: userID)
             try await store.removeAll()
             coinScores = [:]
+            clear(.delete)
             status = "Observations et coins effacés"
         } catch {
-            status = "Suppression impossible : \(error.localizedDescription)"
+            fail(Problem("Rien n'a été effacé : le serveur n'a pas pu être joint", error: error), retry: .delete)
         }
         await refreshFromStore()
     }
@@ -191,7 +212,7 @@ final class FieldModel {
         do {
             try await store.setCoins(list)
         } catch {
-            status = "Coin non enregistré : \(error.localizedDescription)"
+            fail(Problem("Le coin n'a pas pu être enregistré sur l'appareil", error: error, retryable: false))
             return
         }
         await refreshFromStore()
@@ -210,7 +231,7 @@ final class FieldModel {
         do {
             try await store.setCoins(list)
         } catch {
-            status = "Coin non renommé : \(error.localizedDescription)"
+            fail(Problem("Le coin n'a pas pu être renommé", error: error, retryable: false))
             return
         }
         await refreshFromStore()
@@ -222,7 +243,7 @@ final class FieldModel {
         do {
             try await store.setCoins(list)
         } catch {
-            status = "Coin non supprimé : \(error.localizedDescription)"
+            fail(Problem("Le coin n'a pas pu être supprimé", error: error, retryable: false))
             return
         }
         coinScores[id] = nil
@@ -235,9 +256,10 @@ final class FieldModel {
         guard let userID else { return }
         do {
             _ = try await api.putCoins(coins, apnsToken: nil, sandbox: Self.isSandboxBuild, user: userID)
+            clear(.pushCoins)
             await refreshCoinScores()
         } catch {
-            status = "Coins non synchronisés : \(error.localizedDescription)"
+            fail(Problem("Coins pas encore envoyés au serveur : pas de notification d'ici là", error: error), retry: .pushCoins)
         }
     }
 
@@ -251,8 +273,41 @@ final class FieldModel {
                 scores[coin.id] = coin
             }
             coinScores = scores
+            clear(.coinScores)
         } catch {
-            status = "Score des coins indisponible : \(error.localizedDescription)"
+            fail(Problem("Score des coins indisponible", error: error), retry: .coinScores)
+        }
+    }
+
+    // MARK: - Erreurs en clair (étape B4)
+
+    private func fail(_ problem: Problem, retry: Retry? = nil) {
+        self.problem = problem
+        problemRetry = retry
+        status = nil
+    }
+
+    /// Une opération a réussi : son message d'échec, s'il est affiché, disparaît.
+    private func clear(_ retry: Retry) {
+        if problemRetry == retry {
+            problem = nil
+            problemRetry = nil
+        }
+    }
+
+    /// « Réessayer » sous un message des coins ou des observations.
+    func retry() async {
+        let retry = problemRetry
+        problem = nil
+        problemRetry = nil
+        switch retry {
+        case .start: await start(api: api)
+        case .sync: await sync()
+        case .pull: await pullRemote()
+        case .delete: await deleteAll()
+        case .pushCoins: await pushCoins()
+        case .coinScores: await refreshCoinScores()
+        case nil: break
         }
     }
 

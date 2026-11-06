@@ -87,9 +87,12 @@ nonisolated struct ScoredCoin: Decodable, Hashable, Identifiable, Sendable {
     let best: Double?
     /// Les onze jours, J−3 → J+7 ; vide avec un serveur d'avant le lot 1.
     let days: [CoinDay]
+    /// Phrases du jour pour l'espèce qui porte le score, à la classe d'altitude du coin
+    /// (étape B2, 6 nov. 2026) ; vide avec un serveur d'avant l'étape B.
+    let summary: [String]
 
     enum CodingKeys: String, CodingKey {
-        case id, name, score, leading, best, days
+        case id, name, score, leading, best, days, summary
         case bestDay = "best_day"
     }
 
@@ -102,9 +105,13 @@ nonisolated struct ScoredCoin: Decodable, Hashable, Identifiable, Sendable {
         bestDay = try c.decodeIfPresent(String.self, forKey: .bestDay)
         best = try c.decodeIfPresent(Double.self, forKey: .best)
         days = try c.decodeIfPresent([CoinDay].self, forKey: .days) ?? []
+        summary = try c.decodeIfPresent([String].self, forKey: .summary) ?? []
     }
 
-    init(id: UUID, name: String, score: Double?, leading: String?, bestDay: String?, best: Double?, days: [CoinDay]) {
+    init(
+        id: UUID, name: String, score: Double?, leading: String?, bestDay: String?, best: Double?, days: [CoinDay],
+        summary: [String] = []
+    ) {
         self.id = id
         self.name = name
         self.score = score
@@ -112,6 +119,7 @@ nonisolated struct ScoredCoin: Decodable, Hashable, Identifiable, Sendable {
         self.bestDay = bestDay
         self.best = best
         self.days = days
+        self.summary = summary
     }
 }
 

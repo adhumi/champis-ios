@@ -53,6 +53,12 @@ struct SettingsView: View {
                     if let status = model.field.status {
                         Text(status).font(.footnote).foregroundStyle(.secondary)
                     }
+                    if let problem = model.field.problem {
+                        ProblemView(problem: problem) {
+                            let field = model.field
+                            Task { await field.retry() }
+                        }
+                    }
                 } header: {
                     Text("Mes données")
                 } footer: {

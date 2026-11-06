@@ -38,8 +38,11 @@ struct PointSheet: View {
                     Text("Hors forêt ou pas de donnée ici.")
                         .foregroundStyle(.secondary)
                 case .noWeather:
-                    Text("Du terrain, mais pas de météo pour ce secteur aujourd'hui : le serveur réessaie.")
-                        .foregroundStyle(.secondary)
+                    Section {
+                        Text("Du terrain, mais pas de météo pour ce secteur aujourd'hui : le serveur réessaie.")
+                            .foregroundStyle(.secondary)
+                        forestRow
+                    }
                 case .scored(let scored):
                     summarySection(scored)
                 }
@@ -69,7 +72,10 @@ struct PointSheet: View {
                 Text("Le coin reste privé. Une notification viendra quand son score sera bon ou excellent.")
             }
         }
-        .task { await model.loadFactors(for: info) }
+        // par point : dans l'inspecteur (iPad, Mac), la fiche reste la même vue d'un point à l'autre
+        .task(id: info.id) { await model.loadFactors(for: info) }
+        // statut de la forêt (étape B5) : en parallèle de la météo, la fiche ne l'attend pas
+        .task(id: info.id) { await model.loadForest(for: info) }
         .onAppear {
             // appui long › « Ajouter à mes coins » : la fiche s'ouvre déjà sur le nom
             if model.coinRequestFromLongPress {
@@ -99,14 +105,41 @@ struct PointSheet: View {
             ForEach(phrases(scored), id: \.self) { phrase in
                 Text(phrase)
             }
-            if info.mode == .score, scored.cell != nil, model.pointSummary == nil, model.factorsStatus == nil {
+            if info.mode == .score, scored.cell != nil, model.pointSummary == nil, model.factorsStatus == nil,
+               model.factorsProblem == nil {
                 ProgressView().controlSize(.small)
+            }
+            if info.mode == .score, let problem = model.factorsProblem {
+                ProblemView(problem: problem) {
+                    let model = model
+                    let info = info
+                    Task { await model.loadFactors(for: info) }
+                }
             }
             if info.mode == .score, !model.pointDays.isEmpty, let today = model.today {
                 // en lecture seule : la carte montre toujours aujourd'hui (étape A, 6 nov. 2026)
                 CoinDaysView(days: model.pointDays, today: today, selected: .constant(today), model: model, interactive: false)
                     .padding(.vertical, 4)
+                // tendance et meilleur jour (étape B2), même règle que les coins
+                if let trend = trendPhrase(today: today) {
+                    Text("Tendance : \(trend)").fontWeight(.semibold)
+                }
             }
+            forestRow
+        }
+    }
+
+    private func trendPhrase(today: String) -> String? {
+        guard let goodMin = model.goodThreshold else { return nil }
+        return CoinTrend.phrase(CoinTrend.kind(days: model.pointDays, today: today, goodMin: goodMin))
+    }
+
+    /// Forêt domaniale, autre forêt publique, ou sans doute privée (étape B5) ; rien hors ligne.
+    @ViewBuilder
+    private var forestRow: some View {
+        if let forest = model.pointForest {
+            Label(forest, systemImage: "tree")
+                .font(.subheadline)
         }
     }
 
