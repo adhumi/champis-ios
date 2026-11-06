@@ -38,6 +38,10 @@ nonisolated struct RGBA: Hashable, Sendable {
 
 /// Colorisation d'une tuile : fonction pure, testée sans MapKit (skill `swiftui-mapkit`).
 ///
+/// Même fonction de couleur dans les deux modes (échelle linéaire, 6 nov. 2026) : le violet de
+/// `palette.scale`, dont l'alpha est la valeur du pixel (`Palette.Scale.alpha8`) ; l'overlay est
+/// dessiné à l'opacité 1. Sans `scale` (API ancienne), couleur de la classe du pixel.
+///
 /// - Mode terrain : valeur = max sur les espèces de la couche de `T`.
 /// - Mode score : valeur = max sur les espèces de `T × M_eff × Φ`, avec `M_eff × Φ` de la cellule
 ///   météo la plus proche (par bloc de 16 × 16 px, une cellule fait 5 km, à moins de 7,5 km) et de
@@ -70,15 +74,26 @@ nonisolated struct TileColorizer: Sendable {
 
     let palette: Palette
     private let thresholds: [(min: Double, color: RGBA)]
+    /// Violet de l'échelle, parsé une fois pour la tuile (65 536 pixels), et sa règle d'alpha.
+    private let scale: (rgb: RGBA, rule: Palette.Scale)?
 
     init(palette: Palette) {
         self.palette = palette
         self.thresholds = palette.thresholds.map { (min: $0.min, color: RGBA(hex: $0.hex) ?? .clear) }
+        if let rule = palette.scale, let rgb = rule.rgb {
+            self.scale = (rgb: RGBA(r: rgb.r, g: rgb.g, b: rgb.b, a: 255), rule: rule)
+        } else {
+            self.scale = nil
+        }
     }
 
-    /// Couleur d'une valeur : premier seuil (ordre du fichier) dont `min ≤ value`, sinon le dernier,
-    /// comme `Palette.classify`.
+    /// Couleur d'une valeur : le violet de l'échelle avec l'alpha de la valeur (même résultat que
+    /// `Palette.pixelColor`, validé par les vecteurs). Sans échelle, premier seuil (ordre du fichier)
+    /// dont `min ≤ value`, sinon le dernier, comme `Palette.classify`.
     func color(for value: Double) -> RGBA {
+        if let scale {
+            return RGBA(r: scale.rgb.r, g: scale.rgb.g, b: scale.rgb.b, a: scale.rule.alpha8(for: value))
+        }
         for t in thresholds where value >= t.min {
             return t.color
         }

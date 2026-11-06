@@ -103,7 +103,10 @@ struct OnboardingView: View {
                 HStack(spacing: 10) {
                     ForEach(model.legend, id: \.label) { threshold in
                         VStack(spacing: 4) {
-                            Circle().fill(Color(hex: threshold.hex)).frame(width: 16, height: 16)
+                            Circle()
+                                .fill(Color(hex: threshold.hex))
+                                .overlay(Circle().strokeBorder(Color.secondary.opacity(0.5), lineWidth: 0.5))
+                                .frame(width: 16, height: 16)
                             Text(threshold.fr).font(.caption2)
                         }
                         .accessibilityElement(children: .combine)

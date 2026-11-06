@@ -328,29 +328,74 @@ nonisolated struct NoteRequest: Identifiable, Sendable {
     let fix: LocationProvider.Fix
 }
 
-/// Légende : seuils et couleurs de la palette servie par l'API. La couleur ne porte jamais seule
-/// l'information : chaque pastille a son libellé.
+/// Barre continue de la légende (échelle linéaire, 6 nov. 2026) : du transparent au violet de
+/// `scale`, sur un fond neutre pour que le transparent se voie, les cinq mots en dessous dans
+/// l'ordre des scores (très faible → excellent). La couleur ne porte jamais seule l'information.
+struct LegendBar: View {
+    let scale: Palette.Scale
+    let thresholds: [Palette.Threshold]
+
+    private var words: [Palette.Threshold] { thresholds.sorted { $0.min < $1.min } }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(.quaternary)
+                .overlay {
+                    LinearGradient(
+                        colors: [
+                            Color(hex: scale.hex).opacity(scale.alphaMin),
+                            Color(hex: scale.hex).opacity(scale.alphaMax),
+                        ],
+                        startPoint: .leading, endPoint: .trailing
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+                .frame(height: 14)
+            HStack(spacing: 0) {
+                ForEach(Array(words.enumerated()), id: \.element.label) { index, threshold in
+                    if index > 0 { Spacer(minLength: 4) }
+                    Text(threshold.fr)
+                        .font(.caption2)
+                        .lineLimit(1)
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Du transparent au violet foncé : " + words.map(\.fr).joined(separator: ", "))
+    }
+}
+
+/// Légende compacte : la barre continue, ou, sans échelle (API ancienne), les pastilles de classe
+/// avec leur mot.
 struct LegendView: View {
+    let scale: Palette.Scale?
     let thresholds: [Palette.Threshold]
 
     var body: some View {
-        HStack(spacing: 10) {
-            ForEach(thresholds, id: \.label) { threshold in
-                HStack(spacing: 4) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color(hex: threshold.hex))
-                        .frame(width: 14, height: 14)
-                    Text(threshold.fr)
-                        .font(.caption)
+        if let scale {
+            LegendBar(scale: scale, thresholds: thresholds)
+        } else {
+            HStack(spacing: 10) {
+                ForEach(thresholds, id: \.label) { threshold in
+                    HStack(spacing: 4) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color(hex: threshold.hex))
+                            .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.secondary.opacity(0.5), lineWidth: 0.5))
+                            .frame(width: 14, height: 14)
+                        Text(threshold.fr)
+                            .font(.caption)
+                    }
+                    .accessibilityElement(children: .combine)
                 }
-                .accessibilityElement(children: .combine)
             }
         }
     }
 }
 
-/// Légende (lot 2) : les cinq couleurs et leurs mots, ce que veut dire un pixel transparent, et
-/// le renvoi vers Comprendre. La couleur ne porte jamais seule l'information.
+/// Légende (lot 2, échelle linéaire le 6 nov. 2026) : la barre continue du transparent au violet
+/// avec les cinq mots, ce que veut dire un pixel transparent, et le renvoi vers Comprendre. Sans
+/// échelle (API ancienne), les cinq pastilles de classe. La couleur ne porte jamais seule l'information.
 struct LegendSheet: View {
     let model: MapModel
     @Environment(\.dismiss) private var dismiss
@@ -359,14 +404,20 @@ struct LegendSheet: View {
         NavigationStack {
             List {
                 Section {
-                    ForEach(model.legend, id: \.label) { threshold in
-                        HStack(spacing: 10) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color(hex: threshold.hex))
-                                .frame(width: 22, height: 16)
-                            Text(threshold.fr)
+                    if let scale = model.palette?.scale {
+                        LegendBar(scale: scale, thresholds: model.legend)
+                            .padding(.vertical, 4)
+                    } else {
+                        ForEach(model.legend, id: \.label) { threshold in
+                            HStack(spacing: 10) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color(hex: threshold.hex))
+                                    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Color.secondary.opacity(0.5), lineWidth: 0.5))
+                                    .frame(width: 22, height: 16)
+                                Text(threshold.fr)
+                            }
+                            .accessibilityElement(children: .combine)
                         }
-                        .accessibilityElement(children: .combine)
                     }
                     HStack(spacing: 10) {
                         RoundedRectangle(cornerRadius: 4)
@@ -376,9 +427,9 @@ struct LegendSheet: View {
                     }
                     .accessibilityElement(children: .combine)
                 } header: {
-                    Text("Ce que montrent les couleurs")
+                    Text("Ce que montre la couleur")
                 } footer: {
-                    Text("Le terrain, la météo des dernières semaines et la saison de l'espèce, en un seul score. Le détail est dans l'onglet Guide.")
+                    Text("Plus le violet est foncé, plus les conditions sont réunies : le terrain, la météo des dernières semaines et la saison de l'espèce, en un seul score. Le détail est dans l'onglet Guide.")
                 }
             }
             .navigationTitle("Légende")

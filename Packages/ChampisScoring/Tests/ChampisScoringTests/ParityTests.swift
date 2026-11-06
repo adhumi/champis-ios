@@ -74,6 +74,8 @@ private struct PaletteCase: Decodable {
     struct PaletteExpected: Decodable {
         let label: String
         let hex: String
+        /// Couleur du pixel (échelle linéaire, 6 nov. 2026) : `[r, g, b, a]` sur 8 bits.
+        let rgba: [Int]
     }
 }
 
@@ -172,13 +174,41 @@ struct ParityTests {
         }
     }
 
-    @Test("Palette : seuils exacts 0,15 / 0,35 / 0,55 / 0,75")
+    @Test("Palette : seuils exacts 0,15 / 0,35 / 0,55 / 0,75, et couleur du pixel (alpha = score, floor(x + 0,5))")
     func paletteClasses() throws {
         let p = try palette()
-        for c in try vectors("palette", as: PaletteCase.self) {
+        let cases = try vectors("palette", as: PaletteCase.self)
+        #expect(cases.count >= 20)
+        for c in cases {
             let cls = p.classify(c.score)
             #expect(cls.label == c.expected.label && cls.hex == c.expected.hex, "score \(c.score)")
+            let px = try #require(p.pixelColor(c.score), "score \(c.score)")
+            #expect([Int(px.r), Int(px.g), Int(px.b), Int(px.a)] == c.expected.rgba, "score \(c.score)")
         }
+    }
+
+    @Test("Palette sans échelle (API antérieure au 6 nov. 2026) : pas de couleur de pixel, les mots restent")
+    func paletteWithoutScale() throws {
+        let json = """
+        {
+          "version": 1,
+          "thresholds": [
+            { "min": 0.55, "label": "bon", "fr": "Bon", "hex": "#4CA64C" },
+            { "min": 0.0, "label": "tres_faible", "fr": "Très faible", "hex": "#B8402E" }
+          ],
+          "nodata_hex": "#00000000",
+          "tile_encoding": { "channel": "luminance", "scale": 254, "nodata": 255 },
+          "alt_encoding": { "channel": "luminance", "class_m": 300, "nodata": 255 }
+        }
+        """
+        let p = try Palette.decode(Data(json.utf8))
+        #expect(p.scale == nil)
+        #expect(p.pixelColor(0.8) == nil)
+        #expect(p.classify(0.8).label == "bon" && p.classify(0.1).label == "tres_faible")
+        // Un hex invalide dans l'échelle : pas de couleur non plus, jamais une couleur inventée
+        let bad = Palette.Scale(hex: "#zzzzzz", alphaMin: 0, alphaMax: 1)
+        #expect(bad.rgb == nil)
+        #expect(bad.alpha8(for: 0.5) == 128)
     }
 
     @Test("Dates civiles : ordinal, jour de l'année, arithmétique, années bissextiles")
