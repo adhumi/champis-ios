@@ -10,7 +10,12 @@ import SwiftUI
 /// toujours aujourd'hui, le bandeau des jours est retiré (les onze jours sont dans la fiche d'un
 /// point, en lecture seule), et les réglages s'ouvrent aussi d'ici.
 struct MapScreen: View {
-    static let defaultAPIBaseURL = "https://champis.app"
+    /// L'API est sur son propre domaine depuis le découpage des dépôts (spec › Produit › Étape C,
+    /// lot C7, 6 nov. 2026) ; `champis.app` est le site, qui relaie encore l'API pour les versions
+    /// d'avant.
+    static let defaultAPIBaseURL = "https://api.champis.app"
+    /// Ancienne adresse par défaut, peut-être gardée par `@AppStorage` : lue comme la nouvelle.
+    static let legacyAPIBaseURLs: Set<String> = ["https://champis.app", "https://champis.app/"]
 
     nonisolated enum Layout: Sendable {
         /// iPhone : les fiches sont des feuilles.
@@ -310,7 +315,7 @@ struct MapScreen: View {
 
     static func url(from text: String) -> URL {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let url = URL(string: trimmed), url.scheme != nil, url.host() != nil {
+        if !legacyAPIBaseURLs.contains(trimmed), let url = URL(string: trimmed), url.scheme != nil, url.host() != nil {
             return url
         }
         return URL(string: defaultAPIBaseURL)!

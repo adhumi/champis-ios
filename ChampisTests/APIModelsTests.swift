@@ -85,6 +85,35 @@ struct APIModelsTests {
         #expect(MapScreen.url(from: "").absoluteString == MapScreen.defaultAPIBaseURL)
     }
 
+    @Test("Découpage des dépôts : l'API sur api.champis.app, l'ancienne adresse gardée lue comme la nouvelle")
+    @MainActor
+    func apiDomain() {
+        #expect(MapScreen.defaultAPIBaseURL == "https://api.champis.app")
+        #expect(MapScreen.url(from: "https://champis.app").absoluteString == "https://api.champis.app")
+        #expect(MapScreen.url(from: " https://champis.app/ ").absoluteString == "https://api.champis.app")
+        #expect(MapScreen.url(from: "http://localhost:8000").absoluteString == "http://localhost:8000")
+        #expect(ChampisAPI.defaultSiteURL.absoluteString == "https://champis.app")
+    }
+
+    @Test("Limites des départements : lues sur le site, pas sur l'API")
+    func departementsFromSite() async throws {
+        let apiHost = StubURLProtocol.host()
+        let siteHost = StubURLProtocol.host()
+        StubURLProtocol.set(host: apiHost) { _, _, _ in (404, #"{"detail": "Not Found"}"#) }
+        StubURLProtocol.set(host: siteHost) { method, path, _ in
+            method == "GET" && path == "/web/departements.geojson"
+                ? (200, #"{"type": "FeatureCollection", "features": []}"#) : (404, "{}")
+        }
+        let api = ChampisAPI(
+            baseURL: URL(string: "https://\(apiHost)")!, siteURL: URL(string: "https://\(siteHost)")!,
+            session: URLSession(configuration: StubURLProtocol.configuration())
+        )
+        let data = try await api.departementsGeoJSON()
+        #expect(String(decoding: data, as: UTF8.self).contains("FeatureCollection"))
+        #expect(StubURLProtocol.requests(host: apiHost).isEmpty)
+        #expect(StubURLProtocol.requests(host: siteHost).map(\.path) == ["/web/departements.geojson"])
+    }
+
     @Test("GET /weather/field : un jour, f par espèce et classe, stale seulement si présent, manquantes comptées")
     func weatherField() throws {
         let field = try Fixtures.decode(WeatherFieldResponse.self, Fixtures.weatherFieldJSON)

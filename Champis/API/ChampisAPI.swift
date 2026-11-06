@@ -19,7 +19,8 @@ nonisolated struct BBox: Hashable, Sendable {
 }
 
 /// Client de champis-api (`/species`, `/tiles`, `/weather`, `/weather/bbox`, `/weather/field`,
-/// `/departements`). Sans état ; les réponses sont décodées hors du MainActor.
+/// `/departements`, sur `api.champis.app`) et du site pour ses fichiers (`/web/departements.geojson`,
+/// sur `champis.app`). Sans état ; les réponses sont décodées hors du MainActor.
 nonisolated struct ChampisAPI: Sendable {
     nonisolated enum Failure: Error, LocalizedError, Equatable {
         case badURL
@@ -34,11 +35,17 @@ nonisolated struct ChampisAPI: Sendable {
         }
     }
 
+    /// Le site, qui garde les fichiers qui ne sont pas à l'API depuis le découpage des dépôts
+    /// (spec › Produit › Étape C, lot C7, 6 nov. 2026) : les limites des départements.
+    static let defaultSiteURL = URL(string: "https://champis.app")!
+
     let baseURL: URL
+    let siteURL: URL
     let session: URLSession
 
-    init(baseURL: URL, session: URLSession = .shared) {
+    init(baseURL: URL, siteURL: URL = ChampisAPI.defaultSiteURL, session: URLSession = .shared) {
         self.baseURL = baseURL
+        self.siteURL = siteURL
         self.session = session
     }
 
@@ -88,9 +95,10 @@ nonisolated struct ChampisAPI: Sendable {
         try await get("departements", query: species.map { URLQueryItem(name: "species", value: $0) })
     }
 
-    /// Limites des départements (GeoJSON Admin Express simplifié, servi avec le site sous `/web/`).
+    /// Limites des départements (GeoJSON Admin Express simplifié), un fichier du site sous `/web/` :
+    /// l'API ne sert plus le site depuis le découpage des dépôts.
     func departementsGeoJSON() async throws -> Data {
-        try await getData("web/departements.geojson")
+        try await send("GET", "web/departements.geojson", on: siteURL)
     }
 
     /// URL absolue d'un fichier du manifeste (relative à l'API en mode proxy).
@@ -111,12 +119,16 @@ nonisolated struct ChampisAPI: Sendable {
     /// En-tête qui porte l'identifiant de l'app (contrat spec › Backend, 30 oct. 2026).
     static let userHeader = "X-Champis-User"
 
-    /// Requête générique : `body` est un JSON, `user` ajoute l'en-tête d'identité.
+    /// Requête générique : `body` est un JSON, `user` ajoute l'en-tête d'identité ; `on` remplace
+    /// l'adresse de l'API (le site pour ses propres fichiers).
     @concurrent
     func send(
-        _ method: String, _ path: String, query: [URLQueryItem] = [], body: Data? = nil, user: UUID? = nil
+        _ method: String, _ path: String, query: [URLQueryItem] = [], body: Data? = nil, user: UUID? = nil,
+        on base: URL? = nil
     ) async throws -> Data {
-        guard var components = URLComponents(url: baseURL.appending(path: path), resolvingAgainstBaseURL: false) else {
+        guard var components = URLComponents(
+            url: (base ?? baseURL).appending(path: path), resolvingAgainstBaseURL: false
+        ) else {
             throw Failure.badURL
         }
         if !query.isEmpty {
