@@ -16,7 +16,7 @@ Chaque espèce a sa fenêtre dans l'année, qui se décale avec l'altitude. Hors
 
 ## Les cinq couleurs
 
-Le résultat se lit en cinq mots, du vert foncé au rouge : excellent, bon, moyen, faible, très faible. Un endroit transparent est hors forêt ou sans donnée. La couleur ne dit jamais « il y en a » : elle dit « les conditions sont réunies ».
+Le résultat se lit en cinq mots : excellent, bon, moyen, faible, très faible. Plus le violet est profond, meilleures sont les conditions ; un endroit transparent est très faible, hors forêt ou sans donnée. La couleur ne dit jamais « il y en a » : elle dit « les conditions sont réunies ».
 
 ## Pourquoi deux endroits voisins diffèrent
 

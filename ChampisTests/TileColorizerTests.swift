@@ -55,6 +55,10 @@ struct TileColorizerTests {
         #expect(RGBA(hex: "#1B6B3A") == RGBA(r: 0x1B, g: 0x6B, b: 0x3A, a: 255))
         #expect(RGBA(hex: "#00000000") == .clear)
         #expect(RGBA(hex: "E88A3C") == RGBA(r: 0xE8, g: 0x8A, b: 0x3C, a: 255))
+        // étape B1 (6 nov. 2026) : l'opacité de chaque classe est dans le hex de la palette,
+        // « très faible » est transparent
+        #expect(RGBA(hex: "#633179E6") == RGBA(r: 0x63, g: 0x31, b: 0x79, a: 0xE6))
+        #expect(RGBA(hex: "#E8CFED00")?.a == 0)
         #expect(RGBA(hex: "#zzzzzz") == nil)
         #expect(RGBA(hex: "#123") == nil)
     }
