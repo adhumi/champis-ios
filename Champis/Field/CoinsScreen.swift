@@ -128,7 +128,7 @@ struct ScoreDot: View {
     var body: some View {
         Circle()
             .fill(fill)
-            .overlay(Circle().strokeBorder(selected ? Color.primary : Color.secondary.opacity(value == nil ? 0.6 : 0), lineWidth: 1.5))
+            .overlay(Circle().strokeBorder(selected ? Color.primary : Color.secondary.opacity(isEmpty ? 0.6 : 0), lineWidth: 1.5))
             .frame(width: size, height: size)
             .accessibilityHidden(true)
     }
@@ -136,6 +136,13 @@ struct ScoreDot: View {
     private var fill: Color {
         guard let value, let threshold = model.classify(value) else { return .clear }
         return Color(hex: threshold.hex)
+    }
+
+    /// Sans météo, ou classe transparente de la palette (« très faible » depuis l'étape B1) : la
+    /// pastille n'a pas de couleur, on la cercle pour qu'elle reste visible.
+    private var isEmpty: Bool {
+        guard let value, let threshold = model.classify(value) else { return true }
+        return (RGBA(hex: threshold.hex)?.a ?? 255) == 0
     }
 }
 
