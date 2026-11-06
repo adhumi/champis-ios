@@ -1,7 +1,7 @@
 {
  "generated_by": {
   "scoring_version": "1.0.0",
-  "species_hash": "bdb541d7"
+  "species_hash": "f8ef1c42"
  },
  "cases": [
   {
@@ -6720,6 +6720,1926 @@
   },
   {
    "species": "cantharellus_pallens",
+   "date": "2028-02-29",
+   "alt_m": 500,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-01",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-08",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-15",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-22",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-29",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-05",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-12",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-19",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-26",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-05",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-12",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-19",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-26",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-02",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-09",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-16",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-23",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-30",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-07",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-14",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-21",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-28",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-04",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-11",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-18",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-25",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-02",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-09",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-16",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-23",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-30",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-06",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-13",
+   "alt_m": 100,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-20",
+   "alt_m": 100,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-27",
+   "alt_m": 100,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-03",
+   "alt_m": 100,
+   "expected": 0.375
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-10",
+   "alt_m": 100,
+   "expected": 0.55
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-17",
+   "alt_m": 100,
+   "expected": 0.725
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-24",
+   "alt_m": 100,
+   "expected": 0.9
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-01",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-08",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-15",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-22",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-29",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-05",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-12",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-19",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-26",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-03",
+   "alt_m": 100,
+   "expected": 0.95
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-10",
+   "alt_m": 100,
+   "expected": 0.775
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-17",
+   "alt_m": 100,
+   "expected": 0.6
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-24",
+   "alt_m": 100,
+   "expected": 0.425
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-31",
+   "alt_m": 100,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-01",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-08",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-15",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-22",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-29",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-05",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-12",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-19",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-26",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-05",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-12",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-19",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-26",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-02",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-09",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-16",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-23",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-30",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-07",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-14",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-21",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-28",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-04",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-11",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-18",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-25",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-02",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-09",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-16",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-23",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-30",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-06",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-13",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-20",
+   "alt_m": 700,
+   "expected": 0.325
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-27",
+   "alt_m": 700,
+   "expected": 0.5
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-03",
+   "alt_m": 700,
+   "expected": 0.675
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-10",
+   "alt_m": 700,
+   "expected": 0.85
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-17",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-24",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-01",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-08",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-15",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-22",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-29",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-05",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-12",
+   "alt_m": 700,
+   "expected": 0.875
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-19",
+   "alt_m": 700,
+   "expected": 0.7
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-26",
+   "alt_m": 700,
+   "expected": 0.525
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-03",
+   "alt_m": 700,
+   "expected": 0.35
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-10",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-17",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-24",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-31",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-01",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-08",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-15",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-22",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-01-29",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-05",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-12",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-19",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-02-26",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-05",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-12",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-19",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-03-26",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-02",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-09",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-16",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-23",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-04-30",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-07",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-14",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-21",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-05-28",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-04",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-11",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-18",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-06-25",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-02",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-09",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-16",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-23",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-07-30",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-06",
+   "alt_m": 1400,
+   "expected": 0.325
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-13",
+   "alt_m": 1400,
+   "expected": 0.5
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-20",
+   "alt_m": 1400,
+   "expected": 0.675
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-08-27",
+   "alt_m": 1400,
+   "expected": 0.85
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-03",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-10",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-17",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-09-24",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-01",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-08",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-15",
+   "alt_m": 1400,
+   "expected": 0.9
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-22",
+   "alt_m": 1400,
+   "expected": 0.725
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-10-29",
+   "alt_m": 1400,
+   "expected": 0.55
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-05",
+   "alt_m": 1400,
+   "expected": 0.375
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-12",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-19",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-11-26",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-03",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-10",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-17",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-24",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2026-12-31",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "craterellus_cornucopioides",
+   "date": "2028-02-29",
+   "alt_m": 500,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-01",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-08",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-15",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-22",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-29",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-05",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-12",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-19",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-26",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-05",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-12",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-19",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-26",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-02",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-09",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-16",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-23",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-30",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-07",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-14",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-21",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-28",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-04",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-11",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-18",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-25",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-02",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-09",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-16",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-23",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-30",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-06",
+   "alt_m": 100,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-13",
+   "alt_m": 100,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-20",
+   "alt_m": 100,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-27",
+   "alt_m": 100,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-03",
+   "alt_m": 100,
+   "expected": 0.375
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-10",
+   "alt_m": 100,
+   "expected": 0.55
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-17",
+   "alt_m": 100,
+   "expected": 0.725
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-24",
+   "alt_m": 100,
+   "expected": 0.9
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-01",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-08",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-15",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-22",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-29",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-05",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-12",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-19",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-26",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-03",
+   "alt_m": 100,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-10",
+   "alt_m": 100,
+   "expected": 0.9
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-17",
+   "alt_m": 100,
+   "expected": 0.725
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-24",
+   "alt_m": 100,
+   "expected": 0.55
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-31",
+   "alt_m": 100,
+   "expected": 0.375
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-01",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-08",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-15",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-22",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-29",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-05",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-12",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-19",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-26",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-05",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-12",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-19",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-26",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-02",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-09",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-16",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-23",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-30",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-07",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-14",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-21",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-28",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-04",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-11",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-18",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-25",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-02",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-09",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-16",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-23",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-30",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-06",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-13",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-20",
+   "alt_m": 700,
+   "expected": 0.325
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-27",
+   "alt_m": 700,
+   "expected": 0.5
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-03",
+   "alt_m": 700,
+   "expected": 0.675
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-10",
+   "alt_m": 700,
+   "expected": 0.85
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-17",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-24",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-01",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-08",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-15",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-22",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-29",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-05",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-12",
+   "alt_m": 700,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-19",
+   "alt_m": 700,
+   "expected": 0.825
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-26",
+   "alt_m": 700,
+   "expected": 0.65
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-03",
+   "alt_m": 700,
+   "expected": 0.475
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-10",
+   "alt_m": 700,
+   "expected": 0.3
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-17",
+   "alt_m": 700,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-24",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-31",
+   "alt_m": 700,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-01",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-08",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-15",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-22",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-01-29",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-05",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-12",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-19",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-02-26",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-05",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-12",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-19",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-03-26",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-02",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-09",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-16",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-23",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-04-30",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-07",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-14",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-21",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-05-28",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-04",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-11",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-18",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-06-25",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-02",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-09",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-16",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-23",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-07-30",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-06",
+   "alt_m": 1400,
+   "expected": 0.325
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-13",
+   "alt_m": 1400,
+   "expected": 0.5
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-20",
+   "alt_m": 1400,
+   "expected": 0.675
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-08-27",
+   "alt_m": 1400,
+   "expected": 0.85
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-03",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-10",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-17",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-09-24",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-01",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-08",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-15",
+   "alt_m": 1400,
+   "expected": 1.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-22",
+   "alt_m": 1400,
+   "expected": 0.85
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-10-29",
+   "alt_m": 1400,
+   "expected": 0.675
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-05",
+   "alt_m": 1400,
+   "expected": 0.5
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-12",
+   "alt_m": 1400,
+   "expected": 0.325
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-19",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-11-26",
+   "alt_m": 1400,
+   "expected": 0.25
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-03",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-10",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-17",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-24",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
+   "date": "2026-12-31",
+   "alt_m": 1400,
+   "expected": 0.0
+  },
+  {
+   "species": "hydnum_repandum",
    "date": "2028-02-29",
    "alt_m": 500,
    "expected": 0.0

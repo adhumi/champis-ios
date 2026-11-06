@@ -1,0 +1,313 @@
+{
+  "id": "craterellus_cornucopioides",
+  "schema_version": 1,
+  "group": {
+    "id": "trompettes",
+    "fr": "Trompettes de la mort"
+  },
+  "names": {
+    "fr": "Trompette de la mort",
+    "la": "Craterellus cornucopioides"
+  },
+  "notes": "Craterelle ectomycorhizienne (Dahlman 2000, Matheny 2010 pour l'espèce sœur américaine C. fallax) des forêts de feuillus : hêtraies, chênaies-charmaies, châtaigneraies, noisetiers, en troupes serrées dans la litière humide des sols argilo-calcaires et des vallons frais ; rare sous conifères purs (sapinières-hêtraies mixtes). Préférence pour les sols neutres à calcaires (Breitenbach & Kränzlin 1986) mais présente sur sols acides des chênaies-châtaigneraies atlantiques et des Cévennes : plage pH large. GBIF FR (1 467 occ. géolocalisées, lu le 6 nov. 2026) : oct. 385, sept. 199, nov. 170, août 81, juil. 45, déc. 35 ; altitude (283 occ. renseignées) médiane 617 m, q10 286 m, q90 1 215 m, q99 1 592 m, max 1 854 m ; médiane d'altitude 965 m en septembre, 600 m en octobre, 495 m en novembre, 427 m en décembre (la montagne d'abord, puis la plaine et le Sud : latitude médiane 45,6° N en novembre, 43,3° N en décembre). Les 80 occurrences du 1er avril viennent d'un seul jeu de données sans date réelle : ignorées. Hygrophile : il lui faut un automne durablement humide, une pluie isolée ne suffit pas ; les sporophores sèchent sur place et persistent longtemps (terrain, confiance faible). Délai pluie → pousse, tolérance au gel et persistance : terrain, à valider. Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 1.0,
+      "sapin_epicea": 0.2,
+      "chenes_decidus": 1.0,
+      "chataignier": 0.9,
+      "mixte_feuillus_dom": 0.9,
+      "mixte_coniferes_dom": 0.4,
+      "melange_feuillus": 0.9,
+      "melange_coniferes": 0.2,
+      "feuillus_indet": 0.8,
+      "coniferes_indet": 0.2,
+      "mixte_indet": 0.6,
+      "pin_sylvestre": 0.1,
+      "pin_crochets_cembro": 0.05,
+      "pin_maritime": 0.1,
+      "melange_pins": 0.1,
+      "autre_feuillu": 0.8,
+      "pin_laricio_noir": 0.05,
+      "autre_pin": 0.05,
+      "meleze": 0.05,
+      "chenes_sempervirents": 0.2,
+      "douglas": 0.05,
+      "autre_conifere": 0.05,
+      "pin_alep": 0.0,
+      "lande": 0.05,
+      "sans_couvert": 0.05,
+      "robinier": 0.0,
+      "peupleraie": 0.05,
+      "herbacee": 0.0,
+      "default": 0.05,
+      "melange_coniferes_hors_pins": 0.3
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.5,
+      "sans_couvert": 0.05,
+      "plantation": 0.1,
+      "non_foret": 0.05
+    },
+    "ph": {
+      "min": 3.8,
+      "opt_low": 5.2,
+      "opt_high": 7.8,
+      "max": 8.5
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 100,
+      "opt_high": 1200,
+      "max": 1700
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.8,
+      "SW": 0.75,
+      "S": 0.7,
+      "flat": 1.0
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 20,
+      "max": 35
+    },
+    "weights": {
+      "cover": 0.2,
+      "ph": 0.35,
+      "altitude": 0.15,
+      "aspect": 0.2,
+      "slope": 0.1
+    },
+    "refs": {
+      "hosts": [
+        "dahlman2000",
+        "matheny2010",
+        "bk1986",
+        "firstnature",
+        "tanchaud"
+      ],
+      "cover": [
+        "bk1986",
+        "terrain_fr"
+      ],
+      "ph": [
+        "bk1986",
+        "firstnature",
+        "terrain_fr"
+      ],
+      "altitude": [
+        "gbif2026",
+        "bk1986"
+      ],
+      "aspect": [
+        "terrain_fr"
+      ],
+      "slope": [
+        "terrain_fr"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "08-01",
+      "end": "12-31"
+    },
+    "peak": {
+      "start": "09-20",
+      "end": "11-15"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 500,
+      "start_days_per_100m": -2,
+      "end_days_per_100m": -4,
+      "max_days": 35
+    },
+    "refs": [
+      "gbif2026",
+      "straatsma2001",
+      "bk1986",
+      "kauserud2012",
+      "tanchaud"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 21,
+      "c": {
+        "min": 3,
+        "opt_low": 8,
+        "opt_high": 16,
+        "max": 22
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 40,
+        "opt_low": 80,
+        "opt_high": 180,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 10,
+        "opt_low": 14,
+        "opt_high": 28,
+        "max": 42
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.2,
+      "opt_low": 0.5,
+      "opt_high": 0.95,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -4,
+      "ramp_c": 2,
+      "nights": 3,
+      "window_days": 7,
+      "factor": 0.35
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -20,
+      "severe_mm": -40,
+      "moderate_factor": 0.35,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 80,
+        "opt_low": 180,
+        "opt_high": 450,
+        "max": 900
+      },
+      "floor": 0.65
+    },
+    "persistence": {
+      "days": 25
+    },
+    "weights": {
+      "temp": 0.2,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.3
+    },
+    "refs": {
+      "temp_mean": [
+        "straatsma2001",
+        "kauserud2012",
+        "terrain_fr"
+      ],
+      "rain": [
+        "straatsma2001",
+        "salerni2002",
+        "terrain_fr"
+      ],
+      "trigger": [
+        "pietka2012",
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "frost": [
+        "terrain_fr",
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "straatsma2001",
+        "karavani2018"
+      ],
+      "memory": [
+        "straatsma2001",
+        "agreda2015"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "karavani2018"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Entonnoir creux jusqu'au pied, gris-brun à noir, à la chair mince et souple ; sa face externe est lisse ou à peine ridée, sans lames. Presque invisible dans la litière, elle pousse en troupes serrées et sent bon le sous-bois une fois séchée.",
+    "habitat": "Forêts de feuillus : hêtraies, chênaies-charmaies, châtaigneraies et noisetiers, dans la litière humide des sols argileux ou calcaires, vallons frais et bords de ruisseaux. Rare sous conifères, de la plaine à la moyenne montagne.",
+    "season": "De la fin août à décembre, le gros de la pousse de fin septembre à mi-novembre, la montagne d'abord puis la plaine et le Sud. Il lui faut un automne durablement humide ; elle supporte les premières gelées.",
+    "confusions": [
+      {
+        "name": "Craterelle cendrée",
+        "latin": "Craterellus cinereus",
+        "risk": "Aucun : comestible, souvent cueillie avec elle.",
+        "tell": "Même silhouette noire, mais la face externe porte des plis gris nets comme ceux d'une girolle, là où la trompette est lisse ou à peine ridée.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Urnule en cratère",
+        "latin": "Urnula craterium",
+        "risk": "Immangeable : coriace, sans sosie toxique connu de la trompette en Europe, mais une coupe noire ramassée par erreur gâche le panier.",
+        "tell": "Coupe noire à paroi épaisse et caoutchouteuse, pousse au printemps sur du bois enterré, jamais en troupes dans la litière d'automne.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/0_Craterellus_cornucopioides_-_Trompette_de_la_mort_%281%29.JPG/1280px-0_Craterellus_cornucopioides_-_Trompette_de_la_mort_%281%29.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:0_Craterellus_cornucopioides_-_Trompette_de_la_mort_(1).JPG",
+      "author": "Jean-Pol Grandmont",
+      "license": "CC BY 3.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — hydnes et craterelles : caractères distinctifs, confusions et comestibilité",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes"
+    }
+  },
+  "references": {
+    "dahlman2000": "Dahlman M., Danell E. & Spatafora J.W. 2000, Mycol. Res. 104:388-394 — systématique moléculaire de Craterellus : C. cornucopioides dans les Cantharellales, genre ectomycorhizien",
+    "matheny2010": "Matheny P.B. et al. 2010, Mycorrhiza 20:569-575 — C. fallax (trompette d'Amérique du Nord, espèce sœur) : ectomycorhizes confirmées sur racines de chênes, hêtres et pins, large gamme d'hôtes feuillus",
+    "bk1986": "Breitenbach J. & Kränzlin F. 1986, Champignons de Suisse t. 2 (Aphyllophorales) — C. cornucopioides : forêts de feuillus, surtout hêtraies, sols calcaires, en troupes serrées, d'août à novembre",
+    "firstnature": "First Nature (fiche C. cornucopioides) — feuillus (hêtre, chêne, noisetier), sols argileux ou calcaires, litière humide, août-décembre",
+    "straatsma2001": "Straatsma G., Ayer F. & Egli S. 2001, Mycol. Res. 105:515-523 — La Chanéaz (Suisse), 21 ans de relevés hebdomadaires dans une forêt mixte : phénologie des espèces automnales, productivité liée à la pluie et à la température de l'été ; confiance moyenne pour les valeurs d'espèce",
+    "kauserud2012": "Kauserud H. et al. 2012, PNAS 109:14488-14493 — phénologie de fructification en Europe : les espèces d'automne fructifient plus tard, saisons allongées avec le réchauffement",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents",
+    "pietka2012": "Piętka et al. 2012, Leśne Prace Badawcze — girolle : corrélation pluie r = 0,72 avec ~1 mois de délai ; transposé aux Cantharellales à croissance lente, confiance faible",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pluie et humidité du sol à 1 mois, T max négatives, production de champignons comestibles",
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
+    "tanchaud": "Fiches Tanchaud, Mycocharentes — C. cornucopioides sous feuillus (chênes, châtaigniers, hêtres), de septembre à décembre",
+    "terrain_fr": "Sources de terrain françaises (guides, sociétés mycologiques) — litière humide des feuillus, vallons et bas de pente, sols argilo-calcaires ; il faut un automne durablement humide, délai pluie → pousse de 2 à 4 semaines, sporophores qui sèchent sur place et persistent 3 à 4 semaines, supporte les premières gelées ; confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 6 nov. 2026 — C. cornucopioides FR 1 467 occ. géolocalisées : oct. 385, sept. 199, nov. 170, août 81, juil. 45, déc. 35 ; altitude (283 occ. renseignées) médiane 617 m, q10 286 m, q90 1 215 m, q99 1 592 m, max 1 854 m ; médiane d'altitude 965 m en septembre, 600 m en octobre, 495 m en novembre, 427 m en décembre ; latitude médiane 45,6° N en novembre, 43,3° N en décembre ; 80 occ. datées du 1er avril d'un seul jeu de données, ignorées",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; la trompette supporte les premières gelées (seuil -4 °C, 3 nuits, × 0,35), confiance faible"
+  }
+}

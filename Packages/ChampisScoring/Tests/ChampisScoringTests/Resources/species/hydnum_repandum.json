@@ -1,0 +1,315 @@
+{
+  "id": "hydnum_repandum",
+  "schema_version": 1,
+  "group": {
+    "id": "pieds_de_mouton",
+    "fr": "Pieds de mouton"
+  },
+  "names": {
+    "fr": "Pied de mouton",
+    "la": "Hydnum repandum"
+  },
+  "notes": "Hydne ectomycorhizien généraliste (Niskanen 2018, Feng 2016) : hêtraies, chênaies-charmaies, sapinières-pessières, pinèdes moussues, en troupes et en ronds, souvent dans la litière épaisse et la mousse des vieilles forêts fermées. Indifférent au substrat (Breitenbach & Kränzlin 1986 : sols calcaires et acides) avec une légère préférence pour les sols neutres à calcaires des hêtraies du Jura, de Bourgogne et des Préalpes : plage pH large, poids pH faible. De la plaine à la limite des sapinières-pessières (~2 000 m). Espèce d'arrière-saison : septembre-décembre, pic fin septembre-novembre, se ramasse après les premières gelées et jusqu'en décembre en plaine ; sporophores fermes, à croissance lente, persistant plusieurs semaines (terrain, confiance faible). Le pied de mouton roux (H. rufescens, plus petit, orangé, plutôt acidophile et sous conifères) partage les mêmes stations et la même saison : il n'a pas de fichier propre, le groupe « Pieds de mouton » le couvre de fait. GBIF FR (2 575 occ. géolocalisées, lu le 6 nov. 2026) confirme la saison et l'altitude : oct. 577, sept. 476, nov. 260, août 204, déc. 98, juil. 79, janv. 43 ; altitude (523 occ. renseignées) médiane 800 m, q10 244 m, q90 1 422 m, q99 1 848 m, max 1 875 m ; médiane d'altitude 1 100 m en août-septembre, 780 m en octobre, 480 m en novembre, 400 m en décembre (la montagne d'abord, puis la plaine et le Sud : latitude médiane 45,3° N en novembre, 44,2° N en décembre). Les 86 occurrences du 1er avril viennent d'un seul jeu de données sans date réelle : ignorées. Délai pluie → pousse, tolérance au gel et persistance : terrain, à valider. Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 1.0,
+      "sapin_epicea": 1.0,
+      "chenes_decidus": 0.9,
+      "chataignier": 0.8,
+      "mixte_feuillus_dom": 0.9,
+      "mixte_coniferes_dom": 0.9,
+      "melange_feuillus": 0.8,
+      "melange_coniferes": 0.8,
+      "feuillus_indet": 0.7,
+      "coniferes_indet": 0.7,
+      "mixte_indet": 0.7,
+      "pin_sylvestre": 0.7,
+      "pin_crochets_cembro": 0.6,
+      "pin_maritime": 0.5,
+      "melange_pins": 0.6,
+      "autre_feuillu": 0.7,
+      "pin_laricio_noir": 0.5,
+      "autre_pin": 0.5,
+      "meleze": 0.3,
+      "chenes_sempervirents": 0.2,
+      "douglas": 0.2,
+      "autre_conifere": 0.2,
+      "pin_alep": 0.1,
+      "lande": 0.1,
+      "sans_couvert": 0.1,
+      "robinier": 0.0,
+      "peupleraie": 0.1,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.9
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.6,
+      "sans_couvert": 0.1,
+      "plantation": 0.2,
+      "non_foret": 0.1
+    },
+    "ph": {
+      "min": 3.8,
+      "opt_low": 4.8,
+      "opt_high": 7.5,
+      "max": 8.4
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 150,
+      "opt_high": 1500,
+      "max": 2000
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.85,
+      "SW": 0.8,
+      "S": 0.75,
+      "flat": 0.95
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.2,
+      "ph": 0.3,
+      "altitude": 0.2,
+      "aspect": 0.2,
+      "slope": 0.1
+    },
+    "refs": {
+      "hosts": [
+        "niskanen2018",
+        "feng2016",
+        "bk1986",
+        "martinezdearagon2007",
+        "tanchaud"
+      ],
+      "cover": [
+        "bk1986",
+        "straatsma2001",
+        "terrain_fr"
+      ],
+      "ph": [
+        "bk1986",
+        "terrain_fr"
+      ],
+      "altitude": [
+        "gbif2026",
+        "bk1986",
+        "martinezdearagon2007"
+      ],
+      "aspect": [
+        "terrain_fr"
+      ],
+      "slope": [
+        "terrain_fr"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "08-01",
+      "end": "12-31"
+    },
+    "peak": {
+      "start": "09-20",
+      "end": "11-20"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 500,
+      "start_days_per_100m": -2,
+      "end_days_per_100m": -4,
+      "max_days": 35
+    },
+    "refs": [
+      "gbif2026",
+      "straatsma2001",
+      "bk1986",
+      "kauserud2012",
+      "tanchaud"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 21,
+      "c": {
+        "min": 2,
+        "opt_low": 7,
+        "opt_high": 15,
+        "max": 21
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 150,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 15,
+      "event_days": 3,
+      "lag_days": {
+        "min": 10,
+        "opt_low": 14,
+        "opt_high": 30,
+        "max": 45
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -5,
+      "ramp_c": 2,
+      "nights": 3,
+      "window_days": 7,
+      "factor": 0.4
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.45,
+      "severe_factor": 0.2
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 28
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.25
+    },
+    "refs": {
+      "temp_mean": [
+        "straatsma2001",
+        "kauserud2012",
+        "terrain_fr"
+      ],
+      "rain": [
+        "martinezdearagon2007",
+        "straatsma2001",
+        "salerni2002"
+      ],
+      "trigger": [
+        "pietka2012",
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "karavani2018",
+        "straatsma2001"
+      ],
+      "frost": [
+        "terrain_fr",
+        "bk1986",
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "straatsma2001",
+        "karavani2018"
+      ],
+      "memory": [
+        "straatsma2001",
+        "martinezdearagon2007"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "karavani2018"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Chapeau crème à chamois, bosselé et irrégulier, chair blanche cassante ; sous le chapeau, pas de lames ni de pores mais des aiguillons fragiles, crème, qui descendent sur le pied. Le pied de mouton roux, plus petit et orangé, l'accompagne souvent.",
+    "habitat": "Toutes les forêts un peu âgées et fermées : hêtraies, chênaies-charmaies, sapinières et pessières, pinèdes moussues, en troupes et en ronds dans la litière et la mousse. Sur sols calcaires comme acides, de la plaine à la limite des sapins.",
+    "season": "De la fin de l'été à décembre, le gros de la pousse de fin septembre à novembre. Il résiste aux premières gelées et se ramasse après les cèpes et les girolles.",
+    "confusions": [
+      {
+        "name": "Hydnes amers (sarcodons)",
+        "latin": "Sarcodon imbricatus, Sarcodon scabrosus",
+        "risk": "Pas toxiques mais amers, indigestes et sans intérêt ; l'hydne écailleux cause des troubles digestifs chez certaines personnes.",
+        "tell": "Chapeau brun couvert de grosses écailles relevées, aiguillons gris-brun, chair qui grisonne ou verdit à la base, sous les conifères. Le pied de mouton a un chapeau lisse, crème à chamois, et des aiguillons blancs.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Hydnelles",
+        "latin": "Hydnellum spp.",
+        "risk": "Immangeables : coriaces et souvent amères.",
+        "tell": "Chair fibreuse, liégeuse, souvent zonée et colorée, chapeau à surface feutrée ou creusée, aiguillons bruns ; impossible à casser net comme la chair cassante du pied de mouton.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/Hydnum_repandum_JPG1.jpg/1280px-Hydnum_repandum_JPG1.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Hydnum_repandum_JPG1.jpg",
+      "author": "Jean-Pol Grandmont",
+      "license": "CC BY 3.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — hydnes et craterelles : caractères distinctifs, confusions et comestibilité",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes"
+    }
+  },
+  "references": {
+    "niskanen2018": "Niskanen T. et al. 2018, Mycologia 110:890-918 — révision du genre Hydnum : H. repandum au sens strict ectomycorhizien, associé aux feuillus (hêtre, chênes) comme aux conifères (épicéa, sapin, pins), répandu dans toute l'Europe tempérée ; H. rufescens et espèces voisines distinguées",
+    "feng2016": "Feng B. et al. 2016, Scientific Reports 6:25586 — phylogénie multilocus des Hydnum : diversité cryptique, écologie ectomycorhizienne du genre, distribution holarctique",
+    "bk1986": "Breitenbach J. & Kränzlin F. 1986, Champignons de Suisse t. 2 (Aphyllophorales) — H. repandum : forêts de feuillus et de conifères, sols calcaires et acides, en troupes, d'août à décembre ; C. cornucopioides : forêts de feuillus, surtout hêtraies, sols calcaires, en troupes serrées, d'août à novembre",
+    "straatsma2001": "Straatsma G., Ayer F. & Egli S. 2001, Mycol. Res. 105:515-523 — La Chanéaz (Suisse), 21 ans de relevés hebdomadaires dans une forêt mixte : phénologie des espèces automnales, productivité liée à la pluie et à la température de l'été ; confiance moyenne pour les valeurs d'espèce",
+    "kauserud2012": "Kauserud H. et al. 2012, PNAS 109:14488-14493 — phénologie de fructification en Europe (Norvège, Autriche, Suisse, Royaume-Uni) : les espèces d'automne fructifient plus tard, saisons allongées avec le réchauffement",
+    "martinezdearagon2007": "Martínez de Aragón J. et al. 2007, Forest Ecology and Management 252:239-256 — pinèdes des Pré-Pyrénées (Catalogne, 400-1 700 m) : production des ectomycorhiziens comestibles dont les hydnes (Hydnum repandum / rufescens), pluie d'automne et altitude",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents",
+    "pietka2012": "Piętka et al. 2012, Leśne Prace Badawcze — girolle : corrélation pluie r = 0,72 avec ~1 mois de délai ; transposé aux Cantharellales à croissance lente, confiance faible",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pinèdes méditerranéennes : pluie et humidité du sol à 1 mois, T max négatives, production de champignons comestibles",
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
+    "tanchaud": "Fiches Tanchaud, Mycocharentes — H. repandum sous feuillus et conifères, de septembre à décembre",
+    "terrain_fr": "Sources de terrain françaises (guides, sociétés mycologiques) — sols calcaires des hêtraies, vieilles forêts fermées et moussues, versants frais ; résiste bien aux premières gelées et se ramasse jusqu'en décembre ; délai pluie → pousse de 2 à 4 semaines, sporophores persistant 3 à 4 semaines ; confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 6 nov. 2026 — H. repandum FR 2 575 occ. géolocalisées : oct. 577, sept. 476, nov. 260, août 204, déc. 98, juil. 79, janv. 43 ; altitude (523 occ. renseignées) médiane 800 m, q10 244 m, q90 1 422 m, q99 1 848 m, max 1 875 m ; médiane d'altitude 1 100 m en août et septembre, 780 m en octobre, 480 m en novembre, 400 m en décembre ; latitude médiane 45,3° N en novembre, 44,2° N en décembre ; 86 occ. datées du 1er avril d'un seul jeu de données, ignorées",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; le pied de mouton tolère les gelées blanches (seuil -5 °C, 3 nuits, × 0,4), confiance faible"
+  }
+}
