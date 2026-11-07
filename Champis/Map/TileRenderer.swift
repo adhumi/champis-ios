@@ -124,8 +124,8 @@ nonisolated enum TileImage {
         return image
     }
 
-    /// Couleurs multipliées par l'alpha, arrondies au plus proche (`(c × a + 127) / 255`) ; un alpha
-    /// de 0 ou 255 laisse les octets intacts.
+    /// Couleurs multipliées par l'alpha, arrondies au plus proche (`(c × a + 127) / 255`) : un alpha
+    /// de 255 laisse les octets intacts, un alpha de 0 donne un pixel tout à zéro.
     static func premultiplied(_ rgba: [UInt8]) -> [UInt8] {
         var out = rgba
         var i = 0

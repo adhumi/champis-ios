@@ -34,12 +34,12 @@ struct ScoreOverlayRendererTests {
 
     @Test("Image de tuile : alpha droit du coloriste prémultiplié pour Core Graphics")
     func premultipliedAlpha() throws {
-        // (99, 49, 121) à alpha 128 → couleurs à moitié ; alpha 255 et 0 inchangés
+        // (99, 49, 121) à alpha 128 → couleurs à moitié ; alpha 255 inchangé ; alpha 0 → tout à zéro
         let straight: [UInt8] = [99, 49, 121, 128, 99, 49, 121, 255, 99, 49, 121, 0, 0, 0, 0, 0]
         let pre = TileImage.premultiplied(straight)
         #expect(pre[0] == 50 && pre[1] == 25 && pre[2] == 61 && pre[3] == 128)
         #expect(Array(pre[4..<8]) == [99, 49, 121, 255])
-        #expect(Array(pre[8..<16]) == [99, 49, 121, 0, 0, 0, 0, 0])
+        #expect(Array(pre[8..<16]) == [UInt8](repeating: 0, count: 8))
 
         // Dessinée sur un fond transparent, l'image rend ses octets prémultipliés, pas la couleur entière.
         let image = try #require(TileImage.cgImage(rgba: straight, size: 2))
@@ -52,11 +52,11 @@ struct ScoreOverlayRendererTests {
             context.interpolationQuality = .none
             context.draw(image, in: CGRect(x: 0, y: 0, width: 2, height: 2))
         }
-        // le contexte a l'origine en bas : la première ligne de l'image est la seconde du tampon
-        let first = Array(pixels[8..<12])
+        // la première ligne de l'image est dessinée en haut du contexte, soit la première du tampon
+        let first = Array(pixels[0..<4])
         #expect(abs(Int(first[0]) - 50) <= 1 && abs(Int(first[1]) - 25) <= 1 && abs(Int(first[2]) - 61) <= 1 && first[3] == 128)
-        #expect(Array(pixels[12..<16]) == [99, 49, 121, 255])
-        #expect(pixels[3] == 0 && pixels[7] == 0)
+        #expect(Array(pixels[4..<8]) == [99, 49, 121, 255])
+        #expect(Array(pixels[8..<16]) == [UInt8](repeating: 0, count: 8))
     }
 
     @Test("Rendu : image et génération des réglages ; tuile sans donnée vide")
