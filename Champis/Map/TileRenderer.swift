@@ -108,11 +108,13 @@ nonisolated enum TileImage {
     static let empty: Data = png(rgba: [UInt8](repeating: 0, count: TileMath.tileSize * TileMath.tileSize * 4),
                                  size: TileMath.tileSize) ?? Data()
 
-    /// Image RGBA prémultipliée, sans interpolation (les pixels 25 m restent nets à l'agrandissement).
+    /// Image RGBA sans interpolation (les pixels 25 m restent nets à l'agrandissement). Les octets
+    /// reçus ont un alpha droit (le violet de l'échelle et l'alpha du score, `TileColorizer`) ;
+    /// Core Graphics attend des couleurs prémultipliées, sinon il compose `couleur + (1 − α) × fond`
+    /// avec la couleur entière : un pixel « faible » couvrait la carte d'un lavande presque opaque.
     static func cgImage(rgba: [UInt8], size: Int) -> CGImage? {
         guard rgba.count == size * size * 4 else { return nil }
-        guard let provider = CGDataProvider(data: Data(rgba) as CFData) else { return nil }
-        // Les pixels transparents sont noirs : les octets valent déjà comme prémultipliés.
+        guard let provider = CGDataProvider(data: Data(premultiplied(rgba)) as CFData) else { return nil }
         let info = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
         guard let image = CGImage(
             width: size, height: size, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: size * 4,
@@ -120,6 +122,23 @@ nonisolated enum TileImage {
             decode: nil, shouldInterpolate: false, intent: .defaultIntent
         ) else { return nil }
         return image
+    }
+
+    /// Couleurs multipliées par l'alpha, arrondies au plus proche (`(c × a + 127) / 255`) ; un alpha
+    /// de 0 ou 255 laisse les octets intacts.
+    static func premultiplied(_ rgba: [UInt8]) -> [UInt8] {
+        var out = rgba
+        var i = 0
+        while i + 3 < out.count {
+            let a = UInt16(out[i + 3])
+            if a != 255 {
+                for k in i..<(i + 3) {
+                    out[k] = UInt8((UInt16(out[k]) * a + 127) / 255)
+                }
+            }
+            i += 4
+        }
+        return out
     }
 
     static func png(rgba: [UInt8], size: Int) -> Data? {
