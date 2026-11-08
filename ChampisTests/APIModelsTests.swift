@@ -114,6 +114,31 @@ struct APIModelsTests {
         #expect(StubURLProtocol.requests(host: siteHost).map(\.path) == ["/web/departements.geojson"])
     }
 
+    @Test("X-Champis-User : sur toutes les requêtes à l'API, jamais vers le site (lot BO2, 8 nov. 2026)")
+    func identityOnEveryAPIRequest() async throws {
+        let apiHost = StubURLProtocol.host()
+        let siteHost = StubURLProtocol.host()
+        StubURLProtocol.set(host: apiHost) { method, path, _ in
+            method == "GET" && path == "/tiles" ? (200, Fixtures.manifestJSON) : (404, #"{"detail": "Not Found"}"#)
+        }
+        StubURLProtocol.set(host: siteHost) { _, _, _ in (200, #"{"type": "FeatureCollection", "features": []}"#) }
+        let session = URLSession(configuration: StubURLProtocol.configuration())
+        let id = UUID()
+        let api = ChampisAPI(
+            baseURL: URL(string: "https://\(apiHost)")!, siteURL: URL(string: "https://\(siteHost)")!,
+            session: session, userID: id
+        )
+        _ = try await api.tiles()
+        _ = try await api.departementsGeoJSON()
+        #expect(StubURLProtocol.requests(host: apiHost).map(\.user) == [id.uuidString.lowercased()])
+        #expect(StubURLProtocol.requests(host: siteHost).map(\.user) == [nil])
+
+        // sans identifiant (aucun magasin ne répond), rien ne part
+        let anonymous = ChampisAPI(baseURL: URL(string: "https://\(apiHost)")!, session: session)
+        _ = try await anonymous.tiles()
+        #expect(StubURLProtocol.requests(host: apiHost).last?.user == nil)
+    }
+
     @Test("GET /weather/field : un jour, f par espèce et classe, stale seulement si présent, manquantes comptées")
     func weatherField() throws {
         let field = try Fixtures.decode(WeatherFieldResponse.self, Fixtures.weatherFieldJSON)

@@ -21,6 +21,11 @@ nonisolated struct BBox: Hashable, Sendable {
 /// Client de champis-api (`/species`, `/tiles`, `/weather`, `/weather/bbox`, `/weather/field`,
 /// `/departements`, sur `api.champis.app`) et du site pour ses fichiers (`/web/departements.geojson`,
 /// sur `champis.app`). Sans état ; les réponses sont décodées hors du MainActor.
+///
+/// L'identifiant pseudonyme de l'app (`userID`, skill `field-feedback`) part en en-tête
+/// `X-Champis-User` de **toutes** les requêtes à l'API (spec › Backoffice › Usage, tranché le
+/// 8 nov. 2026) : le serveur n'en garde qu'une empreinte hachée par jour pour compter les appareils
+/// actifs, jamais l'identifiant ; rien ne part au site.
 nonisolated struct ChampisAPI: Sendable {
     nonisolated enum Failure: Error, LocalizedError, Equatable {
         case badURL
@@ -42,11 +47,17 @@ nonisolated struct ChampisAPI: Sendable {
     let baseURL: URL
     let siteURL: URL
     let session: URLSession
+    /// Identifiant pseudonyme de l'app, envoyé sur toutes les requêtes à l'API ; `nil` quand aucun
+    /// magasin d'identité ne répond (rien n'est envoyé).
+    let userID: UUID?
 
-    init(baseURL: URL, siteURL: URL = ChampisAPI.defaultSiteURL, session: URLSession = .shared) {
+    init(
+        baseURL: URL, siteURL: URL = ChampisAPI.defaultSiteURL, session: URLSession = .shared, userID: UUID? = nil
+    ) {
         self.baseURL = baseURL
         self.siteURL = siteURL
         self.session = session
+        self.userID = userID
     }
 
     func species() async throws -> SpeciesCatalog {
@@ -119,8 +130,9 @@ nonisolated struct ChampisAPI: Sendable {
     /// En-tête qui porte l'identifiant de l'app (contrat spec › Backend, 30 oct. 2026).
     static let userHeader = "X-Champis-User"
 
-    /// Requête générique : `body` est un JSON, `user` ajoute l'en-tête d'identité ; `on` remplace
-    /// l'adresse de l'API (le site pour ses propres fichiers).
+    /// Requête générique : `body` est un JSON ; l'en-tête d'identité porte `user` s'il est donné,
+    /// sinon `userID`, et jamais rien vers une autre adresse que l'API (`on` : le site pour ses
+    /// propres fichiers).
     @concurrent
     func send(
         _ method: String, _ path: String, query: [URLQueryItem] = [], body: Data? = nil, user: UUID? = nil,
@@ -142,7 +154,7 @@ nonisolated struct ChampisAPI: Sendable {
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
-        if let user {
+        if let user = user ?? (base == nil ? userID : nil) {
             request.setValue(user.uuidString.lowercased(), forHTTPHeaderField: Self.userHeader)
         }
         let (data, response) = try await session.data(for: request)
