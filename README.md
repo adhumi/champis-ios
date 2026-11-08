@@ -20,6 +20,7 @@ ChampisTests/               tests de l'app (Swift Testing)
 Packages/ChampisScoring/    paquet local : portage du scoring, vecteurs de parité en ressources de test
 Packages/ChampisPMTiles/    paquet local : lecteur PMTiles (fichier ou Range HTTP) et décodeur PNG de données
 scripts/sync-vectors.sh     copie shared/vectors/ du monorepo dans le paquet, note VECTORS_VERSION
+scripts/sync-illustrations.sh  copie shared/illustrations/ du monorepo en imagesets vectoriels (Assets.xcassets/Illustrations), note ILLUSTRATIONS_VERSION
 ```
 
 Les dossiers `Champis/` et `ChampisTests/` sont des dossiers synchronisés : ajouter un fichier sur disque suffit, le projet ne change pas.
@@ -83,6 +84,7 @@ Observations (trouvé / rien trouvé, espèce, position, date, quantité, sans p
 ## Comprendre, première ouverture, réglages (refonte UX, lot 4)
 
 - `Champis/Resources/Texts/` : copie de `shared/texts/` du monorepo (`index.json` + Markdown) par `scripts/sync-texts.sh`, seule façon de les mettre à jour ; `Texts` les lit, `MarkdownBlocks` (fonction pure, testée) les découpe, `ArticleView` les affiche. Lisibles hors ligne, les mêmes mots que le site.
+- `Champis/Assets.xcassets/Illustrations/` : une planche vectorielle par espèce (`Image(speciesID)`), copie de `shared/illustrations/` du monorepo par `scripts/sync-illustrations.sh`, seule façon de les mettre à jour ; prévues pour la liste du sélecteur d'espèce, à la place du menu déroulant.
 - « Les espèces » : le texte embarqué puis les fiches du bloc `about` de `GET /species` (`SpeciesView` : photo Wikimedia Commons créditée ou « Photo à venir », où, quand, confusions dangereuses, consigne du pharmacien, sources). Aucune aide à l'identification, aucun chiffre.
 - Première ouverture : `OnboardingView`, trois cartes (les couleurs de la palette, cueillir sans nuire, rien n'est collecté) et « Commencer » ; remplace la fenêtre légale, qui reste dans À propos et dans l'article.
 - Réglages (`SettingsView`) réduits : Notifications (état du système), Départements embarqués, Mes données, Soutenir Champis, À propos (version, modèle, cadre légal, licences des données). Cinq tapes sur la version révèlent l'adresse de l'API et le cache des tuiles ; l'opacité est fixe ; le fond satellite est dans le menu de calque.

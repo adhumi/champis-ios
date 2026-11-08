@@ -13,6 +13,7 @@ Client iOS / iPadOS / macOS 26 de Champis. Le modèle, les règles d'espèces et
 - Projet `project.pbxproj` créé par Xcode (le `.xcproj` généré hors d'Xcode ne s'ouvrait pas). Dossiers synchronisés pour `Champis/` et `ChampisTests/` : ne pas éditer le projet pour ajouter un fichier ; le paquet local est `Packages/ChampisScoring`.
 - Aucune valeur d'espèce dans le code : tout vient de `/species`. Palette et seuils viennent de `shared/palette.json` via l'API.
 - Scoring recalculé localement par le paquet `ChampisScoring`, validé par les vecteurs `shared/vectors/` (tolérance 1e-6, `Double` partout). `scripts/sync-vectors.sh` est la seule façon de les mettre à jour.
+- Illustrations des espèces : `Assets.xcassets/Illustrations/<id>.imageset` (SVG vectoriel), copiées du référentiel par `scripts/sync-illustrations.sh`, jamais dessinées ni retouchées ici.
 - Tuiles PMTiles lues par un lecteur maison (requêtes Range, cache disque pour le hors ligne). Les PNG de données se décodent octet par octet, jamais via `UIImage` ou `CGImage` : la gestion des couleurs décale les gris et change la classe d'un pixel.
 - Observations et favoris : saisis dans l'app seulement, privés, identifiant généré par l'app dans le trousseau iCloud, envoyé en en-tête. Pas de photo, pas de rafraîchissement en arrière-plan : les notifications « mes coins » sont calculées et envoyées par le backend.
 
