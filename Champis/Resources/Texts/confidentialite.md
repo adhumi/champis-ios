@@ -12,7 +12,7 @@ Vos **coins** (un nom, une position, une espèce ou un groupe) et vos **observat
 
 ## Où
 
-Sur votre appareil d'abord, puis sur le serveur de Champis, liés à un identifiant pseudonyme : un code tiré au hasard par l'app et conservé dans votre trousseau iCloud. Aucun nom, aucune adresse, aucun numéro de téléphone. Le serveur et sa base de données sont hébergés par Railway dans sa région européenne, aux Pays-Bas ; Railway, société américaine, peut traiter certaines données aux États-Unis pour exploiter son service, dans le cadre de son contrat de traitement des données.
+Sur votre appareil d'abord, puis sur le serveur de Champis, liés à un identifiant pseudonyme : un code tiré au hasard par l'app et conservé dans votre trousseau iCloud. L'app envoie ce code avec chacune de ses requêtes au serveur. Aucun nom, aucune adresse, aucun numéro de téléphone. Le serveur et sa base de données sont hébergés par Railway dans sa région européenne, aux Pays-Bas ; Railway, société américaine, peut traiter certaines données aux États-Unis pour exploiter son service, dans le cadre de son contrat de traitement des données.
 
 ## Pour quoi
 
@@ -22,7 +22,9 @@ Les coins servent à calculer le score du jour et à vous prévenir quand il dev
 
 Coins et observations restent tant que vous ne les effacez pas. Le serveur et son hébergeur gardent des journaux techniques (adresse IP, page demandée, heure) quelques jours, durée fixée par l'hébergeur, seulement pour faire fonctionner et sécuriser le service.
 
-Pour savoir si Champis sert, le serveur tient aussi des totaux par jour : ouvertures de la carte du site, observations reçues, appareils ayant des coins, notifications envoyées. Ce sont des nombres, sans adresse IP ni identifiant, gardés 13 mois.
+Pour savoir si Champis sert, le serveur tient aussi des totaux par jour : ouvertures de la carte du site, observations reçues, appareils ayant des coins, notifications envoyées, espèces affichées sur la carte. Ce sont des nombres, sans adresse IP ni identifiant, gardés 13 mois.
+
+Pour compter les appareils qui utilisent l'app chaque jour, le serveur note une fois par jour une empreinte de l'identifiant pseudonyme : un hachage calculé avec une clé que seul le serveur connaît, qui ne permet de retrouver ni l'identifiant, ni vos coins, ni vos observations. Ces empreintes sont effacées après 13 mois. Rien de tel pour le site, qui n'a pas d'identifiant.
 
 ## Qui d'autre intervient
 

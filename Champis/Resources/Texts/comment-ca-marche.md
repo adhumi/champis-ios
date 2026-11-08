@@ -14,9 +14,9 @@ Les pluies des dernières semaines, la température, l'humidité du sol, le gel,
 
 Chaque espèce a sa fenêtre dans l'année, qui se décale avec l'altitude. Hors saison, la carte reste éteinte même si tout le reste est parfait.
 
-## Les cinq couleurs
+## Une couleur, cinq mots
 
-Le résultat se lit en cinq mots, du vert foncé au rouge : excellent, bon, moyen, faible, très faible. Un endroit transparent est hors forêt ou sans donnée. La couleur ne dit jamais « il y en a » : elle dit « les conditions sont réunies ».
+Sur la carte, une seule couleur, le violet, et son intensité est le score : plus la forêt est foncée, plus les conditions sont réunies ; là où il n'y a presque rien à attendre, le fond de carte reste visible. Le résultat se lit aussi en cinq mots, du plus clair au plus foncé : très faible, faible, moyen, bon, excellent. Un endroit sans aucune couleur est hors forêt ou sans donnée. La couleur ne dit jamais « il y en a » : elle dit « les conditions sont réunies ».
 
 ## Pourquoi deux endroits voisins diffèrent
 
