@@ -25,7 +25,7 @@ Pas de photo, pas de commentaire libre, pas de nom de lieu : moins il y a de don
 
 ## Identité
 
-Un identifiant aléatoire généré au premier lancement, stocké dans le trousseau avec synchronisation iCloud (`kSecAttrSynchronizable`) pour survivre à un changement d'appareil, envoyé en en-tête de chaque appel qui touche les observations ou les coins. Le nom de l'en-tête est un contrat d'API : il se fixe dans la spec › Backend avec `POST /observations`, pas dans le code. Aucun compte, aucun mail, pas de Sign in with Apple.
+Un identifiant aléatoire généré au premier lancement, stocké dans le trousseau avec synchronisation iCloud (`kSecAttrSynchronizable`) pour survivre à un changement d'appareil, envoyé en en-tête de chaque appel à l'API (obligatoire pour les observations et les coins ; sur les autres, le serveur n'en garde qu'une empreinte hachée par jour pour compter les appareils actifs, spec › Backoffice › Usage, 8 nov. 2026). Le nom de l'en-tête est un contrat d'API : il se fixe dans la spec › Backend avec `POST /observations`, pas dans le code. Aucun compte, aucun mail, pas de Sign in with Apple.
 
 Limite assumée : qui perd son trousseau perd ses épingles et ses coins ; le serveur garde des lignes anonymes pour la calibration.
 
@@ -49,7 +49,7 @@ Position et date d'une personne sont des données personnelles. Rappels : jamais
 
 ## Implémentation (31 oct. 2026)
 
-- `Champis/Field` : `FieldModels` (formes exactes de l'API, clés `snake_case`), `Identity` (`KeychainIdentityStore` synchronisé iCloud, repli `DefaultsIdentityStore`, `MemoryIdentityStore` pour les tests), `LocalStore` (acteur, `observations.json` avec la file `pending` et `coins.json`, écriture atomique), `LocationProvider` (`CLLocationUpdate.liveUpdates`, première mesure avec délai), `FieldModel` (`@Observable` : enregistrer, envoyer par lots de 200, reprendre du serveur, tout effacer, coins en liste complète, scores de `GET /coins`), `FieldViews` (`ObservationForm`, `CoinsView`). `ChampisAPI+Field` porte l'en-tête `X-Champis-User`.
+- `Champis/Field` : `FieldModels` (formes exactes de l'API, clés `snake_case`), `Identity` (`KeychainIdentityStore` synchronisé iCloud, repli `DefaultsIdentityStore`, `MemoryIdentityStore` pour les tests), `LocalStore` (acteur, `observations.json` avec la file `pending` et `coins.json`, écriture atomique), `LocationProvider` (`CLLocationUpdate.liveUpdates`, première mesure avec délai), `FieldModel` (`@Observable` : enregistrer, envoyer par lots de 200, reprendre du serveur, tout effacer, coins en liste complète, scores de `GET /coins`), `FieldViews` (`ObservationForm`, `CoinsView`). `ChampisAPI+Field` porte l'en-tête `X-Champis-User` explicitement ; depuis le lot BO2 du backoffice (8 nov. 2026), `ChampisAPI.userID` l'ajoute aussi à toutes les autres requêtes à l'API (jamais au site), le serveur n'en gardant qu'une empreinte hachée par jour pour compter les appareils actifs.
 - Entrées : menu « Retour terrain » de la carte (position touchée ou GPS), boutons de la fiche du point (« Trouvé ici », « Rien trouvé ici », « Ajouter à mes coins » avec la cible de la couche, la classe d'altitude et le T de chaque espèce du pixel). Épingles : vertes trouvé, grises rien trouvé, orange coins.
 - La permission de notification est demandée au premier coin ; l'enregistrement APNs (jeton dans `PUT /coins`) attend la capacité Push sur l'App ID.
 

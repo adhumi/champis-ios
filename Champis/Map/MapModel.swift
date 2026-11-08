@@ -192,7 +192,10 @@ final class MapModel {
         apiBaseURL: URL, session: URLSession = .shared, diskCache: DiskTileCache? = nil, fieldDirectory: URL? = nil,
         identityStores: [any IdentityStore]? = nil, offlineRoot: URL? = nil, downloads: DownloadManager? = nil
     ) {
-        let api = ChampisAPI(baseURL: apiBaseURL, session: session)
+        let stores = identityStores ?? [KeychainIdentityStore(), DefaultsIdentityStore()]
+        // L'identifiant pseudonyme part avec toutes les requêtes à l'API (spec › Backoffice › Usage,
+        // 8 nov. 2026) : le serveur en tire une empreinte par jour pour compter les appareils actifs.
+        let api = ChampisAPI(baseURL: apiBaseURL, session: session, userID: Identity.userID(from: stores))
         self.session = session
         self.api = api
         let tileStore = TileStore(disk: diskCache)
@@ -202,10 +205,7 @@ final class MapModel {
         overlay = ScoreTileOverlay(renderer: tileRenderer)
         let directory = fieldDirectory ?? (try? LocalStore.defaultDirectory())
             ?? FileManager.default.temporaryDirectory.appending(path: "champis-field", directoryHint: .isDirectory)
-        field = FieldModel(
-            api: api, store: LocalStore(directory: directory),
-            identityStores: identityStores ?? [KeychainIdentityStore(), DefaultsIdentityStore()]
-        )
+        field = FieldModel(api: api, store: LocalStore(directory: directory), identityStores: stores)
         let offlineRoot = offlineRoot ?? (try? OfflineStore.defaultRoot())
             ?? FileManager.default.temporaryDirectory.appending(path: "champis-offline", directoryHint: .isDirectory)
         let offlineModel = OfflineModel(api: api, store: OfflineStore(root: offlineRoot), downloads: downloads ?? DownloadManager())
@@ -287,7 +287,7 @@ final class MapModel {
     /// Démarre (ou redémarre, si l'adresse de l'API a changé) : espèces, palette, manifeste des tuiles.
     func start(apiBaseURL: URL) async {
         if apiBaseURL != api.baseURL {
-            api = ChampisAPI(baseURL: apiBaseURL, session: session)
+            api = ChampisAPI(baseURL: apiBaseURL, session: session, userID: api.userID)
             weather = WeatherField()
             weatherCoverage = nil
             fieldCoverage = [:]

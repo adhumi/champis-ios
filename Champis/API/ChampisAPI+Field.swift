@@ -1,6 +1,8 @@
 import Foundation
 
-/// Observations et coins : les seuls appels qui portent l'identifiant de l'app (`X-Champis-User`).
+/// Observations et coins : les appels où l'identifiant de l'app (`X-Champis-User`) est obligatoire,
+/// donné explicitement ; depuis le lot BO2 (8 nov. 2026) les autres requêtes à l'API le portent
+/// aussi, par `userID`, pour le compte des appareils actifs.
 nonisolated extension ChampisAPI {
     /// Lot idempotent : renvoyer le même lot après une coupure ne crée pas de doublon.
     func postObservations(_ observations: [FieldObservation], user: UUID) async throws -> ObservationsPostResponse {

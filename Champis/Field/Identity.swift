@@ -3,7 +3,8 @@ import Security
 import Synchronization
 
 /// Identifiant de l'app (skill `field-feedback`) : un UUID aléatoire généré au premier lancement,
-/// envoyé en en-tête `X-Champis-User` de chaque appel qui touche les observations ou les coins.
+/// envoyé en en-tête `X-Champis-User` de chaque appel à l'API (obligatoire pour les observations et
+/// les coins ; pour le reste, le serveur n'en garde qu'une empreinte hachée par jour, lot BO2).
 /// Aucun compte, aucun mail. Le trousseau synchronisé iCloud le fait survivre à un changement
 /// d'appareil ; qui le perd perd ses épingles et ses coins, le serveur garde des lignes anonymes.
 nonisolated protocol IdentityStore: Sendable {
