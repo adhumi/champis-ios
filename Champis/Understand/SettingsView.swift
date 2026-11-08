@@ -6,9 +6,9 @@ import UIKit
 #endif
 
 /// Réglages réduits (refonte UX, lot 4) : Notifications, Départements embarqués, Mes données,
-/// Soutenir Champis, À propos. L'adresse de l'API est un réglage de développement, révélé par
-/// cinq tapes sur la version ; l'opacité est fixe ; le fond satellite est dans le menu de calque ;
-/// le hors ligne se propose à la création d'un coin.
+/// Soutenir Champis, Icône de l'app (iOS et iPadOS, étape C, lot C6), À propos. L'adresse de l'API
+/// est un réglage de développement, révélé par cinq tapes sur la version ; l'opacité est fixe ; le
+/// fond satellite est dans le menu de calque ; le hors ligne se propose à la création d'un coin.
 struct SettingsView: View {
     /// La page Soutenir du site (`/soutenir` répondait 404 : le site est servi sous `/web/`).
     static let supportURL = URL(string: "https://champis.app/web/soutenir.html")!
@@ -30,6 +30,10 @@ struct SettingsView: View {
     @State private var notifications: UNAuthorizationStatus?
     @State private var versionTaps = 0
     @AppStorage("developerSettings") private var developerSettings = false
+    #if os(iOS)
+    /// Icônes alternatives (étape C, lot C6) : iOS et iPadOS seulement, macOS n'en a pas.
+    @State private var appIcons = AppIconModel(switcher: SystemAppIconSwitcher())
+    #endif
 
     var body: some View {
         NavigationStack {
@@ -79,6 +83,25 @@ struct SettingsView: View {
                 } footer: {
                     Text("Serveurs et données sont financés par des dons. Pas de publicité, pas de compte.")
                 }
+                #if os(iOS)
+                if appIcons.isAvailable {
+                    Section {
+                        NavigationLink {
+                            AppIconPicker(model: appIcons, catalog: model.catalog)
+                        } label: {
+                            LabeledContent("Icône de l'app") {
+                                Image(appIcons.selected.previewName)
+                                    .resizable()
+                                    .frame(width: 29, height: 29)
+                                    .clipShape(.rect(cornerRadius: 6.5, style: .continuous))
+                                    .accessibilityLabel(appIcons.title(for: appIcons.selected, catalog: model.catalog))
+                            }
+                        }
+                    } footer: {
+                        Text("Une icône par espèce de la carte, d'après son aquarelle.")
+                    }
+                }
+                #endif
                 Section("À propos") {
                     Button {
                         versionTaps += 1
