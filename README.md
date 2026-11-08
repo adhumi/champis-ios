@@ -16,10 +16,12 @@ Champis/API/                client champis-api (/species, /tiles, /weather/bbox,
 Champis/Map/                carte : MapModel, overlay MKTileOverlay, TileStore, colorisation, écran
 Champis/Field/              retour terrain et mes coins : modèles, identité (trousseau), LocalStore JSON, formulaire, liste
 Champis/Offline/            hors ligne par département : manifeste offline.json, OfflineStore, DownloadManager (URLSession de fond), écran
+Champis/Support/            icônes de l'app : une par aquarelle d'espèce, sélecteur des réglages (iOS, iPadOS)
 ChampisTests/               tests de l'app (Swift Testing)
 Packages/ChampisScoring/    paquet local : portage du scoring, vecteurs de parité en ressources de test
 Packages/ChampisPMTiles/    paquet local : lecteur PMTiles (fichier ou Range HTTP) et décodeur PNG de données
 scripts/sync-vectors.sh     copie shared/vectors/ du monorepo dans le paquet, note VECTORS_VERSION
+scripts/sync-icons.py       icônes et aperçus tirés de shared/illustrations/ du référentiel, note ICONS_VERSION
 ```
 
 Les dossiers `Champis/` et `ChampisTests/` sont des dossiers synchronisés : ajouter un fichier sur disque suffit, le projet ne change pas.
@@ -85,7 +87,17 @@ Observations (trouvé / rien trouvé, espèce, position, date, quantité, sans p
 - `Champis/Resources/Texts/` : copie de `shared/texts/` du monorepo (`index.json` + Markdown) par `scripts/sync-texts.sh`, seule façon de les mettre à jour ; `Texts` les lit, `MarkdownBlocks` (fonction pure, testée) les découpe, `ArticleView` les affiche. Lisibles hors ligne, les mêmes mots que le site.
 - « Les espèces » : le texte embarqué puis les fiches du bloc `about` de `GET /species` (`SpeciesView` : photo Wikimedia Commons créditée ou « Photo à venir », où, quand, confusions dangereuses, consigne du pharmacien, sources). Aucune aide à l'identification, aucun chiffre.
 - Première ouverture : `OnboardingView`, trois cartes (les couleurs de la palette, cueillir sans nuire, rien n'est collecté) et « Commencer » ; remplace la fenêtre légale, qui reste dans À propos et dans l'article.
-- Réglages (`SettingsView`) réduits : Notifications (état du système), Départements embarqués, Mes données, Soutenir Champis, À propos (version, modèle, cadre légal, licences des données). Cinq tapes sur la version révèlent l'adresse de l'API et le cache des tuiles ; l'opacité est fixe ; le fond satellite est dans le menu de calque.
+- Réglages (`SettingsView`) réduits : Notifications (état du système), Départements embarqués, Mes données, Soutenir Champis, Icône de l'app, À propos (version, modèle, cadre légal, licences des données). Cinq tapes sur la version révèlent l'adresse de l'API et le cache des tuiles ; l'opacité est fixe ; le fond satellite est dans le menu de calque.
+
+## Icônes de l'app (étape C, lot C6, 8 nov. 2026)
+
+Une icône alternative par aquarelle d'espèce du référentiel (`shared/illustrations/<espèce>.jpg`) : papier ramené au blanc, sujet recadré au centre (86 % du côté), aquarelle reposée sur un fond crème commun. Le jeu `Icon-<espèce>.appiconset` (1024 px, iOS et iPadOS) et l'aperçu `IconPreview-<espèce>.imageset` sont écrits par :
+
+```sh
+uv run scripts/sync-icons.py ../champis
+```
+
+Le script vérifie que `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES` du projet (iphoneos et iphonesimulator, Debug et Release) nomme exactement les icônes écrites ; une espèce de plus demande d'y ajouter son nom. Xcode en tire `CFBundleAlternateIcons` dans l'Info.plist, où `AppIconChoice.alternates(in:)` lit la liste : aucune espèce n'est nommée dans le code. Réglages › Icône de l'app (`AppIconPicker`) : grille à la manière de l'écran d'accueil sur le fond des listes, anneau et coche sur l'icône en service, noms français tirés du catalogue `/species`. Ouvert à tous pour l'instant ; les icônes récompenseront le soutien quand il existera. macOS n'a pas d'icônes alternatives : la ligne n'y est pas proposée.
 
 ## Tests
 
