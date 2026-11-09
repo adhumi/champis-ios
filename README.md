@@ -14,7 +14,7 @@ Champis.xcodeproj/          projet (project.pbxproj), schéma partagé Champis
 Champis/                    cible app : SwiftUI, MVVM @Observable, Assets, entitlements
 Champis/API/                client champis-api (/species, /tiles, /weather/bbox, /weather/field) et ses modèles
 Champis/Map/                carte : MapModel, overlay MKTileOverlay, TileStore, colorisation, écran
-Champis/Field/              retour terrain et mes coins : modèles, identité (trousseau), LocalStore JSON, formulaire, liste
+Champis/Field/              retour terrain et mes coins : modèles, identité (trousseau), LocalStore JSON, « Trouvé ici », liste
 Champis/Offline/            hors ligne par département : manifeste offline.json, OfflineStore, DownloadManager (URLSession de fond), écran
 Champis/Support/            icônes de l'app : une par aquarelle d'espèce, sélecteur des réglages (iOS, iPadOS)
 ChampisTests/               tests de l'app (Swift Testing)
@@ -42,7 +42,7 @@ scripts/sync-vectors.sh ../champis      # puis relancer les tests
 
 ## Navigation
 
-Refonte UX, lot 1 (décision du 1er nov. 2026 ; analyse et wireframes dans le doc « Champis — Analyse UX/UI et proposition de refonte ») : trois onglets, une question chacun. **Mes coins** (quand ?) : liste classée par score du jour, libellé de la palette et espèce porteuse, tendance en mots (« mieux dimanche », « stable toute la semaine », « en baisse », `CoinTrend`), fiche d'un coin avec ses onze jours (`GET /coins` › `days`), Voir sur la carte, Renommer, Supprimer, chiffres derrière Détails ; l'état vide porte la promesse de confidentialité. **Carte** (où ?) : l'écran existant. **Comprendre** (pourquoi ?) : textes légal et confidentialité, résumé du modèle, en attendant les articles du lot 4. L'app s'ouvre toujours sur la carte ; une notification « mes coins » (`coin_id` dans la charge utile) bascule sur Mes coins et ouvre la fiche (`AppRouter`, `AppDelegate`). Les réglages restent accessibles depuis chaque onglet. Un seul `MapModel`, créé par `ContentView`, est partagé par les trois onglets.
+Refonte UX, lot 1 (décision du 1er nov. 2026 ; analyse et wireframes dans le doc « Champis — Analyse UX/UI et proposition de refonte ») : trois onglets, une question chacun. **Mes coins** (quand ?) : liste classée par score du jour, libellé de la palette et espèce porteuse, tendance en mots (« mieux dimanche », « stable toute la semaine », « en baisse », `CoinTrend`), fiche d'un coin avec ses onze jours (`GET /coins` › `days`), Voir sur la carte, Renommer, Supprimer, chiffres derrière Détails ; l'état vide porte la promesse de confidentialité. **Carte** (où ?) : l'écran existant. **Comprendre** (pourquoi ?) : textes légal et confidentialité, résumé du modèle, en attendant les articles du lot 4. L'app s'ouvre toujours sur la carte ; une notification « mes coins » (`coin_id` dans la charge utile) bascule sur Mes coins et ouvre la fiche (`AppRouter`, `AppDelegate`). Les réglages s'ouvrent depuis Mes coins et Guide (plus depuis la carte depuis le 9 nov. 2026). Un seul `MapModel`, créé par `ContentView`, est partagé par les trois onglets.
 
 Lot 2 (1er nov. 2026) : la fiche d'un point parle en clair (`PointSheet` : libellé de la palette et jour, espèce porteuse, phrase de terrain depuis le libellé de T, phrases de `GET /weather` › `summary`, onze pastilles du point, chiffres derrière Détails) ; le curseur de jour devient un bandeau de onze pastilles datées (`DayStrip`), colorées par l'indice du département sous le centre de la carte (`MapModel.centerDeptCode`, `dayDots`, `GET /departements` chargé à tout zoom) ; le mode Terrain devient l'option « Afficher le potentiel toute saison » du menu de calque ; un bouton « i » ouvre la légende (`LegendSheet`). Étape A (6 nov. 2026, spec › Produit) : le bandeau des jours quitte la carte, qui montre toujours aujourd'hui (une ligne « Aujourd'hui · … » le dit) ; `GET /departements` n'est plus chargé ; les onze pastilles de la fiche d'un point sont en lecture seule (`CoinDaysView(interactive: false)`), datées « sam. » / « 7 » ; les réglages s'ouvrent aussi depuis la carte.
 
@@ -63,14 +63,23 @@ Observations (trouvé / rien trouvé, espèce, position, date, quantité, sans p
 ## Deux tapes en forêt, iPad et Mac (refonte UX, lot 3)
 
 - Appui long sur la carte (`MapContainer`, `UILongPressGestureRecognizer` / `NSPressGestureRecognizer`) → `MapModel.longPress` → menu « Trouvé ici · Rien trouvé ici · Ajouter à mes coins » (`MapScreen`).
-- « Rien trouvé ici » : `FieldModel.recordNotFound` enregistre une négative par espèce du calque, affiche « Noté : rien trouvé » avec Annuler pendant cinq secondes (`undoable`, `undoNotFound`, `LocalStore.remove`), puis envoie. « Trouvé ici » : `QuickFoundSheet`, trois boutons de quantité. Le formulaire complet reste dans le menu Retour terrain.
+- « Rien trouvé ici » : `FieldModel.recordNotFound` enregistre une négative par espèce du calque, affiche « Noté : rien trouvé » avec Annuler pendant cinq secondes (`undoable`, `undoNotFound`, `LocalStore.remove`), puis envoie. « Trouvé ici » : `QuickFoundSheet`, trois boutons de quantité. Depuis le 9 nov. 2026, c'est la seule façon de noter (avec la fiche du point touché) : plus de menu Retour terrain ni de formulaire complet.
 - Nouveau coin dans un département non embarqué dont le serveur publie un jeu : `MapModel.addCoin` propose une fois « Embarquer … ? » (`suggestOffline`, refus mémorisé dans `UserDefaults`).
 - iPad en largeur régulière et Mac : `SplitContentView` (barre latérale Mes coins · Carte · Comprendre, carte en détail, fiches dans l'inspecteur) ; `MapScreen(layout: .split)` ne présente pas de feuille. La carte reste sur aujourd'hui (étape A) : plus de raccourci de jour.
+
+## Carte allégée (9 nov. 2026)
+
+- Barre : à gauche le sélecteur d'espèce, à droite la légende, rien d'autre. Plus de menu Retour terrain (la feuille), plus de réglages (ils restent dans Mes coins et Guide).
+- Sélecteur d'espèce, aux mêmes règles que celui du site (`LayerCatalog`, testé) : le bouton montre la vignette naturaliste (`SpeciesThumbnail`, l'aperçu `IconPreview-<espèce>` déjà embarqué pour les icônes ; pour un groupe, l'espèce au nom français le plus court) et le nom. Le menu donne les groupes (genres en sous-titre, « Boletus spp. »), un séparateur, puis les espèces (nom latin en sous-titre). L'option « potentiel toute saison » est retirée : la carte montre toujours le score du jour (`MapMode.terrain` reste pour le rendu et ses tests).
+- Fond de carte (plan ou satellite) : bouton rond en verre sous « Centrer sur ma position », même taille (glyphe dans un cadre fixe).
+- Plus de bouton « Noter » : on note depuis la fiche du point touché ou le menu de l'appui long.
+- Sous la carte, rien par défaut : ni le jour ni le nombre de cellules et l'heure du précalcul. Un message seulement quand il change la lecture de la carte (`MapModel.weatherNotice`, `hasNotice`) : météo hors ligne et sa date, emprise trop grande, au moins un quart de l'emprise sans météo (zones transparentes, à ne pas lire comme un mauvais score) ou pas à jour ; et les erreurs, avec « Réessayer ».
+- L'avertissement sur le cadre légal de la cueillette, qui accompagne la carte, est dans la légende.
 
 ## Fiches, Noter, erreurs en clair, forêts publiques (étape B, 6 nov. 2026)
 
 - Fiche d'un point et d'un coin : sous les onze pastilles, « Tendance : mieux samedi 7 », « stable toute la semaine » ou « en baisse » (`CoinTrend`, seuil « bon » de la palette). Fiche d'un coin : ses phrases du jour (`GET /coins` › `summary`, pour l'espèce qui porte le score, à la classe du coin) et « Itinéraire » vers Plans (`CoinDetailView.directionsURL`).
-- « Noter » : bouton flottant de la carte, présent quand le point bleu est connu (`MapContainer` › `didUpdate userLocation` → `MapModel.userLocationChanged` ; seul `hasUserFix` est observé, la position reste en mémoire). `NoteSheet` : trouvé (espèce du calque, trois quantités) et rien trouvé (une négative par espèce de la couche, annulable) à ma position, précision GPS comprise.
+- « Noter » à ma position (bouton flottant, `NoteSheet`) : retiré le 9 nov. 2026, on note depuis le point touché ou pressé sur la carte.
 - Erreurs : `Problem` (phrase en clair, cause en mots pour le réseau et le serveur, détail technique à part) et `ProblemView` (« Réessayer », « Détails »). `MapModel.problem` (chargement, point, cache) et `weatherProblem`, `FieldModel.problem` et `OfflineModel.problem` portent chacun leur reprise (`Retry`) ; un département incomplet se reprend là où il s'est arrêté (`OfflineModel.resume`).
 - Statut de la forêt dans la fiche d'un point : `PublicForest` interroge le WFS `ONF.FORETS_PUBLIQUES:ONF_FORETS_PUBLIQUES` de la Géoplateforme IGN (`data.geopf.fr`, sans clé) sur un carré de quelques mètres ; « forêt domaniale », « forêt publique » ou « sans doute privée, accord du propriétaire nécessaire ». En ligne seulement : sans réponse, la ligne n'apparaît pas. Mêmes phrases que le site.
 
@@ -80,14 +89,14 @@ Observations (trouvé / rien trouvé, espèce, position, date, quantité, sans p
 - Réglages › À propos : « Confidentialité » et « Mentions légales » (articles du Guide synchronisés depuis `shared/texts/`), « Écrire à Champis » (`mailto:hello@champis.app`), « Soutenir Champis » vers `https://champis.app/web/soutenir.html` (l'ancienne adresse `/soutenir` répondait 404).
 - `Champis/PrivacyInfo.xcprivacy` : aucun suivi ; position précise, identifiant pseudonyme et contenu saisi liés à l'utilisateur ; raisons d'API `UserDefaults` (`CA92.1`) et métadonnées de fichiers (`C617.1`). Testé dans `PrivacyManifestTests`.
 - `docs/app-store.md` : les champs de la fiche App Store, les captures à produire, les étiquettes de confidentialité (alignées sur le manifeste et sur l'article Confidentialité) et les notes pour la revue.
-- Texte d'autorisation de localisation : il dit aussi « noter une observation là où vous êtes ».
+- Texte d'autorisation de localisation : afficher la position et centrer la carte (« noter une observation là où vous êtes » retiré avec « Noter », 9 nov. 2026).
 
 ## Comprendre, première ouverture, réglages (refonte UX, lot 4)
 
 - `Champis/Resources/Texts/` : copie de `shared/texts/` du monorepo (`index.json` + Markdown) par `scripts/sync-texts.sh`, seule façon de les mettre à jour ; `Texts` les lit, `MarkdownBlocks` (fonction pure, testée) les découpe, `ArticleView` les affiche. Lisibles hors ligne, les mêmes mots que le site.
 - « Les espèces » : le texte embarqué puis les fiches du bloc `about` de `GET /species` (`SpeciesView` : photo Wikimedia Commons créditée ou « Photo à venir », où, quand, confusions dangereuses, consigne du pharmacien, sources). Aucune aide à l'identification, aucun chiffre.
 - Première ouverture : `OnboardingView`, trois cartes (les couleurs de la palette, cueillir sans nuire, rien n'est collecté) et « Commencer » ; remplace la fenêtre légale, qui reste dans À propos et dans l'article.
-- Réglages (`SettingsView`) réduits : Notifications (état du système), Départements embarqués, Mes données, Soutenir Champis, Icône de l'app, À propos (version, modèle, cadre légal, licences des données). Cinq tapes sur la version révèlent l'adresse de l'API et le cache des tuiles ; l'opacité est fixe ; le fond satellite est dans le menu de calque.
+- Réglages (`SettingsView`) réduits : Notifications (état du système), Départements embarqués, Mes données, Soutenir Champis, Icône de l'app, À propos (version, modèle, cadre légal, licences des données). Cinq tapes sur la version révèlent l'adresse de l'API et le cache des tuiles ; l'opacité est fixe ; le fond satellite a son bouton sur la carte.
 
 ## Icônes de l'app (étape C, lot C6, 8 nov. 2026)
 

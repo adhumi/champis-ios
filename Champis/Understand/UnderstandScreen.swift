@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Onglet Guide (refonte UX, lot 4) : la réponse à « pourquoi ? ». Cinq articles embarqués
 /// (`shared/texts/`, lisibles hors ligne) ; « Les espèces » ouvre les fiches de `GET /species`.
-/// Les réglages, réduits, sont ici et dans chaque onglet.
+/// Les réglages, réduits, sont ici et dans Mes coins (plus sur la carte depuis le 9 nov. 2026).
 struct UnderstandScreen: View {
     let model: MapModel
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL

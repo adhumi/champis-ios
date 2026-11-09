@@ -8,7 +8,8 @@ Pour chaque planche : le papier est ramené au blanc, le sujet recadré au centr
 puis l'aquarelle reposée sur un fond crème commun aux dix icônes. Écrit dans Champis/Assets.xcassets :
 
 - Icon-<espèce>.appiconset : icône alternative 1024 px, iOS et iPadOS (PNG sans alpha) ;
-- IconPreview-<espèce>.imageset : aperçu du sélecteur (JPEG 300 px) ;
+- IconPreview-<espèce>.imageset : aperçu du sélecteur d'icônes, aussi vignette du sélecteur d'espèce
+  de la carte (JPEG 300 px) ;
 - IconPreview-champis.imageset : aperçu de l'icône principale, tiré de AppIcon-1024.png ;
 
 et note le commit du référentiel dans Champis/Resources/ICONS_VERSION. Vérifie enfin que la liste

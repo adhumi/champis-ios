@@ -2,13 +2,18 @@ import ChampisScoring
 import SwiftUI
 
 /// Onglet Carte (refonte UX, lot 2) : overlay colorisé sur fond Apple, à tout zoom (plus de vue
-/// France, décision du 4 nov. 2026), menu de calque (groupes, espèces, potentiel toute saison),
-/// légende, fiche au toucher en clair. Les coins ont leur onglet (`CoinsScreen`). Lot 3 : appui
-/// long pour le menu de terrain, « Noté : rien trouvé » annulable, proposition d'embarquer le
-/// département d'un nouveau coin ; sur iPad et Mac (`layout: .split`), les fiches vont dans
-/// l'inspecteur de `SplitContentView`, pas en feuille. Étape A (6 nov. 2026) : la carte montre
-/// toujours aujourd'hui, le bandeau des jours est retiré (les onze jours sont dans la fiche d'un
-/// point, en lecture seule), et les réglages s'ouvrent aussi d'ici.
+/// France, décision du 4 nov. 2026), sélecteur d'espèce, légende, fiche au toucher en clair. Les
+/// coins ont leur onglet (`CoinsScreen`). Lot 3 : appui long pour le menu de terrain, « Noté : rien
+/// trouvé » annulable, proposition d'embarquer le département d'un nouveau coin ; sur iPad et Mac
+/// (`layout: .split`), les fiches vont dans l'inspecteur de `SplitContentView`, pas en feuille.
+/// Étape A (6 nov. 2026) : la carte montre toujours aujourd'hui, les onze jours sont dans la fiche
+/// d'un point, en lecture seule.
+///
+/// Écran allégé le 9 nov. 2026 : dans la barre, le sélecteur d'espèce (vignette et nom) et la
+/// légende seulement ; plus de potentiel toute saison, plus de réglages (onglets Mes coins et
+/// Guide), plus de menu Retour terrain ni de bouton « Noter » : on note depuis le point touché
+/// (fiche) ou pressé (menu). Le fond de carte a son bouton sous « Centrer sur ma position ». Sous la
+/// carte, rien, sauf une erreur ou une information qui change sa lecture (`MapModel.hasNotice`).
 struct MapScreen: View {
     /// L'API est sur son propre domaine depuis le découpage des dépôts (spec › Produit › Étape C,
     /// lot C7, 6 nov. 2026) ; `champis.app` est le site, qui relaie encore l'API pour les versions
@@ -16,6 +21,9 @@ struct MapScreen: View {
     static let defaultAPIBaseURL = "https://api.champis.app"
     /// Ancienne adresse par défaut, peut-être gardée par `@AppStorage` : lue comme la nouvelle.
     static let legacyAPIBaseURLs: Set<String> = ["https://champis.app", "https://champis.app/"]
+    /// Côté du glyphe des boutons ronds de la carte : un cadre fixe, pour que les cercles aient la
+    /// même taille quel que soit le symbole.
+    private static let controlGlyphSide: CGFloat = 22
 
     nonisolated enum Layout: Sendable {
         /// iPhone : les fiches sont des feuilles.
@@ -28,12 +36,7 @@ struct MapScreen: View {
     let model: MapModel
     var layout: Layout = .compact
     @State private var showLegend = false
-    @State private var showSettings = false
-    @State private var showLegalNotice = false
-    @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
-    @State private var observationRequest: ObservationFormRequest?
     @State private var quickFound: MapSelection?
-    @State private var note: NoteRequest?
 
     var body: some View {
         NavigationStack {
@@ -47,48 +50,29 @@ struct MapScreen: View {
                     Spacer(minLength: 0)
                     HStack {
                         Spacer()
-                        if model.hasUserFix, model.catalog != nil {
-                            // étape B4 : noter à ma position, sans viser la carte
-                            Button {
-                                if let fix = model.currentFix {
-                                    note = NoteRequest(fix: fix)
-                                }
-                            } label: {
-                                Label("Noter", systemImage: "square.and.pencil")
-                                    .font(.body.weight(.semibold))
-                                    .padding(.horizontal, 4)
-                                    .padding(.vertical, 2)
-                            }
-                            .buttonStyle(.glassProminent)
-                            .accessibilityHint("Trouvé ou rien trouvé, à votre position")
+                        VStack(spacing: 8) {
+                            locateButton
+                            basemapMenu
                         }
-                        Button {
-                            model.locateMe()
-                        } label: {
-                            Image(systemName: model.locationDenied ? "location.slash" : "location")
-                                .font(.body.weight(.medium))
-                                .padding(6)
-                        }
-                        .buttonStyle(.glass)
-                        .buttonBorderShape(.circle)
-                        .accessibilityLabel("Centrer sur ma position")
-                        .accessibilityHint(model.locationDenied ? "Position refusée dans les réglages du système" : "")
                     }
                     if !model.field.undoable.isEmpty {
                         undoToast
                     }
-                    panel
+                    if model.hasNotice {
+                        notices
+                    }
                 }
                 .padding(12)
                 .animation(.default, value: model.field.undoable.isEmpty)
+                .animation(.default, value: model.hasNotice)
             }
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
             #endif
             .toolbar {
-                // le menu de calque à gauche, la légende et le retour terrain à droite : tout en
-                // Liquid Glass dans la barre, plus rien de flottant en haut de la carte
+                // le sélecteur d'espèce à gauche, la légende à droite : tout en Liquid Glass dans
+                // la barre, plus rien de flottant en haut de la carte
                 ToolbarItem(placement: Self.leadingPlacement) {
                     layerMenu
                 }
@@ -104,37 +88,7 @@ struct MapScreen: View {
                         Label("Légende", systemImage: "info")
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showSettings = true
-                    } label: {
-                        Label("Réglages", systemImage: "slider.horizontal.3")
-                    }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        Button {
-                            observationRequest = ObservationFormRequest(found: true, species: nil, point: model.selection)
-                        } label: {
-                            Label("Trouvé", systemImage: "checkmark.circle")
-                        }
-                        Button {
-                            observationRequest = ObservationFormRequest(found: false, species: nil, point: model.selection)
-                        } label: {
-                            Label("Rien trouvé", systemImage: "xmark.circle")
-                        }
-                    } label: {
-                        Label("Retour terrain", systemImage: "leaf")
-                    }
-                    .disabled(model.catalog == nil)
-                }
             }
-        }
-        .sheet(item: $observationRequest) { request in
-            ObservationForm(
-                field: model.field, species: model.speciesOptions, initialSpecies: request.species,
-                at: request.point, found: request.found
-            )
         }
         .sheet(item: pointBinding) { info in
             PointSheet(info: info, model: model)
@@ -142,19 +96,8 @@ struct MapScreen: View {
         .sheet(isPresented: $showLegend) {
             LegendSheet(model: model)
         }
-        .sheet(isPresented: $showSettings) {
-            SettingsView(model: model, apiBaseURL: $apiBaseURL, showLegalNotice: $showLegalNotice)
-        }
-        .alert(LegalNotice.title, isPresented: $showLegalNotice) {
-            Button("OK") {}
-        } message: {
-            Text(LegalNotice.text)
-        }
         .sheet(item: $quickFound) { point in
             QuickFoundSheet(model: model, point: point, initialSpecies: nil)
-        }
-        .sheet(item: $note) { request in
-            NoteSheet(model: model, fix: request.fix)
         }
         .confirmationDialog(
             "À cet endroit", isPresented: longPressBinding, titleVisibility: .visible, presenting: model.longPressPoint
@@ -201,64 +144,100 @@ struct MapScreen: View {
         #endif
     }
 
-    /// Menu de calque (groupes, espèces, potentiel toute saison, fond de carte), dans la barre.
+    /// Sélecteur d'espèce (9 nov. 2026, comme celui du site) : dans la barre, la vignette
+    /// naturaliste et le nom de la couche ; dans le menu, les groupes (nom latin des genres en
+    /// sous-titre), un séparateur, puis les espèces (nom latin en sous-titre).
     private var layerMenu: some View {
         Menu {
-            Picker("Espèce ou groupe", selection: layerBinding) {
-                ForEach(model.layers) { layer in
-                    Text(layer.title).tag(Optional(layer.key))
+            Section {
+                ForEach(model.groupLayers) { layer in
+                    layerToggle(layer)
                 }
             }
-            .pickerStyle(.inline)
-            Divider()
-            Toggle(isOn: potentialBinding) {
-                Label("Afficher le potentiel toute saison", systemImage: "leaf")
-            }
-            Text("Le terrain seul, sans la météo ni la saison : pour repérer des secteurs.")
-            Divider()
-            Picker("Fond de carte", selection: basemapBinding) {
-                ForEach(Basemap.allCases) { basemap in
-                    Text(basemap.title).tag(basemap)
+            Section {
+                ForEach(model.speciesLayers) { layer in
+                    layerToggle(layer)
                 }
             }
-            .pickerStyle(.menu)
         } label: {
-            HStack(spacing: 4) {
-                Text(model.selectedLayer?.title ?? "Couche")
+            HStack(spacing: 8) {
+                SpeciesThumbnail(species: model.selectedLayer?.illustration)
+                Text(model.selectedLayer?.title ?? "Espèce")
                     .fontWeight(.semibold)
                 Image(systemName: "chevron.down").font(.caption)
             }
         }
         .disabled(model.layers.isEmpty)
-        .accessibilityLabel("Couche : \(model.selectedLayer?.title ?? "aucune")")
+        .accessibilityLabel("Espèce : \(model.selectedLayer?.title ?? "aucune")")
     }
 
-    /// Bandeau du bas : les onze jours (mode score) ou le rappel du potentiel (mode terrain),
-    /// puis les messages (météo, erreurs, envois en attente).
-    private var panel: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if model.mode == .score {
-                // la carte montre toujours aujourd'hui : on le dit, à la place du bandeau des jours
-                Text(model.dayLabel)
-                    .font(.subheadline.weight(.semibold))
-                if let problem = model.weatherProblem {
-                    ProblemView(problem: problem) { model.retryWeather() }
-                } else if let status = model.weatherStatus {
-                    Text(status)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+    /// Une ligne du menu : coche sur la couche affichée, nom français, nom latin en sous-titre.
+    private func layerToggle(_ layer: Layer) -> some View {
+        Toggle(isOn: layerBinding(layer)) {
+            Text(layer.title)
+            if !layer.latin.isEmpty {
+                Text(layer.latin)
+            }
+        }
+    }
+
+    /// Centrer sur ma position : bouton rond en verre, en bas à droite.
+    private var locateButton: some View {
+        Button {
+            model.locateMe()
+        } label: {
+            controlGlyph(model.locationDenied ? "location.slash" : "location")
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .accessibilityLabel("Centrer sur ma position")
+        .accessibilityHint(model.locationDenied ? "Position refusée dans les réglages du système" : "")
+    }
+
+    /// Fond de carte (plan ou satellite) : même bouton rond, sous « Centrer sur ma position ».
+    private var basemapMenu: some View {
+        Menu {
+            Picker("Fond de carte", selection: basemapBinding) {
+                ForEach(Basemap.allCases) { basemap in
+                    Label(basemap.title, systemImage: basemap.systemImage).tag(basemap)
                 }
-            } else {
-                Label("Potentiel terrain, indépendant de la météo et de la saison", systemImage: "leaf")
+            }
+            .pickerStyle(.inline)
+        } label: {
+            controlGlyph("square.2.layers.3d")
+        }
+        .menuStyle(.button)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .accessibilityLabel("Fond de carte")
+        .accessibilityValue(model.basemap.title)
+    }
+
+    private func controlGlyph(_ systemName: String) -> some View {
+        Image(systemName: systemName)
+            .font(.body.weight(.medium))
+            .frame(width: Self.controlGlyphSide, height: Self.controlGlyphSide)
+            .padding(6)
+    }
+
+    /// Sous la carte, seulement quand il y a quelque chose à dire : une erreur avec sa reprise, ou
+    /// une information qui change la lecture de la carte (hors ligne, zones sans météo).
+    private var notices: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let problem = model.weatherProblem {
+                ProblemView(problem: problem) { model.retryWeather() }
+            } else if let notice = model.weatherNotice {
+                Label(notice, systemImage: "info.circle")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
             }
             if let problem = model.problem {
                 ProblemView(problem: problem) { model.retryProblem() }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
     /// « Noté : rien trouvé » avec Annuler, le temps du délai avant l'envoi.
@@ -300,12 +279,9 @@ struct MapScreen: View {
         Binding(get: { model.basemap }, set: { model.basemap = $0 })
     }
 
-    private var potentialBinding: Binding<Bool> {
-        Binding(get: { model.mode == .terrain }, set: { model.setMode($0 ? .terrain : .score) })
-    }
-
-    private var layerBinding: Binding<LayerKey?> {
-        Binding(get: { model.selectedLayer?.key }, set: { model.select(layerKey: $0) })
+    /// Cocher une couche l'affiche ; décocher celle affichée ne fait rien (il en faut une).
+    private func layerBinding(_ layer: Layer) -> Binding<Bool> {
+        Binding(get: { model.selectedLayer?.key == layer.key }, set: { if $0 { model.select(layerKey: layer.key) } })
     }
 
     /// En disposition partagée, l'inspecteur montre la fiche : la feuille ne se présente jamais.
@@ -320,12 +296,6 @@ struct MapScreen: View {
         }
         return URL(string: defaultAPIBaseURL)!
     }
-}
-
-/// « Noter » à ma position (étape B4) : la position est figée au moment de l'appui.
-nonisolated struct NoteRequest: Identifiable, Sendable {
-    let id = UUID()
-    let fix: LocationProvider.Fix
 }
 
 /// Barre continue de la légende (échelle linéaire, 6 nov. 2026) : du transparent au violet de
@@ -396,6 +366,7 @@ struct LegendView: View {
 /// Légende (lot 2, échelle linéaire le 6 nov. 2026) : la barre continue du transparent au violet
 /// avec les cinq mots, ce que veut dire un pixel transparent, et le renvoi vers Comprendre. Sans
 /// échelle (API ancienne), les cinq pastilles de classe. La couleur ne porte jamais seule l'information.
+/// Depuis le 9 nov. 2026, elle porte aussi l'avertissement sur le cadre légal de la cueillette.
 struct LegendSheet: View {
     let model: MapModel
     @Environment(\.dismiss) private var dismiss
@@ -431,6 +402,12 @@ struct LegendSheet: View {
                 } footer: {
                     Text("Plus le violet est foncé, plus les conditions sont réunies : le terrain, la météo des dernières semaines et la saison de l'espèce, en un seul score. Le détail est dans l'onglet Guide.")
                 }
+                // l'avertissement accompagne la carte (30 oct. 2026) : les réglages n'y sont plus
+                // depuis le 9 nov. 2026, il est ici
+                Section(LegalNotice.title) {
+                    Text(LegalNotice.text)
+                        .font(.footnote)
+                }
             }
             .navigationTitle("Légende")
             .toolbar {
@@ -440,7 +417,7 @@ struct LegendSheet: View {
             }
         }
         #if os(iOS)
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
         #endif
     }
 }

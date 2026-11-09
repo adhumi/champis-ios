@@ -5,18 +5,15 @@ import Testing
 
 @MainActor
 struct MapModelTests {
-    @Test("Curseur de jour borné à J−3 → J+7 ; libellés sans météo")
+    @Test("Curseur de jour borné à J−3 → J+7 ; pas de jour sans météo")
     func day() {
         let model = MapModel(apiBaseURL: URL(string: "https://champis.example")!)
         #expect(model.dayOffset == 0)
-        #expect(model.dayLabel == "Aujourd'hui")
         #expect(model.dayDate == nil)
         model.setDay(12)
         #expect(model.dayOffset == 7)
-        #expect(model.dayLabel == "J+7")
         model.setDay(-9)
         #expect(model.dayOffset == -3)
-        #expect(model.dayLabel == "J−3")
         #expect(model.renderGeneration == 2)
     }
 
@@ -147,15 +144,21 @@ struct MapModelTests {
         #expect(MapModel.format(iso: "n'importe quoi") == "n'importe quoi")
     }
 
-    @Test("Statut météo : cellules, date du précalcul, cache périmé, cellules manquantes")
-    func status() throws {
+    @Test("Message sous la carte (9 nov. 2026) : rien quand tout va bien, zones sans météo ou pas à jour au-delà d'un quart")
+    func notice() throws {
         let response = try Fixtures.decode(WeatherBBoxResponse.self, Fixtures.weatherJSON)
-        let status = MapModel.status(for: response)
-        #expect(status.hasPrefix("1 cellule(s) météo"))
-        #expect(status.contains("calculée le"))
-        #expect(status.contains("1 sans météo"))
-        #expect(!status.contains("périmé"))
+        // une cellule servie, une manquante : la moitié de l'emprise reste transparente
+        #expect(MapModel.notice(for: response) == "Pas de météo sur une partie de la carte : ces zones restent transparentes.")
         #expect(!MapModel.isComplete(response))  // une cellule manque : le prochain déplacement redemande
+
+        #expect(MapModel.notice(cells: 0, stale: 0, missing: 0) == nil)
+        #expect(MapModel.notice(cells: 40, stale: 0, missing: 0) == nil)  // ni cellules ni heure de calcul
+        #expect(MapModel.notice(cells: 31, stale: 0, missing: 9) == nil)  // quelques cellules au bord : rien
+        #expect(MapModel.notice(cells: 30, stale: 0, missing: 10)?.hasPrefix("Pas de météo") == true)
+        #expect(MapModel.notice(cells: 40, stale: 9, missing: 0) == nil)
+        #expect(MapModel.notice(cells: 40, stale: 10, missing: 0) == "Météo pas à jour sur une partie de la carte : le score peut y être décalé.")
+        // les deux : l'absence l'emporte, elle se voit sur la carte
+        #expect(MapModel.notice(cells: 20, stale: 20, missing: 20)?.hasPrefix("Pas de météo") == true)
     }
 
     @Test("Météo déjà reçue : une emprise contenue dans la dernière, même couche et même jour, ne redemande rien")
@@ -200,14 +203,16 @@ struct MapModelTests {
         #expect(!model.usesWeatherField)
     }
 
-    @Test("Statut d'un champ compact : cellules, date du précalcul, périmées et manquantes en clair")
-    func fieldStatus() throws {
+    @Test("Message d'un champ compact : cellules manquantes comptées, périmées lues dans les cellules")
+    func fieldNotice() throws {
         let field = try Fixtures.decode(WeatherFieldResponse.self, Fixtures.weatherFieldJSON)
-        let status = MapModel.status(for: field)
-        #expect(status.hasPrefix("2 cellule(s) météo"))
-        #expect(status.contains("calculée le"))
-        #expect(status.contains("cache périmé pour 1 cellule(s)"))
-        #expect(status.contains("2 sans météo"))
+        #expect(MapModel.notice(for: field)?.hasPrefix("Pas de météo") == true)  // 2 servies, 2 manquantes
+        let complete = try Fixtures.decode(WeatherFieldResponse.self, Self.completeFieldJSON)
+        #expect(MapModel.notice(for: complete) == nil)
+        let staleOnly = try Fixtures.decode(
+            WeatherFieldResponse.self, Fixtures.weatherFieldJSON.replacingOccurrences(of: "\"unavailable\": 2", with: "\"unavailable\": 0")
+        )
+        #expect(MapModel.notice(for: staleOnly)?.hasPrefix("Météo pas à jour") == true)  // 1 périmée sur 2
     }
 
     /// Le champ compact de la fixture, complet (rien de périmé ni de manquant) : une réponse complète
@@ -264,9 +269,8 @@ struct MapModelTests {
         #expect(last.query.contains("day=2026-10-30"))
         #expect(model.today == "2026-10-30")
         #expect(model.weather.cells.count == 2)
-        #expect(model.weatherStatus?.hasPrefix("2 cellule(s) météo") == true)
-        #expect(model.weatherStatus?.contains("calculée le") == true)
-        #expect(model.weatherStatus?.contains("sans météo") == false)
+        #expect(model.weatherNotice == nil)  // champ complet : rien sous la carte
+        #expect(!model.hasNotice)
         let generation = model.renderGeneration
         #expect(generation > 0)
 
@@ -306,7 +310,8 @@ struct MapModelTests {
         #expect(bbox.path == "/weather/bbox")
         #expect(bbox.query.contains("min_lon=8.20000"))
         #expect(!bbox.query.contains("day="))
-        #expect(model.weatherStatus?.hasPrefix("1 cellule(s) météo") == true)
+        #expect(model.weatherNotice?.hasPrefix("Pas de météo") == true)  // une cellule sur deux manque
+        #expect(model.hasNotice)
         let count = Self.weatherRequests(host: host).count
         model.setDay(2)
         await model.awaitWeather()
@@ -337,19 +342,6 @@ struct MapModelTests {
         #expect(model.catalog != nil)
     }
 
-    @Test("Étape B4 : « Noter » n'apparaît que quand la carte connaît ma position")
-    func userFixShowsNote() {
-        let (model, _, directory) = Self.stubModel()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        #expect(!model.hasUserFix)
-        model.userLocationChanged(LocationProvider.Fix(latitude: 46.9, longitude: 6.35, accuracyM: 12))
-        #expect(model.hasUserFix)
-        #expect(model.currentFix?.accuracyM == 12)
-        model.userLocationChanged(nil)
-        #expect(!model.hasUserFix)
-        #expect(model.currentFix == nil)
-    }
-
     @Test("Mode terrain : aucune météo demandée, à aucun zoom")
     func terrainAsksNothing() async throws {
         let (model, host, directory) = Self.stubModel()
@@ -361,6 +353,6 @@ struct MapModelTests {
         model.visibleRegionChanged(BBox(minLon: 8.3, minLat: 46.9, maxLon: 8.5, maxLat: 47.1), zoom: 12)
         await model.awaitWeather()
         #expect(Self.weatherRequests(host: host).isEmpty)
-        #expect(model.weatherStatus == nil)
+        #expect(model.weatherNotice == nil)
     }
 }

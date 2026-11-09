@@ -199,25 +199,6 @@ struct MapContainer: PlatformRepresentable {
             model.visibleRegionChanged(Self.bbox(of: mapView), zoom: Self.zoomLevel(of: mapView))
         }
 
-        /// Le point bleu a bougé : « Noter » sait où je suis (étape B4). Une précision négative est
-        /// une position invalide.
-        func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
-            guard let location = userLocation.location, location.horizontalAccuracy >= 0 else {
-                model.userLocationChanged(nil)
-                return
-            }
-            model.userLocationChanged(
-                LocationProvider.Fix(
-                    latitude: location.coordinate.latitude, longitude: location.coordinate.longitude,
-                    accuracyM: location.horizontalAccuracy
-                )
-            )
-        }
-
-        func mapView(_ mapView: MKMapView, didFailToLocateUserWithError error: any Error) {
-            model.userLocationChanged(nil)
-        }
-
         @objc private func handleTap(_ gesture: PlatformGestureRecognizer) {
             guard let mapView else { return }
             let point = gesture.location(in: mapView)
