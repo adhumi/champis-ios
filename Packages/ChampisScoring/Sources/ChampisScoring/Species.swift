@@ -155,18 +155,44 @@ public struct Species: Codable, Hashable, Sendable {
         public let rain: Double
         public let trigger: Double
         public let soilMoisture: Double
+        /// Poids du facteur optionnel `soil_temp` (spec › Scoring › Facteurs de sol et de paysage,
+        /// 9 nov. 2026) : absent du fichier = 0, l'espèce ne l'emploie pas.
+        public let soilTemp: Double
 
         enum CodingKeys: String, CodingKey {
             case temp, rain, trigger
             case soilMoisture = "soil_moisture"
+            case soilTemp = "soil_temp"
+        }
+
+        public init(temp: Double, rain: Double, trigger: Double, soilMoisture: Double, soilTemp: Double = 0) {
+            self.temp = temp
+            self.rain = rain
+            self.trigger = trigger
+            self.soilMoisture = soilMoisture
+            self.soilTemp = soilTemp
+        }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            temp = try c.decode(Double.self, forKey: .temp)
+            rain = try c.decode(Double.self, forKey: .rain)
+            trigger = try c.decode(Double.self, forKey: .trigger)
+            soilMoisture = try c.decode(Double.self, forKey: .soilMoisture)
+            soilTemp = try c.decodeIfPresent(Double.self, forKey: .soilTemp) ?? 0
         }
     }
+
+    /// Température du sol 0–7 cm : même forme que `temp_mean` (fenêtre et trapèze), corrigée à
+    /// l'altitude comme l'air. Bloc optionnel : une espèce sans lui a un poids `soil_temp` nul.
+    public typealias SoilTemp = TempMean
 
     public struct Weather: Codable, Hashable, Sendable {
         public let tempMean: TempMean
         public let rain: Rain
         public let trigger: Trigger
         public let soilMoisturePct: Trapezoid
+        public let soilTemp: SoilTemp?
         public let frost: Frost
         public let waterBalance: WaterBalance
         public let heat: Heat
@@ -178,6 +204,7 @@ public struct Species: Codable, Hashable, Sendable {
             case rain, trigger, frost, heat, memory, persistence, weights
             case tempMean = "temp_mean"
             case soilMoisturePct = "soil_moisture_pct"
+            case soilTemp = "soil_temp"
             case waterBalance = "water_balance"
         }
     }
@@ -224,8 +251,10 @@ public struct Species: Codable, Hashable, Sendable {
         try JSONDecoder().decode(Species.self, from: data)
     }
 
-    /// Longueur minimale de série avant J pour calculer `M_eff` sans troncature.
+    /// Longueur minimale de série avant J pour calculer `M_eff` sans troncature (la fenêtre de la
+    /// température du sol est comptée si elle dépasse celle de la pluie, comme `required_series_days`).
     public var requiredSeriesDays: Int {
-        weather.memory.windowDays + weather.rain.windowDays + weather.persistence.days
+        let window = Swift.max(weather.rain.windowDays, weather.soilTemp?.windowDays ?? 0)
+        return weather.memory.windowDays + window + weather.persistence.days
     }
 }

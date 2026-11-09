@@ -1,0 +1,317 @@
+{
+  "id": "craterellus_cinereus",
+  "schema_version": 1,
+  "group": {
+    "id": "trompettes",
+    "fr": "Trompettes de la mort"
+  },
+  "names": {
+    "fr": "Craterelle cendrée",
+    "la": "Craterellus cinereus"
+  },
+  "notes": "BONUS du groupe trompettes, à valider. Nom retenu : Craterellus cinereus (Pers.) Pers., nom néotypifié par Contu et al. 2009 (Mycotaxon) et nom correct pour Wikipédia (fr). Le squelette taxonomique de GBIF (lu le 8 nov. 2026) donne comme nom accepté Cantharellus cinereus Pers. (clé 9226626) et met Craterellus cinereus (Pers.) Donk et Pseudocraterellus cinereus (Pers.) Kalamees en synonymes. On ne le suit pas : Pseudocraterellus n'est pas séparable de Craterellus (Dahlman et al. 2000, qui rattachent aussi à Craterellus les Cantharellus du sous-genre Leptocantharellus), et le placement dans Cantharellus semble tenir aux anciennes conceptions morphologiques (Contu et al. 2009 décrivent d'ailleurs une espèce voisine bouclée, Cantharellus atrofuscus) ; l'id suit donc Craterellus cinereus. Le nom accepté reste à confirmer sur Species Fungorum / MycoBank (inaccessibles pendant cette recherche) : si Adrien préfère suivre GBIF, renommer en cantharellus_cinereus ne change aucune valeur. Même écologie que la trompette pour l'essentiel (feuillus, litière humide, sols argileux à calcaires, souvent cueillie avec elle) : hôtes, pH, couvert, pente et exposition repris de craterellus_cornucopioides, avec un poids un peu plus fort sur le châtaignier, le chêne vert et les sapinières-hêtraies (Wikipédia fr ; un relevé GBIF « Abies alba/Fagus sylvatica »). GBIF FR (446 occ. géolocalisées, lu le 8 nov. 2026, sous le nom C. cinereus) : oct. 70, sept. 49, nov. 38, août 16, déc. 6 ; janv. 16 dont 12 au 1er janvier, et 67 occ. d'avril dont 66 au 1er avril : artefacts de date, ignorés. Saison plus courte que la trompette (presque rien en décembre) : fin de saison au 15 décembre. Altitude (56 occ. renseignées seulement) médiane 589 m, q10 190 m, q90 1 235 m, q99 1 544 m, max 1 600 m ; médiane d'altitude 1 015 m en septembre, 855 m en octobre, 542 m en novembre : la montagne d'abord, décalage repris de la trompette. Foyers : Jura 68, Doubs 48, Hautes-Pyrénées 27, Isère 19, Pas-de-Calais 19. Météo identique à la trompette (même groupe, mêmes stations, aucune donnée propre) : confiance faible. Comestibilité et qualité culinaire non vérifiées dans une source à comité de lecture. Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 1.0,
+      "sapin_epicea": 0.25,
+      "chenes_decidus": 0.9,
+      "chataignier": 1.0,
+      "mixte_feuillus_dom": 0.9,
+      "mixte_coniferes_dom": 0.5,
+      "melange_feuillus": 0.9,
+      "melange_coniferes": 0.2,
+      "feuillus_indet": 0.8,
+      "coniferes_indet": 0.2,
+      "mixte_indet": 0.6,
+      "pin_sylvestre": 0.1,
+      "pin_crochets_cembro": 0.05,
+      "pin_maritime": 0.1,
+      "melange_pins": 0.1,
+      "autre_feuillu": 0.8,
+      "pin_laricio_noir": 0.05,
+      "autre_pin": 0.05,
+      "meleze": 0.05,
+      "chenes_sempervirents": 0.3,
+      "douglas": 0.05,
+      "autre_conifere": 0.05,
+      "pin_alep": 0.0,
+      "lande": 0.05,
+      "sans_couvert": 0.05,
+      "robinier": 0.0,
+      "peupleraie": 0.05,
+      "herbacee": 0.0,
+      "default": 0.05,
+      "melange_coniferes_hors_pins": 0.4
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.5,
+      "sans_couvert": 0.05,
+      "plantation": 0.1,
+      "non_foret": 0.05
+    },
+    "ph": {
+      "min": 3.8,
+      "opt_low": 5.2,
+      "opt_high": 7.8,
+      "max": 8.5
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 100,
+      "opt_high": 1200,
+      "max": 1700
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.8,
+      "SW": 0.75,
+      "S": 0.7,
+      "flat": 1.0
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 20,
+      "max": 35
+    },
+    "weights": {
+      "cover": 0.2,
+      "ph": 0.35,
+      "altitude": 0.15,
+      "aspect": 0.2,
+      "slope": 0.1
+    },
+    "refs": {
+      "hosts": [
+        "wikipedia_fr_cinereus",
+        "contu2009",
+        "dahlman2000",
+        "gbif2026",
+        "terrain_fr"
+      ],
+      "cover": [
+        "terrain_fr"
+      ],
+      "ph": [
+        "wikipedia_fr_cinereus",
+        "terrain_fr"
+      ],
+      "altitude": [
+        "gbif2026"
+      ],
+      "aspect": [
+        "terrain_fr"
+      ],
+      "slope": [
+        "terrain_fr"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "07-15",
+      "end": "12-15"
+    },
+    "peak": {
+      "start": "09-10",
+      "end": "11-05"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 500,
+      "start_days_per_100m": -2,
+      "end_days_per_100m": -4,
+      "max_days": 35
+    },
+    "refs": [
+      "gbif2026",
+      "wikipedia_fr_cinereus",
+      "kauserud2012"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 21,
+      "c": {
+        "min": 3,
+        "opt_low": 8,
+        "opt_high": 16,
+        "max": 22
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 40,
+        "opt_low": 80,
+        "opt_high": 180,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 10,
+        "opt_low": 14,
+        "opt_high": 28,
+        "max": 42
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.2,
+      "opt_low": 0.5,
+      "opt_high": 0.95,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -4,
+      "ramp_c": 2,
+      "nights": 3,
+      "window_days": 7,
+      "factor": 0.35
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -20,
+      "severe_mm": -40,
+      "moderate_factor": 0.35,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 80,
+        "opt_low": 180,
+        "opt_high": 450,
+        "max": 900
+      },
+      "floor": 0.65
+    },
+    "persistence": {
+      "days": 25
+    },
+    "weights": {
+      "temp": 0.2,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.3
+    },
+    "refs": {
+      "temp_mean": [
+        "straatsma2001",
+        "kauserud2012",
+        "terrain_fr"
+      ],
+      "rain": [
+        "straatsma2001",
+        "salerni2002",
+        "terrain_fr"
+      ],
+      "trigger": [
+        "pietka2012",
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "frost": [
+        "terrain_fr",
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "straatsma2001",
+        "karavani2018"
+      ],
+      "memory": [
+        "straatsma2001",
+        "agreda2015"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "karavani2018"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Petit entonnoir gris-noir, percé au centre et à bord très lobé, à chair mince et souple. Sous le chapeau, des plis bien formés, fourchus, gris bleuté à gris cendré, qui descendent sur le pied : c'est ce qui la distingue de la trompette, lisse dessous.",
+    "habitat": "Forêts de feuillus : châtaigneraies, chênaies, hêtraies et sapinières-hêtraies, dans la litière humide des sols argileux ou calcaires. Moins commune que la trompette, souvent en mélange avec elle, de la plaine à la moyenne montagne.",
+    "season": "De la fin de l'été à novembre, le gros de la pousse de mi-septembre à début novembre, la montagne d'abord. Il lui faut, comme à la trompette, un automne durablement humide.",
+    "confusions": [
+      {
+        "name": "Trompette de la mort",
+        "latin": "Craterellus cornucopioides",
+        "risk": "Aucun risque connu : les deux sont cueillies ensemble.",
+        "tell": "Corne plus profonde et creuse jusqu'à la base, face externe lisse ou à peine ridée, sans plis nets.",
+        "refs": [
+          "wikipedia_fr_cinereus",
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Chanterelle sinueuse",
+        "latin": "Craterellus undulatus (C. sinuosus)",
+        "risk": "Aucun risque connu.",
+        "tell": "Même allure mais plus pâle, gris-brun, dessous lisse à faiblement veiné, sans les plis gris nets de la craterelle cendrée.",
+        "refs": [
+          "wikipedia_fr_cinereus"
+        ]
+      },
+      {
+        "name": "Fausse chanterelle des charbonnières",
+        "latin": "Faerberia carbonaria",
+        "risk": "Sans intérêt, coriace.",
+        "tell": "Vraies lames, pied plus clair et plein, chapeau plus lisse ; pousse sur les places à feu et les charbonnières, pas dans la litière.",
+        "refs": [
+          "wikipedia_fr_cinereus"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/Chanterelle_cendr%C3%A9e_%28Bouzonville_13%29.JPG/1280px-Chanterelle_cendr%C3%A9e_%28Bouzonville_13%29.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Chanterelle_cendr%C3%A9e_(Bouzonville_13).JPG",
+      "author": "Jean.claude",
+      "license": "CC BY-SA 3.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017",
+      "wikipedia_fr_cinereus"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — hydnes et craterelles : caractères distinctifs, confusions et comestibilité",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "wikipedia_fr_cinereus": "Wikipédia (fr), « Craterellus cinereus » (titre « Chanterelle cendrée »), lu le 8 nov. 2026 — nom correct Craterellus cinereus (Pers.) Pers. ; forêts de feuillus, préférence pour les châtaigneraies et les sols calcaires, aussi sous chênes, chêne vert, frênes et hêtre, de la fin de l'été à l'automne ; souvent mêlée à la trompette ; confusions avec C. cornucopioides, C. undulatus (sinuosus) et Faerberia carbonaria ; confiance faible (encyclopédie peu sourcée)"
+    }
+  },
+  "references": {
+    "dahlman2000": "Dahlman M., Danell E. & Spatafora J.W. 2000, Mycol. Res. 104:388-394 — systématique moléculaire de Craterellus : Pseudocraterellus non séparable de Craterellus, espèces de Cantharellus subgen. Leptocantharellus rattachées à Craterellus, genre ectomycorhizien",
+    "contu2009": "Contu M., Vizzini A., Carbone M. & Setti L. 2009, Mycotaxon 110:139-149 — identité et néotypification de Craterellus cinereus d'après les spécimens authentiques de l'herbier de Leyde (espèce sans boucles) ; description de Cantharellus atrofuscus, espèce voisine bouclée ; résumé lu, texte intégral non consulté",
+    "wikipedia_fr_cinereus": "Wikipédia (fr), « Craterellus cinereus » (titre « Chanterelle cendrée »), lu le 8 nov. 2026 — nom correct Craterellus cinereus (Pers.) Pers. ; forêts de feuillus, préférence pour les châtaigneraies et les sols calcaires, aussi sous chênes, chêne vert, frênes et hêtre, de la fin de l'été à l'automne ; souvent mêlée à la trompette ; confusions avec C. cornucopioides, C. undulatus (sinuosus) et Faerberia carbonaria ; confiance faible (encyclopédie peu sourcée)",
+    "kauserud2012": "Kauserud H. et al. 2012, PNAS 109:14488-14493 — phénologie de fructification en Europe : les espèces d'automne fructifient plus tard, saisons allongées avec le réchauffement",
+    "straatsma2001": "Straatsma G., Ayer F. & Egli S. 2001, Mycol. Res. 105:515-523 — La Chanéaz (Suisse), 21 ans de relevés hebdomadaires dans une forêt mixte : phénologie des espèces automnales, productivité liée à la pluie et à la température de l'été ; confiance moyenne pour les valeurs d'espèce",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents",
+    "pietka2012": "Piętka et al. 2012, Leśne Prace Badawcze — girolle : corrélation pluie r = 0,72 avec ~1 mois de délai ; transposé aux Cantharellales à croissance lente, confiance faible",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pluie et humidité du sol à 1 mois, T max négatives, production de champignons comestibles",
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
+    "terrain_fr": "Sources de terrain françaises (guides, sociétés mycologiques) — mêmes stations que la trompette : litière humide des feuillus, sols argilo-calcaires, souvent en mélange avec elle ; il faut un automne durablement humide, délai pluie → pousse de 2 à 4 semaines, sporophores persistants ; paramètres repris de la trompette, confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — C. cinereus (synonyme de Cantharellus cinereus Pers. dans le squelette GBIF, clé 9226626) FR 446 occ. géolocalisées : oct. 70, sept. 49, nov. 38, août 16, déc. 6 ; altitude (56 occ. renseignées) médiane 589 m, q10 190 m, q90 1 235 m, q99 1 544 m, max 1 600 m ; médiane d'altitude 1 015 m en septembre, 855 m en octobre, 542 m en novembre ; foyers : Jura 68, Doubs 48, Hautes-Pyrénées 27 ; 66 occ. datées du 1er avril et 12 du 1er janvier, sans date réelle, ignorées",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; paramètres de gel de la trompette (seuil -4 °C, 3 nuits, × 0,35), confiance faible"
+  }
+}

@@ -1,11 +1,14 @@
 /// Indice météo `M`, persistance `M_eff` et détail des facteurs, dans l'ordre exact de
-/// `champis_api.scoring` : somme pondérée (temp, rain, trigger, soil), puis facteurs multiplicatifs
-/// frost, water_balance, heat, memory, puis persistance, puis frost et water_balance réappliqués.
+/// `champis_api.scoring` : somme pondérée (temp, rain, trigger, soil, et soil_temp si l'espèce
+/// l'emploie), puis facteurs multiplicatifs frost, water_balance, heat, memory, puis persistance,
+/// puis frost et water_balance réappliqués.
 public struct WeatherFactors: Hashable, Sendable {
     public var temp: Double
     public var rain: Double
     public var trigger: Double
     public var soilMoisture: Double
+    /// Température du sol, facteur optionnel (9 nov. 2026) : `nil` pour une espèce sans bloc `soil_temp`.
+    public var soilTemp: Double?
     public var frost: Double
     public var waterBalance: Double
     public var heat: Double
@@ -21,6 +24,7 @@ public struct WeatherFactors: Hashable, Sendable {
         case "rain": rain
         case "trigger": trigger
         case "soil_moisture": soilMoisture
+        case "soil_temp": soilTemp
         case "frost": frost
         case "water_balance": waterBalance
         case "heat": heat
@@ -86,6 +90,15 @@ public enum WeatherIndex {
         return sp.weather.soilMoisturePct.value(mean(Array(w)))
     }
 
+    /// Température du sol 0–7 cm (`factor_soil_temp`) : moyenne sur `window_days`, corrigée à
+    /// l'altitude du pixel comme l'air, puis trapèze. Appelé seulement si l'espèce a le bloc ;
+    /// une série absente est une erreur, jamais une approximation.
+    static func factorSoilTemp(_ sp: Species, _ cfg: Species.SoilTemp, _ s: DailySeries, _ day: CivilDate, _ altM: Double) throws -> Double {
+        guard let soilTemp = s.soilTemp else { throw ScoringError.missingSeries("soil_temperature_0_to_7cm_mean") }
+        let w = try s.window(soilTemp, end: day, days: cfg.windowDays)
+        return cfg.c.value(mean(corrected(w, series: s, altM: altM)))
+    }
+
     /// Sévérité d'une nuit, 0–1 (`frost_severity`) : `1 − trapèze(tmin, min = tmin_c,
     /// opt_low = tmin_c + ramp_c, opt_high = +∞, max = +∞)`, soit 1 à `tmin_c` et en dessous, 0 dès
     /// `tmin_c + ramp_c`, linéaire entre. Le trapèze unique du paquet, avec des bornes hautes
@@ -149,10 +162,15 @@ public enum WeatherIndex {
         let heat = try factorHeat(sp, s, day, altM)
         let memory = try factorMemory(sp, s, day)
         var f = WeatherFactors(
-            temp: temp, rain: rain, trigger: trigger, soilMoisture: soil, frost: frost,
+            temp: temp, rain: rain, trigger: trigger, soilMoisture: soil, soilTemp: nil, frost: frost,
             waterBalance: water, heat: heat, memory: memory, m: 0, mEff: nil
         )
-        let base = w.temp * f.temp + w.rain * f.rain + w.trigger * f.trigger + w.soilMoisture * f.soilMoisture
+        var base = w.temp * f.temp + w.rain * f.rain + w.trigger * f.trigger + w.soilMoisture * f.soilMoisture
+        if let cfg = sp.weather.soilTemp {  // facteur optionnel (9 nov. 2026) : absent = poids 0
+            let st = try factorSoilTemp(sp, cfg, s, day, altM)
+            f.soilTemp = st
+            base += w.soilTemp * st
+        }
         f.m = base * f.frost * f.waterBalance * f.heat * f.memory
         return f
     }

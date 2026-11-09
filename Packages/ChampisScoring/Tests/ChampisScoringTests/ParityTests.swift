@@ -39,22 +39,29 @@ private struct SeriesJSON: Decodable {
     let snow: [Double]
     let et0: [Double]
     let soilMoisturePct: [Double]
+    /// Température du sol (facteur optionnel, 9 nov. 2026) : fournie dans tous les cas, lue par les espèces qui l'emploient.
+    let soilTemp: [Double]?
     enum CodingKeys: String, CodingKey {
         case dates, rain, snow, et0
         case tMean = "t_mean", tMin = "t_min", tMax = "t_max", soilMoisturePct = "soil_moisture_pct"
+        case soilTemp = "soil_temp"
     }
 }
 
 private struct MCase: Decodable {
     let species: String
+    /// Fichier espèce embarqué dans le cas (un facteur qu'aucune espèce publiée n'emploie encore) :
+    /// rejoué à la place de la ressource `species/<id>.json`.
+    let speciesOverride: Species?
     let scenario: String
     let day: String
     let altM: Double
     let cellElevationM: Double
     let series: SeriesJSON
-    let expected: [String: Double]  // temp, rain, trigger, soil_moisture, frost, water_balance, heat, memory, M, M_eff
+    let expected: [String: Double]  // temp, rain, trigger, soil_moisture, [soil_temp], frost, water_balance, heat, memory, M, M_eff
     enum CodingKeys: String, CodingKey {
         case species, scenario, day, series, expected
+        case speciesOverride = "species_override"
         case altM = "alt_m", cellElevationM = "cell_elevation_m"
     }
 }
@@ -149,13 +156,16 @@ struct ParityTests {
     func weatherIndex() throws {
         let cases = try vectors("m", as: MCase.self)
         #expect(cases.count >= 60)
+        var overrides = 0
         for c in cases {
-            let sp = try species(c.species)
+            let sp = try c.speciesOverride ?? species(c.species)
+            if c.speciesOverride != nil { overrides += 1 }
             let s = try DailySeries(
                 dates: c.series.dates.map { try CivilDate(iso: $0) },
                 tMean: c.series.tMean, tMin: c.series.tMin, tMax: c.series.tMax,
                 rain: c.series.rain, snow: c.series.snow, et0: c.series.et0,
-                soilMoisturePct: c.series.soilMoisturePct, cellElevationM: c.cellElevationM
+                soilMoisturePct: c.series.soilMoisturePct, cellElevationM: c.cellElevationM,
+                soilTemp: c.series.soilTemp
             )
             let f = try WeatherIndex.weatherIndex(sp, s, day: CivilDate(iso: c.day), altM: c.altM)
             for (name, expected) in c.expected {
@@ -163,6 +173,38 @@ struct ParityTests {
                 #expect(close(actual, expected), "\(c.species) \(c.scenario) \(c.day) \(c.altM) m : \(name)")
             }
         }
+        #expect(overrides >= 4, "les cas à fichier embarqué (soil_temp) sont dans m.json")
+    }
+
+    @Test("Température du sol : facteur optionnel, absent = poids 0 ; présent sans série = erreur")
+    func soilTempIsOptional() throws {
+        let plain = try species("boletus_edulis")
+        #expect(plain.weather.soilTemp == nil && plain.weather.weights.soilTemp == 0)
+        let start = try CivilDate(iso: "2026-05-01")
+        let n = 170
+        func series(_ soilTemp: [Double]?) throws -> DailySeries {
+            try DailySeries(
+                dates: (0..<n).map { start.adding(days: $0) },
+                tMean: Array(repeating: 13, count: n), tMin: Array(repeating: 8, count: n),
+                tMax: Array(repeating: 18, count: n), rain: Array(repeating: 2.5, count: n),
+                snow: Array(repeating: 0, count: n), et0: Array(repeating: 1.5, count: n),
+                soilMoisturePct: Array(repeating: 0.6, count: n), cellElevationM: 700,
+                soilTemp: soilTemp
+            )
+        }
+        let day = start.adding(days: n - 1)
+        let without = try WeatherIndex.weatherIndexRaw(plain, series(nil), day: day, altM: 700)
+        let with = try WeatherIndex.weatherIndexRaw(plain, series(Array(repeating: 3, count: n)), day: day, altM: 700)
+        #expect(without.soilTemp == nil && without == with)
+        // le même cèpe avec le bloc : rejoué depuis les cas à fichier embarqué de m.json
+        let cases = try vectors("m", as: MCase.self)
+        let sp = try #require(cases.compactMap(\.speciesOverride).first)
+        #expect(sp.weather.weights.soilTemp > 0 && sp.weather.soilTemp != nil)
+        #expect(throws: ScoringError.missingSeries("soil_temperature_0_to_7cm_mean")) {
+            try WeatherIndex.weatherIndexRaw(sp, series(nil), day: day, altM: 700)
+        }
+        let f = try WeatherIndex.weatherIndexRaw(sp, series(Array(repeating: 11, count: n)), day: day, altM: 700)
+        #expect(f.soilTemp == 1.0)
     }
 
     @Test("Groupe : max des espèces, première par ordre alphabétique à égalité")

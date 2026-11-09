@@ -1,0 +1,326 @@
+{
+  "id": "lepista_nuda",
+  "schema_version": 1,
+  "group": {
+    "id": "pieds_bleus",
+    "fr": "Pieds bleus"
+  },
+  "names": {
+    "fr": "Pied bleu",
+    "la": "Lepista nuda"
+  },
+  "notes": "Saprotrophe de litière, pas ectomycorhizien (Wikipédia EN, FR, DE) : il décompose feuilles, aiguilles, brindilles et branches, en troupes et en ronds de sorcière, dans les bois de feuillus comme de conifères, mais aussi dans les prés, les jardins, les haies et les tas de compost (Wikipédia DE). Seule la part forestière est cartographiable : hors forêt T = 0, et l'hôte `herbacee` couvre aussi vignes, cultures et bâti, il reste donc à 0 ; les pousses des jardins, des haies, du compost et des prés, une bonne part des cueillettes, ne sont pas sur la carte. Hôtes : l'arbre ne compte pas comme partenaire, seulement par la litière qu'il fait. Poids plats (0,6-0,9 pour presque toutes les forêts) : plus forts pour les litières épaisses et mélangées (mixtes, sapinières-pessières, mélanges de conifères hors pins), plus faibles pour les litières minces et sèches (pin d'Alep 0,4, chênes sempervirents 0,4) ; robinier (litière riche en azote) 0,5 et peupleraie 0,4, ce qu'on ne fait pas pour un ectomycorhizien ; douglas, mélèze et autres conifères (cèdres, cyprès) pondérés comme des litières ordinaires, sans exigence d'hôte ; coupes et forêts sans couvert 0,3 (rémanents, tas de branches) ; confiance faible, aucune étude d'hôte pour un saprotrophe. Le couvert pèse plus que d'habitude (lisières et clairières fréquentées : ouverte 0,8). pH : sols humifères (Wikipédia DE), aucune exigence connue de pH : plage très large et poids pH 0,15. Taxonomie : Lepista nuda, nom accepté par GBIF (lu le 8 nov. 2026) ; aussi Clitocybe nuda, et reclassé dans Collybia (Collybia nuda) en 2023 (Wikipédia EN) : l'id garde le nom GBIF. Saison : très tardif, vient surtout après les premiers froids (Wikipédia FR) et pousse jusqu'en janvier en plaine les hivers doux ; le schéma n'autorise pas une saison qui passe le 1er janvier : elle s'arrête au 31 décembre (les pousses de janvier ne sont pas montrées). Quelques pousses de printemps et d'été (avril-juin, 55 occ.) : trop rares pour un `secondary_peak`. GBIF FR (1 599 occ. géolocalisées, lu le 8 nov. 2026) : oct. 504, nov. 358, sept. 99, déc. 96, juin 28, août 17 ; janv. 101 dont 70 datées du 1er janvier (52 d'un seul jeu de données : relevés sans date réelle, artefact ignoré ; restent ~31 pousses de janvier réelles) ; pas de pic du 1er avril (avril 13) ; altitude (353 occ. renseignées) médiane 733 m, q01 9 m, q10 86 m, q90 1 409 m, q99 2 087 m, max 2 200 m ; au-dessus de 1 000 m sept. 39, oct. 57, nov. 5 ; sous 500 m oct. 32, nov. 54, déc. 27, janv. 3 (la montagne d'abord, la plaine jusqu'en décembre) ; présent sous toutes les latitudes (279 occ. entre 50 et 51° N). Météo calée sur H. repandum (champignon d'arrière-saison, résistant au froid, même délai supposé), avec trois écarts : températures plus basses (opt 5-12 °C) pour un pic d'octobre-novembre plus tardif que celui du pied de mouton ; humidité du sol plus pesante (0,35) et plus exigeante (trapèze de la trompette) parce qu'un décomposeur de litière dépend de l'eau de la litière plus que d'un arbre ; gel : vient après les premiers froids mais les exemplaires gelés sont à éviter (Wikipédia FR) : seuil -6 °C, × 0,45. Délai pluie → pousse, tolérance au gel et persistance : terrain, à valider (confiance faible). Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 0.8,
+      "sapin_epicea": 0.9,
+      "chenes_decidus": 0.8,
+      "chataignier": 0.7,
+      "mixte_feuillus_dom": 0.9,
+      "mixte_coniferes_dom": 0.9,
+      "melange_feuillus": 0.8,
+      "melange_coniferes": 0.8,
+      "feuillus_indet": 0.7,
+      "coniferes_indet": 0.7,
+      "mixte_indet": 0.7,
+      "pin_sylvestre": 0.7,
+      "pin_crochets_cembro": 0.5,
+      "pin_maritime": 0.6,
+      "melange_pins": 0.6,
+      "autre_feuillu": 0.8,
+      "pin_laricio_noir": 0.7,
+      "autre_pin": 0.6,
+      "meleze": 0.6,
+      "chenes_sempervirents": 0.4,
+      "douglas": 0.7,
+      "autre_conifere": 0.6,
+      "pin_alep": 0.4,
+      "lande": 0.2,
+      "sans_couvert": 0.3,
+      "robinier": 0.5,
+      "peupleraie": 0.4,
+      "herbacee": 0.0,
+      "default": 0.3,
+      "melange_coniferes_hors_pins": 0.9
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.8,
+      "sans_couvert": 0.4,
+      "plantation": 0.5,
+      "non_foret": 0.2
+    },
+    "ph": {
+      "min": 3.8,
+      "opt_low": 4.8,
+      "opt_high": 7.8,
+      "max": 8.6
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 1500,
+      "max": 2300
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 1.0,
+      "NW": 1.0,
+      "E": 0.95,
+      "W": 0.95,
+      "SE": 0.9,
+      "SW": 0.9,
+      "S": 0.85,
+      "flat": 1.0
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.3,
+      "ph": 0.15,
+      "altitude": 0.25,
+      "aspect": 0.15,
+      "slope": 0.15
+    },
+    "refs": {
+      "hosts": [
+        "wikipedia_en_nuda",
+        "wikipedia_fr_nuda",
+        "wikipedia_de_nuda",
+        "terrain_fr"
+      ],
+      "cover": [
+        "wikipedia_de_nuda",
+        "terrain_fr"
+      ],
+      "ph": [
+        "wikipedia_de_nuda",
+        "terrain_fr"
+      ],
+      "altitude": [
+        "gbif2026"
+      ],
+      "aspect": [
+        "terrain_fr"
+      ],
+      "slope": [
+        "terrain_fr"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "08-15",
+      "end": "12-31"
+    },
+    "peak": {
+      "start": "10-05",
+      "end": "11-30"
+    },
+    "ramp_days": 25,
+    "altitude_shift": {
+      "reference_m": 300,
+      "start_days_per_100m": -3,
+      "end_days_per_100m": -4,
+      "max_days": 40
+    },
+    "refs": [
+      "gbif2026",
+      "wikipedia_fr_nuda",
+      "wikipedia_en_nuda",
+      "wikipedia_de_nuda",
+      "kauserud2012"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 21,
+      "c": {
+        "min": 1,
+        "opt_low": 5,
+        "opt_high": 12,
+        "max": 18
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 150,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 15,
+      "event_days": 3,
+      "lag_days": {
+        "min": 10,
+        "opt_low": 14,
+        "opt_high": 30,
+        "max": 45
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.2,
+      "opt_low": 0.5,
+      "opt_high": 0.95,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -6,
+      "ramp_c": 2,
+      "nights": 3,
+      "window_days": 7,
+      "factor": 0.45
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.45,
+      "severe_factor": 0.2
+    },
+    "heat": {
+      "tmax_c": 26,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 21
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.25,
+      "trigger": 0.15,
+      "soil_moisture": 0.35
+    },
+    "refs": {
+      "temp_mean": [
+        "gbif2026",
+        "wikipedia_fr_nuda",
+        "kauserud2012",
+        "terrain_fr"
+      ],
+      "rain": [
+        "straatsma2001",
+        "salerni2002",
+        "terrain_fr"
+      ],
+      "trigger": [
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "frost": [
+        "wikipedia_fr_nuda",
+        "terrain_fr",
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "straatsma2001",
+        "karavani2018"
+      ],
+      "memory": [
+        "straatsma2001",
+        "agreda2015"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "karavani2018"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Champignon charnu à lames, violet lilas quand il est jeune (chapeau, lames serrées et pied), qui brunit en vieillissant ; odeur fruitée, un peu anisée. Les lames se détachent facilement de la chair du chapeau, et sa sporée est rose pâle.",
+    "habitat": "Dans la litière épaisse des bois de feuillus comme de conifères, souvent en troupes ou en ronds, mais aussi hors des bois : jardins, haies, tas de compost, prés. La carte ne montre que la forêt : les pousses des jardins et des prés n'y figurent pas.",
+    "season": "Surtout d'octobre à décembre, après les premiers froids, et jusqu'en janvier en plaine quand l'hiver est doux (la carte s'arrête au 31 décembre). En montagne il commence dès septembre et finit plus tôt.",
+    "confusions": [
+      {
+        "name": "Cortinaires violets",
+        "latin": "Cortinarius violaceus, Cortinarius traganus, Cortinarius camphoratus, Cortinarius purpurascens",
+        "risk": "Indigestes à toxiques selon les espèces. Le même genre compte des cortinaires mortels (cortinaire couleur de rocou, cortinaire très joli), qui ne sont pas violets, mais aucun cortinaire ne se cueille pour un pied bleu.",
+        "tell": "Restes de voile en toile d'araignée (cortine) sous le chapeau jeune et trace en anneau sur le pied, sporée brun rouille qui poudre le pied, lames qui ne se détachent pas de la chair, odeur souvent forte et désagréable. Le pied bleu n'a pas de cortine et sa sporée est rose pâle.",
+        "refs": [
+          "wikipedia_en_nuda",
+          "wikipedia_de_nuda",
+          "wikipedia_fr_nuda",
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Inocybe lilas",
+        "latin": "Inocybe geophylla var. lilacina",
+        "risk": "Toxique : syndrome muscarinien (sueurs, salivation, troubles digestifs).",
+        "tell": "Petit et grêle, chapeau conique soyeux à fibrilles, lames devenant brun terne, odeur spermatique ou terreuse. Le pied bleu est charnu et trapu, à odeur fruitée.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Entolome livide",
+        "latin": "Entoloma sinuatum",
+        "risk": "Toxique : gastro-entérite sévère, parfois hospitalisation.",
+        "tell": "Aucun violet : chapeau gris crème à gris jaunâtre, lames jaunâtres puis roses, odeur de farine. Le risque vient surtout des pieds bleus vieux et décolorés ; la sporée rose ne départage pas, elle est rose chez les deux.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/08/Lepista_nuda_2022_G1.jpg/1280px-Lepista_nuda_2022_G1.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Lepista_nuda_2022_G1.jpg",
+      "author": "George Chernilevsky",
+      "license": "CC BY-SA 4.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017",
+      "wikipedia_fr_nuda",
+      "wikipedia_de_nuda"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — lépistes, cortinaires, inocybes et entolomes : caractères distinctifs, confusions et comestibilité",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "wikipedia_en_nuda": "Wikipédia EN, Collybia nuda (Lepista nuda), lu le 8 nov. 2026 — saprotrophe des litières en décomposition, bois de conifères et de feuillus, Europe et Amérique du Nord ; au Royaume-Uni de septembre à décembre ; reclassé dans Collybia en 2023 ; confusion avec des cortinaires bleus ou violets, dont beaucoup peuvent être toxiques (restes de voile, sporée brun rouille) ; confiance moyenne",
+      "wikipedia_fr_nuda": "Wikipédia FR, Pied bleu, lu le 8 nov. 2026 — champignon tardif qui vient surtout après les premiers froids, bois de feuillus comme de conifères, sur végétaux en décomposition (branches, brindilles, feuilles, aiguilles), en troupes et ronds de sorcière ; éviter les exemplaires âgés, gelés ou gorgés d'eau ; troubles digestifs rares en cas de consommation abondante ou de sujets trop vieux ; concentre le césium 137 ; confusions avec les cortinaires violets ; confiance moyenne",
+      "wikipedia_de_nuda": "Wikipédia DE, Violetter Rötelritterling, lu le 8 nov. 2026 — de septembre à la fin de l'automne, forêts de conifères et de feuillus mais aussi prés et jardins, préfère les sols humifères, en grands ronds de sorcière ; confusions avec des cortinaires violets non comestibles à toxiques (cortine, sporée rouille, lames non séparables de la chair) ; confiance moyenne"
+    }
+  },
+  "references": {
+    "wikipedia_en_nuda": "Wikipédia EN, Collybia nuda (Lepista nuda), lu le 8 nov. 2026 — saprotrophe des litières en décomposition, bois de conifères et de feuillus, Europe et Amérique du Nord ; au Royaume-Uni de septembre à décembre ; reclassé dans Collybia en 2023 ; confusion avec des cortinaires bleus ou violets, dont beaucoup peuvent être toxiques (restes de voile, sporée brun rouille) ; confiance moyenne",
+    "wikipedia_fr_nuda": "Wikipédia FR, Pied bleu, lu le 8 nov. 2026 — champignon tardif qui vient surtout après les premiers froids, bois de feuillus comme de conifères, sur végétaux en décomposition (branches, brindilles, feuilles, aiguilles), en troupes et ronds de sorcière ; éviter les exemplaires âgés, gelés ou gorgés d'eau ; troubles digestifs rares en cas de consommation abondante ou de sujets trop vieux ; concentre le césium 137 ; confusions avec les cortinaires violets ; confiance moyenne",
+    "wikipedia_de_nuda": "Wikipédia DE, Violetter Rötelritterling, lu le 8 nov. 2026 — de septembre à la fin de l'automne, forêts de conifères et de feuillus mais aussi prés et jardins, préfère les sols humifères, en grands ronds de sorcière ; confusions avec des cortinaires violets non comestibles à toxiques (cortine, sporée rouille, lames non séparables de la chair) ; confiance moyenne",
+    "straatsma2001": "Straatsma G., Ayer F. & Egli S. 2001, Mycol. Res. 105:515-523 — La Chanéaz (Suisse), 21 ans de relevés hebdomadaires dans une forêt mixte : phénologie des espèces automnales, productivité liée à la pluie et à la température de l'été ; confiance moyenne pour les valeurs d'espèce",
+    "kauserud2012": "Kauserud H. et al. 2012, PNAS 109:14488-14493 — phénologie de fructification en Europe : les espèces d'automne fructifient plus tard, saisons allongées avec le réchauffement",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pluie et humidité du sol à 1 mois, T max négatives, production de champignons comestibles",
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
+    "terrain_fr": "Sources de terrain françaises (guides, sociétés mycologiques) — litière épaisse des bois de feuillus et de conifères, lisières, tas de branches et de feuilles ; vient après les premiers froids, d'octobre à décembre ; délai pluie → pousse de 2 à 4 semaines, sporophores persistant 2 à 3 semaines ; aucune exigence d'hôte ni de pH connue pour ce saprotrophe ; confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — L. nuda FR 1 599 occ. géolocalisées : oct. 504, nov. 358, sept. 99, déc. 96, juin 28 ; janv. 101 dont 70 datées du 1er janvier, ignorées ; altitude (353 occ. renseignées) médiane 733 m, q10 86 m, q90 1 409 m, q99 2 087 m, max 2 200 m ; ≥ 1 000 m : sept. 39, oct. 57, nov. 5 ; < 500 m : oct. 32, nov. 54, déc. 27",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; le pied bleu vient après les premiers froids mais ses sporophores gelés se gâtent (seuil -6 °C, 3 nuits, × 0,45), confiance faible"
+  }
+}

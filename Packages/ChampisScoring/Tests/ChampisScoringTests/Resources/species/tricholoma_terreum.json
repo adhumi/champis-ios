@@ -1,0 +1,323 @@
+{
+  "id": "tricholoma_terreum",
+  "schema_version": 1,
+  "group": {
+    "id": "petits_gris",
+    "fr": "Petits-gris"
+  },
+  "names": {
+    "fr": "Petit-gris (tricholome terreux)",
+    "la": "Tricholoma terreum"
+  },
+  "notes": "Petit tricholome gris des pinèdes, nommé petit-gris par la Société mycologique de France et griset en Provence (« griset du Ventoux ») ; « charbonnier » désigne selon les régions cette espèce ou T. portentosum. Groupe « Petits-gris » avec T. portentosum. Le complexe terreum (T. myomyces, le plus souvent mis en synonymie ; T. scalpturatum et T. gausapatum, plus pâles ou jaunissants et plus souvent sous feuillus) n'a pas de fichier propre : le groupe le couvre de fait. Ectomycorhizien surtout des pins (pin sylvestre, pin noir et laricio, pin à crochets, pin d'Alep près de la Méditerranée, pin maritime), aussi sous sapin, épicéa et douglas, rare sous feuillus (wikipedia2026, confiance faible) : pins 0,8-1, conifères hors pins 0,3, feuillus purs ≤ 0,05 ; mixtes et mélanges à 0,3-0,7 parce que BD Forêt ne dit pas quelle part des conifères est en pin. Bois clairs, pare-feu, bords de pistes : couvert ouvert préféré. Sols neutres à calcaires souvent cités par le terrain (pins noirs des Causses et des Préalpes du Sud ; GBIF fort en Aveyron, Lozère, Hérault, Doubs, Isère, dunes du Pas-de-Calais) mais aussi sables acides sous pin sylvestre et pin maritime : plage pH large, poids pH faible (0,2), confiance faible. Mont Ventoux : le griset y pousse dans les pinèdes des reboisements de restauration des terrains en montagne (pin noir d'Autriche surtout, pin sylvestre, pin à crochets en haut), que BD Forêt classe en `pin_laricio_noir`, `pin_sylvestre`, `pin_crochets_cembro` ou `melange_pins`, tous à 0,8-1 ; sol calcaire dans l'optimum pH, pinèdes de moyenne montagne dans l'optimum d'altitude, pic avancé fin septembre-octobre par le décalage altitudinal : le massif ressort par ses hôtes, son altitude et sa météo, sans aucun paramètre propre au Ventoux. Cédraies (`autre_conifere`, 0,2) et hêtraies (0,05) restent basses, faute de source sur l'espèce sous cèdre ou sous hêtre (à valider sur le terrain au Ventoux). L'Encyclopédie Ventoux (Champion & Borgarino, citée par Wikipédia, « Cuisine des Alpes méridionales ») appelle au contraire « griset du Ventoux » T. portentosum, que GBIF ne relève pas dans le massif : les deux espèces sont dans le groupe « Petits-gris », qui couvre le griset quelle que soit l'espèce visée (à faire confirmer par une société mycologique du Vaucluse). GBIF : 6 occurrences ONF dans le massif (Bédoin, Brantes, Saint-Léger-du-Ventoux), toutes du 19 au 29 octobre. Altitude : de la mer à ~2 200 m. Saison très tardive : septembre en montagne, octobre-novembre au gros de la pousse, décembre en plaine, jusqu'en janvier près de la Méditerranée (24 occurrences GBIF vraiment datées de janvier, surtout en Provence littorale) ; le schéma ne passe pas le 1er janvier : saison arrêtée au 31 décembre. Décalage altitudinal net (médiane d'altitude GBIF ~1 150 m en septembre, ~880 m en octobre, ~610 m en novembre, ~360 m en décembre : montagne d'abord) : début −3 j/100 m et fin −4 j/100 m autour de 800 m, donc avancés en montagne et retardés en plaine, bornés à 35 j. Les 5 occurrences du 1er janvier et les 6 du 1er juin (un même jeu de données, un même point) sont des dates par défaut ; les autres occurrences de juin, dispersées, sont ignorées pour la saison. Météo calée sur L. deliciosus (pinèdes, arrière-saison) et décalée vers le froid : température optimale 6-14 °C au lieu de 8-16, gel toléré comme le pied de mouton (-5 °C, 3 nuits, × 0,4), chaleur pénalisée dès 26 °C au lieu de 28 : terrain, confiance faible. Délai pluie → pousse et persistance repris de L. deliciosus, à valider. Point sanitaire à trancher par Adrien avant publication : Yin et al. 2014 (Chem. Eur. J.) ont isolé d'une récolte française des saponaceolides toxiques chez la souris ; contesté par Davoli et al. 2016 (même revue) et Clericuzio et al. 2024 (Molecules 29:1794), qui ne les retrouvent pas dans des récoltes italiennes ; l'espèce figure sur la liste ANSES-DGCCRF de 2017 (dénomination de vente « tricholome gris ») ; la CRIIRAD (1997, 2015) relève une forte accumulation du césium 137. Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 0.05,
+      "sapin_epicea": 0.3,
+      "chenes_decidus": 0.05,
+      "chataignier": 0.0,
+      "mixte_feuillus_dom": 0.3,
+      "mixte_coniferes_dom": 0.6,
+      "melange_feuillus": 0.05,
+      "melange_coniferes": 0.7,
+      "feuillus_indet": 0.05,
+      "coniferes_indet": 0.6,
+      "mixte_indet": 0.4,
+      "pin_sylvestre": 1.0,
+      "pin_crochets_cembro": 0.8,
+      "pin_maritime": 0.8,
+      "melange_pins": 1.0,
+      "autre_feuillu": 0.05,
+      "pin_laricio_noir": 1.0,
+      "autre_pin": 0.9,
+      "meleze": 0.1,
+      "chenes_sempervirents": 0.1,
+      "douglas": 0.3,
+      "autre_conifere": 0.2,
+      "pin_alep": 0.8,
+      "lande": 0.2,
+      "sans_couvert": 0.1,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.05,
+      "melange_coniferes_hors_pins": 0.3
+    },
+    "cover": {
+      "fermee": 0.8,
+      "ouverte": 1.0,
+      "sans_couvert": 0.15,
+      "plantation": 0.0,
+      "non_foret": 0.2
+    },
+    "ph": {
+      "min": 4.2,
+      "opt_low": 5.6,
+      "opt_high": 8.0,
+      "max": 8.8
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 100,
+      "opt_high": 1600,
+      "max": 2300
+    },
+    "aspect": {
+      "N": 0.95,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.95,
+      "W": 0.95,
+      "SE": 0.9,
+      "SW": 0.9,
+      "S": 0.85,
+      "flat": 1.0
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.3,
+      "ph": 0.2,
+      "altitude": 0.25,
+      "aspect": 0.15,
+      "slope": 0.1
+    },
+    "refs": {
+      "hosts": [
+        "wikipedia2026",
+        "gbif2026",
+        "terrain_fr"
+      ],
+      "cover": [
+        "wikipedia2026",
+        "terrain_fr"
+      ],
+      "ph": [
+        "terrain_fr",
+        "gbif2026"
+      ],
+      "altitude": [
+        "gbif2026"
+      ],
+      "aspect": [
+        "bonet2008",
+        "terrain_fr"
+      ],
+      "slope": [
+        "bonet2008"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "08-20",
+      "end": "12-31"
+    },
+    "peak": {
+      "start": "10-01",
+      "end": "11-25"
+    },
+    "ramp_days": 25,
+    "altitude_shift": {
+      "reference_m": 800,
+      "start_days_per_100m": -3,
+      "end_days_per_100m": -4,
+      "max_days": 35
+    },
+    "refs": [
+      "gbif2026",
+      "wikipedia2026",
+      "terrain_fr"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 2,
+        "opt_low": 6,
+        "opt_high": 14,
+        "max": 20
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 150,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 7,
+        "opt_low": 12,
+        "opt_high": 22,
+        "max": 35
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -5,
+      "ramp_c": 2,
+      "nights": 3,
+      "window_days": 7,
+      "factor": 0.4
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 26,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 18
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.3,
+      "trigger": 0.25,
+      "soil_moisture": 0.2
+    },
+    "refs": {
+      "temp_mean": [
+        "karavani2018",
+        "wikipedia2026",
+        "terrain_fr"
+      ],
+      "rain": [
+        "karavani2018",
+        "agreda2015",
+        "terrain_fr"
+      ],
+      "trigger": [
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "karavani2018"
+      ],
+      "frost": [
+        "wikipedia2026",
+        "gel_rampe2026",
+        "terrain_fr"
+      ],
+      "heat": [
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "memory": [
+        "agreda2015",
+        "terrain_fr"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "karavani2018"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Petit tricholome à chapeau gris souris à gris-brun, finement feutré, souvent mamelonné, sur des lames grises et un pied blanc sans anneau ; chair mince et grise, sans odeur marquée. Il pousse en troupes serrées : c'est le griset de Provence et du mont Ventoux.",
+    "habitat": "Surtout sous les pins : pinèdes claires de pin sylvestre, pin noir des Causses et des reboisements des Préalpes du Sud comme au Ventoux, pin d'Alep près de la Méditerranée, pin maritime ; plus rarement sous sapins, épicéas ou douglas. Il aime les bois clairs, les pare-feu et les bords de pistes, souvent sur calcaire, de la plaine à la montagne.",
+    "season": "Champignon d'arrière-saison : dès septembre en montagne, le gros de la pousse en octobre-novembre, jusqu'en décembre en plaine et même en janvier près de la Méditerranée. Il sort après les premiers froids et supporte les gelées blanches.",
+    "confusions": [
+      {
+        "name": "Amanites à chapeau gris (amanite phalloïde, amanite panthère)",
+        "latin": "Amanita phalloides, Amanita pantherina",
+        "risk": "Mortelle pour l'amanite phalloïde : destruction du foie, premiers symptômes 6 à 24 h après le repas. L'amanite panthère est gravement toxique.",
+        "tell": "Anneau sur le pied et volve en sac ou en bourrelet à la base, lames blanches : il faut toujours dégager la base du pied. Le petit-gris n'a ni anneau ni volve et ses lames sont grises.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Tricholome tigré",
+        "latin": "Tricholoma pardinum",
+        "risk": "Toxique : gastro-entérite violente (vomissements, diarrhées), souvent hospitalisation.",
+        "tell": "Plus grand et charnu, chapeau gris couvert d'écailles sombres en cercles, odeur de farine, plutôt en montagne sous sapins et hêtres et plus tôt dans la saison. Le petit-gris est petit, à chapeau feutré sans écailles nettes, sans odeur de farine.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017",
+          "wikipedia2026"
+        ]
+      },
+      {
+        "name": "Tricholome de Josserand",
+        "latin": "Tricholoma josserandii",
+        "risk": "Toxique : troubles digestifs.",
+        "tell": "Même allure et mêmes pinèdes, mais odeur de farine rance et base du pied rosée. Le petit-gris n'a pas d'odeur farineuse.",
+        "refs": [
+          "courtecuisse2013",
+          "wikipedia2026"
+        ]
+      },
+      {
+        "name": "Inocybes à chapeau gris",
+        "latin": "Inocybe spp.",
+        "risk": "Toxiques : sueurs, salivation, troubles digestifs et cardiaques (syndrome muscarinien), parfois graves.",
+        "tell": "Chapeau fibrilleux souvent fendu en étoile, lames qui virent au brun tabac à maturité, odeur spermatique ou terreuse. Chez le petit-gris les lames restent grises.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Erd-Ritterling_Tricholoma_terreum.jpg/1280px-Erd-Ritterling_Tricholoma_terreum.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Erd-Ritterling_Tricholoma_terreum.jpg",
+      "author": "Holger Krisp",
+      "license": "CC BY 3.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017",
+      "wikipedia2026"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — tricholomes gris, amanites, entolomes : caractères distinctifs et confusions",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions et confusions des espèces européennes",
+      "wikipedia2026": "Wikipédia, articles « Tricholoma terreum » (fr) et « Tricholoma terreum » (en), lus le 8 nov. 2026 — T. pardinum plus grand, écailleux, à odeur de farine, plus précoce, en montagne sur calcaire et basalte ; T. josserandii à odeur de farine rance et base du pied rosée ; confiance faible (encyclopédie)"
+    }
+  },
+  "references": {
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pinèdes méditerranéennes (Catalogne) : pluie et humidité du sol à 1 mois favorables, T max de septembre-octobre défavorables à la production de champignons récoltés ; transposé aux tricholomes des pinèdes, confiance faible",
+    "agreda2015": "Ágreda et al. 2015, GCB — le bilan hydrique (P-ETP) prédit mieux la production des champignons forestiers que la pluie brute ; base du facteur water_balance",
+    "bonet2008": "Bonet et al. 2008, Ann. For. Sci. 65:206 — pinèdes des Pyrénées (P. sylvestris, P. uncinata, 1 000-2 000 m) : expositions nord et altitude positives, pente forte négative pour la production de champignons ; transposé, confiance faible",
+    "wikipedia2026": "Wikipédia, articles « Tricholoma terreum » (fr, synthèse de Eyssartier & Roux 2017, Courtecuisse 2013, Bon 1975, Heilmann-Clausen et al. 2017) et « Tricholoma terreum » (en), lus le 8 nov. 2026 — bois clairs de conifères, surtout sous pins (notamment pin sylvestre), aussi sous sapins, épicéas et douglas, plus rare sous feuillus ; pare-feu et lieux dégagés ; automne et tout l'hiver dans les régions à hiver doux comme le littoral méditerranéen ; confiance faible (encyclopédie)",
+    "terrain_fr": "Sources de terrain françaises (sociétés mycologiques, tradition provençale du griset) — pinèdes claires, pare-feu et bords de pistes, souvent sur calcaire (pins noirs des Causses et des reboisements des Préalpes du Sud, dont le Ventoux) ; pousse en arrière-saison après les premiers froids, jusqu'en décembre, en janvier près de la Méditerranée ; délai pluie → pousse de 2 à 3 semaines ; sporophores fermes persistant 2 à 3 semaines ; supporte les gelées blanches ; confiance faible",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; le petit-gris, d'arrière-saison, tolère les gelées blanches comme le pied de mouton (seuil -5 °C, 3 nuits, × 0,4), confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — T. terreum FR 860 occ. géolocalisées : oct. 216, nov. 214, sept. 95, déc. 61, janv. 29, juin 23, août 18 ; altitude (240 occ. renseignées) q1 12 m, q10 180 m, médiane 850 m, q90 1 355 m, q99 2 080 m, max 2 200 m ; médiane d'altitude ~1 150 m en septembre, ~880 m en octobre, ~610 m en novembre, ~360 m en décembre ; au-dessus de 1 000 m sept. 39, oct. 30, nov. 5 ; sous 500 m oct. 11, nov. 25, déc. 12, janv. 7 ; au sud de 45° N nov. 103, oct. 93, déc. 45, janv. 14 ; départements les plus représentés Doubs 96, Isère 64, Pas-de-Calais 44, Aveyron 43, Hérault 38, Haute-Savoie 38 ; massif du Ventoux 6 occ. ONF (Bédoin, Brantes, Saint-Léger-du-Ventoux, 28-29 oct. 2014 et 19 oct. 2015) ; 5 occ. au 1er janvier et 6 au 1er juin (dates par défaut) ignorées"
+  }
+}

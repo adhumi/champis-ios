@@ -1,0 +1,333 @@
+{
+  "id": "russula_cyanoxantha",
+  "schema_version": 1,
+  "group": {
+    "id": "russules",
+    "fr": "Russules"
+  },
+  "names": {
+    "fr": "Russule charbonnière (charbonnier)",
+    "la": "Russula cyanoxantha"
+  },
+  "notes": "Nouveau groupe d'affichage « Russules » (avec R. virescens), à déclarer dans la spec. Le nom « charbonnier » désigne selon les régions cette russule ou Tricholoma portentosum : le nom affiché garde « russule charbonnière ». Ectomycorhizienne très commune, sous feuillus surtout (hêtre, chênes, châtaignier, charme, tilleul) et aussi sous épicéa et autres conifères (wikipedia_fr2026, wikipedia_en2026, confiance faible) : hêtre 1, chênes 0,95, châtaignier 0,9, mélanges feuillus 0,9 ; `autre_feuillu` 0,7 (charme, tilleul, bouleau, mais aussi frêne et érable non ECM) ; sapin/épicéa 0,6, pins 0,15-0,35. Peupliers cités par Wikipédia FR, mais `peupleraie` (plantations cultivées) reste à 0 comme dans tous les fichiers. Bois thermophiles de plaine et de colline, moins en montagne sauf en versant chaud ; clairières et bords de chemins : couvert ouvert à 0,85. pH : « sols siliceux acides à légèrement acides », « légèrement acides mais riches » → littérature ~4,0-6,2 élargie de +0,6 (3,8 / 4,5 / 6,8 / 7,8), confiance faible, à recalibrer sur SoilGrids aux occurrences (`champis-pipeline check`). Altitude : GBIF FR q10 73 m, q90 1 278 m, q99 1 591 m, max 1 900 m ; médiane 666 m tirée par le Jura et le Doubs ; la littérature la dit moins fréquente en montagne → optimum 0-1 100 m, max 1 900 m. Saison : GBIF FR (3 768 occ.) monte de juin (287) à août (434), pic septembre (791) et octobre (684), novembre 109, décembre 34 ; 60 des 76 occ. de janvier sont datées au 1er janvier (dates par défaut) : ignorées. Le pic d'automne n'est pas une seconde vague mais la fin d'une longue saison : pic principal 20 août-20 octobre et `secondary_peak` à 0,5 du 10 juin au 31 juillet (poussées d'été, environ moitié moins notées par jour que le pic dans GBIF, qui surreprésente les sorties mycologiques d'automne). Décalage altitudinal : au-dessus de 1 000 m, presque rien en juin (6) et peu en octobre (22 contre 77 en septembre), rien en novembre ; sous 500 m, juin 41, octobre 34, novembre 10 → début +2 j/100 m et fin −3 j/100 m au-dessus de 300 m, bornés à 30 j (comme les girolles). Bloc météo calé sur B. reticulatus (estival, feuillus, sols larges) : aucune étude météo sur les russules trouvée ; températures abaissées de 2 °C (7/12/19/25 au lieu de 9/14/20/26) parce que le pic est en septembre-octobre et non en juin-juillet ; gel comme B. edulis (−2 °C, 2 nuits, × 0,2) parce que la saison va jusqu'en novembre ; persistance 8 j au lieu de 10 (sporophores vite véreux, wikipedia_en2026) ; tout ce bloc est terrain_fr, confiance faible. Point sanitaire : les russules accumulent souvent des métaux lourds (Wikipédia FR « Russule ») ; statut sur la liste ANSES-DGCCRF des champignons commercialisables non vérifié (site inaccessible).",
+  "terrain": {
+    "hosts": {
+      "hetre": 1.0,
+      "sapin_epicea": 0.6,
+      "chenes_decidus": 0.95,
+      "chataignier": 0.9,
+      "mixte_feuillus_dom": 0.85,
+      "mixte_coniferes_dom": 0.6,
+      "melange_feuillus": 0.9,
+      "melange_coniferes": 0.4,
+      "feuillus_indet": 0.7,
+      "coniferes_indet": 0.35,
+      "mixte_indet": 0.6,
+      "pin_sylvestre": 0.35,
+      "pin_crochets_cembro": 0.15,
+      "pin_maritime": 0.3,
+      "melange_pins": 0.3,
+      "autre_feuillu": 0.7,
+      "pin_laricio_noir": 0.2,
+      "autre_pin": 0.2,
+      "meleze": 0.15,
+      "chenes_sempervirents": 0.3,
+      "douglas": 0.2,
+      "autre_conifere": 0.05,
+      "pin_alep": 0.05,
+      "lande": 0.05,
+      "sans_couvert": 0.05,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.5
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.85,
+      "sans_couvert": 0.1,
+      "plantation": 0.0,
+      "non_foret": 0.1
+    },
+    "ph": {
+      "min": 3.8,
+      "opt_low": 4.5,
+      "opt_high": 6.8,
+      "max": 7.8
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 1100,
+      "max": 1900
+    },
+    "aspect": {
+      "N": 0.85,
+      "NE": 0.9,
+      "NW": 0.9,
+      "E": 1.0,
+      "W": 1.0,
+      "SE": 1.0,
+      "SW": 0.95,
+      "S": 0.9,
+      "flat": 1.0
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 20,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.2,
+      "ph": 0.25,
+      "altitude": 0.3,
+      "aspect": 0.15,
+      "slope": 0.1
+    },
+    "refs": {
+      "hosts": [
+        "wikipedia_fr2026",
+        "wikipedia_en2026"
+      ],
+      "cover": [
+        "wikipedia_fr2026",
+        "terrain_fr"
+      ],
+      "ph": [
+        "wikipedia_fr2026",
+        "wikipedia_en2026"
+      ],
+      "altitude": [
+        "gbif2026",
+        "wikipedia_fr2026"
+      ],
+      "aspect": [
+        "wikipedia_fr2026",
+        "terrain_fr"
+      ],
+      "slope": [
+        "bonet2008"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "05-15",
+      "end": "11-30"
+    },
+    "peak": {
+      "start": "08-20",
+      "end": "10-20"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 300,
+      "start_days_per_100m": 2,
+      "end_days_per_100m": -3,
+      "max_days": 30
+    },
+    "refs": [
+      "gbif2026",
+      "wikipedia_fr2026",
+      "andrew2018"
+    ],
+    "secondary_peak": {
+      "start": "06-10",
+      "end": "07-31",
+      "phi": 0.5,
+      "note": "Poussées d'été après les orages, environ moitié moins notées que le pic d'automne"
+    }
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 7,
+        "opt_low": 12,
+        "opt_high": 19,
+        "max": 25
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 25,
+        "opt_low": 50,
+        "opt_high": 130,
+        "max": 500
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 5,
+        "opt_low": 8,
+        "opt_high": 15,
+        "max": 25
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -2,
+      "ramp_c": 2,
+      "nights": 2,
+      "window_days": 7,
+      "factor": 0.2
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 32,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 8
+    },
+    "weights": {
+      "temp": 0.3,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.2
+    },
+    "refs": {
+      "temp_mean": [
+        "bielefeld2025",
+        "terrain_fr"
+      ],
+      "rain": [
+        "bielefeld2025",
+        "salerni2002",
+        "terrain_fr"
+      ],
+      "trigger": [
+        "salerni2023",
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "olano2020",
+        "karavani2018"
+      ],
+      "frost": [
+        "kauserud2012",
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "salerni2023",
+        "wikipedia_fr2026"
+      ],
+      "memory": [
+        "olano2020",
+        "buntgen2015"
+      ],
+      "persistence": [
+        "terrain_fr",
+        "wikipedia_en2026"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "bielefeld2025"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Grande russule charnue au chapeau très changeant : violet, bleu ardoise, vert olive, souvent mêlés sur un même chapeau. Ses lames blanches sont souples et grasses au toucher : elles plient sans casser, ce qui est rare chez les russules. Pied blanc et ferme, sans anneau, chair blanche.",
+    "habitat": "Hêtraies, chênaies, châtaigneraies et bois de charmes, plus rarement sous les épicéas et autres conifères, sur sols acides à légèrement acides. Surtout dans les bois de plaine et de colline, souvent en lisière et au bord des chemins ; moins en montagne, sauf en versant chaud.",
+    "season": "Du début de l'été à la fin de l'automne : les premières en juin, dès mai dans les bois clairs et chauds, des poussées d'été après les orages, puis le gros de la récolte en septembre et octobre. En montagne, elle commence plus tard et finit plus tôt.",
+    "confusions": [
+      {
+        "name": "Amanite phalloïde",
+        "latin": "Amanita phalloides",
+        "risk": "Mortelle : destruction du foie, premiers symptômes le plus souvent 6 à 12 h après le repas, quand le poison a déjà agi.",
+        "tell": "Anneau blanc sous le chapeau et volve en sac à la base du pied, souvent enterrée : toujours déterrer le pied entier. Chapeau vert-jaune à olive, lisse et finement vergeté ; pied qui se déchire en fibres. La russule charbonnière n'a ni anneau ni volve, sa chair grenue casse net comme de la craie et ses lames souples sont grasses au toucher.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017",
+          "wikipedia_phalloide2026",
+          "wikipedia2026"
+        ]
+      },
+      {
+        "name": "Russule olivacée",
+        "latin": "Russula olivacea",
+        "risk": "Malgré sa saveur douce, responsable d'intoxications digestives sérieuses dans le sud de l'Europe.",
+        "tell": "Grande russule au chapeau olive à brun rouille, parfois panaché ; lames crème puis ocre foncé, cassantes sous le doigt, sporée jaune, pied souvent teinté de rose. La charbonnière a des lames blanches qui plient sans casser et une sporée blanche.",
+        "refs": [
+          "courtecuisse2013",
+          "wikipedia_russules2026",
+          "wikipedia2026"
+        ]
+      },
+      {
+        "name": "Russules âcres (russule émétique et voisines)",
+        "latin": "Russula emetica, Russula sardonia, Russula nobilis…",
+        "risk": "Toxiques : vomissements, diarrhées et crampes, une demi-heure à trois heures après le repas.",
+        "tell": "Chapeau souvent rouge ou pourpre, mais pas toujours, lames cassantes. Les russules sont plus de 160 en Europe et beaucoup se ressemblent : une saveur douce ne prouve rien, seule l'identification complète de l'espèce compte.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017",
+          "wikipedia_russules2026"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Frauen-T%C3%A4ubling_Russula_cyanoxantha.jpg/1280px-Frauen-T%C3%A4ubling_Russula_cyanoxantha.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Frauen-T%C3%A4ubling_Russula_cyanoxantha.jpg",
+      "author": "Holger Krisp",
+      "license": "CC BY 3.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017",
+      "wikipedia2026"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — descriptions et confusions des espèces européennes ; cité par Wikipédia FR, non ouvert ici",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "wikipedia2026": "Wikipédia FR, « Russule charbonnière », et Wikipedia EN, « Russula cyanoxantha », lus le 8 nov. 2026 — lames lardacées, souples et grasses, qui plient sans casser, principal critère de l'espèce ; pied cassant comme du polystyrène ; confusion avec l'amanite phalloïde possible par distraction (pas d'anneau ni de volve chez la russule) ; R. olivacea au chapeau aussi panaché mais à sporée jaune (Davis et al. 2012, non ouvert) ; Wikipedia EN, « Russula olivacea » : chapeau olive puis brun rouille, lames crème puis ocre foncé, cassantes, sporée jaune, pied souvent rosé, dite toxique par Eyssartier & Roux 2017 p. 218 (non ouvert) ; confiance faible (encyclopédie)",
+      "wikipedia_phalloide2026": "Wikipédia FR, « Amanite phalloïde », et Wikipedia EN, « Amanita phalloides », lus le 8 nov. 2026 — en Europe, des russules verdâtres (R. heterophylla, R. aeruginea, R. virescens…) sont cueillies dans les mêmes bois ; elles se distinguent par leur chair cassante et l'absence d'anneau et de volve ; symptômes le plus souvent 6 à 12 h après le repas ; mortalité de l'ordre de 10 à 15 % (revue de 1995) ; sources primaires non ouvertes ; confiance moyenne (encyclopédie)",
+      "wikipedia_russules2026": "Wikipédia FR, « Russule », Wikipedia EN, « Russula » et « Russula emetica », lus le 8 nov. 2026 — plus de 160 russules en Europe (Courtecuisse), souvent identifiables seulement au microscope ; les russules âcres (R. emetica, R. sardonia, R. nobilis…) donnent des troubles digestifs une demi-heure à trois heures après le repas ; des russules à chair douce, comme R. olivacea, ont causé des intoxications sérieuses dans le sud de l'Europe (Wikipédia FR) ; Wikipedia EN affirme au contraire que les russules douces sont toutes mangeables : règle contredite, non reprise ; confiance faible (encyclopédie)"
+    }
+  },
+  "references": {
+    "wikipedia_fr2026": "Wikipédia FR, « Russule charbonnière », lu le 8 nov. 2026 — ectomycorhizienne très commune, du début de l'été à la fin de l'automne, sous feuillus comme sous conifères, particulièrement hêtre et épicéa ; aussi chênes, châtaigniers, charmes, tilleuls, peupliers ; bois thermophiles ou chauds et humides de plaine et de basses collines, moins en montagne sauf en situation chaude ; dès mai dans les bois clairs, clairières et chemins, en juin en forêt dense ; fructifie même par été sec ; sols siliceux acides à légèrement acides (cite Tanchaud, Mycocharentes 2024 ; MycoDB ; Funghi Magazine 2023 ; Deconchat & Polèse 2002 ; non ouverts) ; confiance faible (encyclopédie)",
+    "wikipedia_en2026": "Wikipedia EN, « Russula cyanoxantha », lu le 8 nov. 2026 — sols légèrement acides mais riches, surtout en hêtraie, souvent en forêt feuillue ou mixte ; souvent infestée de larves (Arora 1986, non ouvert) ; confiance faible (encyclopédie)",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — R. cyanoxantha FR 3 768 occ. géolocalisées : mai 58, juin 287, juil. 390, août 434, sept. 791, oct. 684, nov. 109, déc. 34 ; janv. 76 dont 60 au 1er janvier (dates par défaut, ignorées) ; altitude (677 occ. renseignées) q1 7 m, q10 73 m, médiane 666 m, q90 1 278 m, q99 1 591 m, max 1 900 m ; ≥ 1 000 m : juin 6, juil. 41, août 50, sept. 77, oct. 22, nov. 0 ; < 500 m : juin 41, juil. 58, août 31, sept. 59, oct. 34, nov. 10 ; départements les plus représentés Pas-de-Calais 522, Jura 417, Doubs 309, Nord 297, Hautes-Pyrénées 289 (effort d'observation inégal)",
+    "andrew2018": "Andrew et al. 2018, Ecology — l'altitude avance la fructification automnale jusqu'à 30 j",
+    "bonet2008": "Bonet et al. 2008, Ann. For. Sci. 65:206 — pente forte négative pour la production de champignons (Pyrénées) ; transposé, confiance faible",
+    "bielefeld2025": "Brejon Lamartinière & Hoffman 2025, Predicting porcini, bioRxiv 10.64898/2025.12.12.693895 — forme du modèle (T moy 20 j, pluie ~4 semaines) établie pour B. edulis, transposée aux russules ; confiance faible",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents, meilleur corrélat (chênaies toscanes)",
+    "salerni2023": "Salerni et al. 2023, Italian Mycology — pluies ≥ 20 mm/j, effet maximal au 12e jour ; hausses brusques de T max inhibent",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pluie et humidité du sol à 1 mois favorables",
+    "olano2020": "Olano et al. 2020, Agric. For. Meteorol. — humidité du sol juillet-nov. r = 0,72 ; pluie de septembre",
+    "buntgen2015": "Büntgen et al. 2015, Fungal Ecology — pluies juillet-sept. positives",
+    "agreda2015": "Ágreda et al. 2015, GCB — le bilan hydrique (P-ETP) prédit mieux que la pluie brute ; base du facteur water_balance",
+    "kauserud2012": "Kauserud et al. 2012, PNAS 109:14488 — recul des premières gelées = allongement de saison",
+    "terrain_fr": "Valeurs transposées de B. reticulatus et B. edulis (fichiers Champis) faute d'étude météo propre aux russules — températures abaissées de 2 °C pour un pic de septembre-octobre, délai pluie → pousse 5-25 j, persistance courte (~8 j, sporophores vite véreux), couvert ouvert et expositions chaudes d'après le caractère thermophile ; confiance faible",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil, à affiner : la marche (≥ nights nuits ≤ tmin_c → × factor) faisait basculer deux cellules météo voisines de « bon » à « très faible » pour un dixième de degré ; aucune référence plus fine sur la sensibilité au gel partiel ; confiance faible"
+  }
+}

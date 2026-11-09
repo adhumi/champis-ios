@@ -1,0 +1,299 @@
+{
+  "id": "lactifluus_volemus",
+  "schema_version": 1,
+  "group": {
+    "id": "lactaires",
+    "fr": "Lactaires"
+  },
+  "names": {
+    "fr": "Lactaire à lait abondant",
+    "la": "Lactifluus volemus"
+  },
+  "notes": "Vachotte. Nom accepté Lactifluus volemus (syn. Lactarius volemus ; GBIF : clé 2551150). Lactaire à lait blanc doux très abondant, de la section Dulces, sans parenté directe avec les Deliciosi : rangé dans le groupe d'affichage « Lactaires » pour l'interface. Le morphotaxon européen recouvre trois espèces (L. volemus s. str., L. subvolemus, L. oedematopus ; Van de Putte et al. 2016), séparables surtout au microscope ou par l'ADN : ce fichier les couvre ensemble (GBIF FR : 2 occ. de L. subvolemus, 1 de L. oedematopus). Ectomycorhizien de feuillus surtout (hêtre, chênes, châtaignier) et plus rarement de conifères (épicéa, sapin, pins) (Wikipédia FR, EN, DE, ES) ; feuillus 0,9-1, sapin/épicéa 0,7, pins 0,1-0,3. Sols : plutôt acides et frais selon les guides, aucune source mesurée trouvée : pH acidophile élargi de +0,6 (référence `terrain_fr`, confiance faible). En recul en Europe (disparu des Pays-Bas et de Flandre, Van de Putte et al. 2016). Espèce estivale, avant les autres lactaires : GBIF FR (681 occ. géolocalisées, lu le 8 nov. 2026) : août 107, sept. 101, juil. 100, oct. 45, juin 23, nov. 11 ; les 69 occurrences d'avril, toutes datées du 1er avril et d'un seul jeu de données, et 10 des 12 de janvier (1er janvier) sont des relevés sans date réelle : ignorées. Altitude (181 occ. renseignées) q1 45 m, q10 380 m, médiane 870 m, q90 1 330 m, q99 1 570 m, max 1 700 m ; médiane d'altitude 450 m en juin, 570 m en juillet, 960 m en août, 1 020 m en septembre : la plaine d'abord, la montagne ensuite, d'où un début retardé en altitude (+3 j/100 m au-dessus de 400 m, comme les girolles) et une fin presque inchangée (−1 j/100 m). Bloc météo : celui de B. reticulatus, cèpe d'été des mêmes chênaies-hêtraies (température 9/14/20/26 °C, pluie 25/50/130/500 mm, gel et chaleur d'été), et non celui de L. deliciosus, espèce d'automne : « plus abondant par temps chaud et humide » (Wikipédia EN), « surtout pendant les jours les plus chauds d'août » (Wikipédia DE) ; délai pluie → pousse 5-25 j (opt 8-16) et persistance 12 j (sporophores vite véreux en été) : terrain, à valider (confiance faible). Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 1.0,
+      "sapin_epicea": 0.7,
+      "chenes_decidus": 0.9,
+      "chataignier": 0.9,
+      "mixte_feuillus_dom": 0.9,
+      "mixte_coniferes_dom": 0.8,
+      "melange_feuillus": 0.85,
+      "melange_coniferes": 0.5,
+      "feuillus_indet": 0.7,
+      "coniferes_indet": 0.4,
+      "mixte_indet": 0.6,
+      "pin_sylvestre": 0.3,
+      "pin_crochets_cembro": 0.05,
+      "pin_maritime": 0.3,
+      "melange_pins": 0.2,
+      "autre_feuillu": 0.5,
+      "pin_laricio_noir": 0.1,
+      "autre_pin": 0.1,
+      "meleze": 0.1,
+      "chenes_sempervirents": 0.2,
+      "douglas": 0.2,
+      "autre_conifere": 0.05,
+      "pin_alep": 0.0,
+      "lande": 0.05,
+      "sans_couvert": 0.05,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.6
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.6,
+      "sans_couvert": 0.05,
+      "plantation": 0.05,
+      "non_foret": 0.1
+    },
+    "ph": {
+      "min": 3.5,
+      "opt_low": 4.2,
+      "opt_high": 6.6,
+      "max": 7.8
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 200,
+      "opt_high": 1400,
+      "max": 1800
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.8,
+      "SW": 0.8,
+      "S": 0.7,
+      "flat": 0.9
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 20,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.2,
+      "ph": 0.3,
+      "altitude": 0.25,
+      "aspect": 0.17,
+      "slope": 0.08
+    },
+    "refs": {
+      "hosts": [
+        "wikipedia_en_volemus",
+        "wikipedia_es_volemus",
+        "wikipedia_de_volemus",
+        "vandeputte2016"
+      ],
+      "cover": [
+        "terrain_fr"
+      ],
+      "ph": [
+        "terrain_fr"
+      ],
+      "altitude": [
+        "gbif2026",
+        "wikipedia_es_volemus"
+      ],
+      "aspect": [
+        "terrain_fr"
+      ],
+      "slope": [
+        "terrain_fr"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "06-01",
+      "end": "10-31"
+    },
+    "peak": {
+      "start": "07-10",
+      "end": "09-20"
+    },
+    "ramp_days": 20,
+    "altitude_shift": {
+      "reference_m": 400,
+      "start_days_per_100m": 3,
+      "end_days_per_100m": -1,
+      "max_days": 30
+    },
+    "refs": [
+      "gbif2026",
+      "wikipedia_de_volemus",
+      "wikipedia_en_volemus"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 9,
+        "opt_low": 14,
+        "opt_high": 20,
+        "max": 26
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 25,
+        "opt_low": 50,
+        "opt_high": 130,
+        "max": 500
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 5,
+        "opt_low": 8,
+        "opt_high": 16,
+        "max": 25
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -1,
+      "ramp_c": 2,
+      "nights": 1,
+      "window_days": 7,
+      "factor": 0.1
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 32,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 12
+    },
+    "weights": {
+      "temp": 0.3,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.2
+    },
+    "refs": {
+      "temp_mean": [
+        "wikipedia_en_volemus",
+        "wikipedia_de_volemus",
+        "terrain_fr"
+      ],
+      "rain": [
+        "wikipedia_en_volemus",
+        "terrain_fr"
+      ],
+      "trigger": [
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "wikipedia_en_volemus",
+        "terrain_fr"
+      ],
+      "frost": [
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "terrain_fr"
+      ],
+      "memory": [
+        "terrain_fr"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Gros lactaire au chapeau sec et mat, orange fauve à brun-roux, aux lames crème. À la moindre blessure, il laisse couler un lait blanc très abondant, qui brunit les lames ; il prend en vieillissant une odeur de poisson.",
+    "habitat": "Surtout dans les forêts de feuillus, hêtraies, chênaies et châtaigneraies, plus rarement sous les sapins et les épicéas, sur des sols plutôt acides et frais, de la plaine à la moyenne montagne. Il se raréfie en Europe.",
+    "season": "En été, de juillet à septembre, avant les autres lactaires ; en montagne, plutôt en août et septembre. Il aime les périodes chaudes et humides.",
+    "confusions": [
+      {
+        "name": "Lactaire roux",
+        "latin": "Lactarius rufus",
+        "risk": "Toxique : troubles digestifs.",
+        "tell": "Chapeau brun-rouge à petit mamelon, lait blanc d'abord doux puis très brûlant après une minute, sous les pins et les épicéas sur sols acides. Le lactaire à lait abondant a un lait doux et un chapeau orange fauve sans mamelon.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017",
+          "wikipedia_en_rufus"
+        ]
+      },
+      {
+        "name": "Lactaire à odeur de chicorée",
+        "latin": "Lactarius helvus",
+        "risk": "Toxique : nausées, vomissements, vertiges.",
+        "tell": "Chapeau beige grisâtre, lait clair comme de l'eau, forte odeur de chicorée ou de céleri, dans les sphaignes et les lieux humides. Le lactaire à lait abondant a un lait blanc et épais et un chapeau orange fauve.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017",
+          "wikipedia_en_helvus"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Lactarius_volemus_a1_%281%29.JPG/1280px-Lactarius_volemus_a1_%281%29.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Lactarius_volemus_a1_%281%29.JPG",
+      "author": "Jerzy Opioła",
+      "license": "CC BY-SA 4.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — lactaires à lait blanc doux et à lait âcre, confusions et comestibilité",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "wikipedia_en_rufus": "Wikipédia EN, Lactarius rufus, lu le 8 nov. 2026 — lait blanc abondant, doux puis très âcre après une minute ; surtout sous pins, aussi épicéas et bouleaux ; jugé toxique, troubles gastriques",
+      "wikipedia_en_helvus": "Wikipédia EN, Lactarius helvus, lu le 8 nov. 2026 — lait aqueux incolore, odeur de fenugrec ou de livèche, sphaignes sous conifères et bouleaux ; toxique cru : nausées, vomissements, vertiges, 418 intoxiqués près de Leipzig en octobre 1949"
+    }
+  },
+  "references": {
+    "wikipedia_en_volemus": "Wikipédia EN, Lactifluus volemus, lu le 8 nov. 2026 — ectomycorhizien au pied de conifères et de feuillus, plus commun dans les bois de feuillus ; de l'été à l'automne, plus abondant par temps chaud et humide ; en recul dans plusieurs pays, disparu des Pays-Bas",
+    "wikipedia_de_volemus": "Wikipédia DE, Brätling, lu le 8 nov. 2026 — de juillet à octobre en forêts de feuillus, plus rarement de conifères, surtout pendant les jours les plus chauds d'août",
+    "wikipedia_es_volemus": "Wikipédia ES, Lactarius volemus, lu le 8 nov. 2026 — forêts de feuillus, surtout sous châtaigniers, moins souvent sous conifères, en général au-dessous de 1 000 m ; été-automne",
+    "vandeputte2016": "Van de Putte K., Nuytinck J., De Crop E. & Verbeken A. 2016, Fungal Biology 120:1-25 — ITS, LSU et rpb2 : le morphotaxon européen L. volemus = trois espèces (L. volemus, L. oedematopus, L. subvolemus sp. nov.) ; espèce déjà éteinte aux Pays-Bas et en Flandre, en déclin ailleurs (résumé lu, texte intégral non consulté)",
+    "agreda2015": "Ágreda et al. 2015, GCB — le bilan hydrique (P-ETP) prédit mieux que la pluie brute ; base du facteur water_balance",
+    "terrain_fr": "Sources de terrain françaises (guides, sociétés mycologiques) — vachotte des hêtraies et chênaies acidophiles fraîches, juillet-septembre, quelques jours à deux semaines après les orages d'été, sporophores vite véreux ; ordres de grandeur repris de B. reticulatus ; confiance faible",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; paramètres estivaux de B. reticulatus repris (seuil -1 °C, 1 nuit, × 0,1), confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — Lactifluus volemus (syn. Lactarius volemus) FR 681 occ. géolocalisées : août 107, sept. 101, juil. 100, oct. 45, juin 23, nov. 11 ; 69 occ. du 1er avril d'un seul jeu de données et 10 du 1er janvier, ignorées ; altitude (181 occ. renseignées) q1 45 m, q10 380 m, médiane 870 m, q90 1 330 m, q99 1 570 m, max 1 700 m ; médiane d'altitude 450 m en juin, 570 m en juillet, 960 m en août, 1 020 m en septembre ; L. subvolemus FR 2 occ., L. oedematopus FR 1"
+  }
+}

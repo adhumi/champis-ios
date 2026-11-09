@@ -1,0 +1,322 @@
+{
+  "id": "craterellus_tubaeformis",
+  "schema_version": 1,
+  "group": {
+    "id": "chanterelles",
+    "fr": "Chanterelles"
+  },
+  "names": {
+    "fr": "Chanterelle en tube",
+    "la": "Craterellus tubaeformis"
+  },
+  "notes": "Craterelle ectomycorhizienne (Dahlman 2000 pour la place dans Craterellus ; Trappe 2004 : mycorhizes confirmées par PCR-RFLP sur pruche, douglas et épicéa de Sitka en Oregon). Wikipédia (fr) la dit saprophyte : contredit par Trappe 2004, on la traite comme ECM, avec un lien fort au bois mort très décomposé (88 % de la biomasse sur bois pourri chez Trappe 2004) que le modèle ne sait pas représenter. Attention : la population de l'ouest de l'Amérique du Nord étudiée par Trappe est peut-être une espèce distincte (« C. neotubaeformis », non publiée) ; transposition à l'Europe, confiance moyenne pour l'hôte, faible pour le reste. Hôtes en France : sapinières, pessières et sapinières-hêtraies de montagne (Jura, Doubs, Pyrénées, Alpes du Nord), pinèdes moussues, mais aussi hêtraies et chênaies acides humides de plaine du Nord-Ouest (Normandie, Pas-de-Calais, Bretagne) : poids élevé sur les conifères hors pins et le hêtre, moyen sur les pins et les chênes. pH : réputée acidophile sur sols moussus et humides, mais abondante dans le Jura calcaire (humus acide sur calcaire) et dite plus rare dans les régions acides en Suède (Wikipédia sv) : plage large, poids pH réduit à 0,3 (terrain, confiance faible). Pente, exposition et altitude sans effet sur l'occurrence ni la biomasse chez Trappe 2004 : exposition presque plate et poids réduits. GBIF FR (2 001 occ. géolocalisées, lu le 8 nov. 2026) : oct. 512, sept. 283, nov. 273, déc. 114, août 81 ; janv. 59 dont 25 au 1er janvier (artefact) et ~34 réelles, surtout au sud de 45° N : la pousse continue en janvier en plaine douce, mais la saison du modèle s'arrête au 31 décembre (pas de passage d'année). Les 83 occ. d'avril (79 au 1er avril) sont un artefact de date : ignorées. Altitude (390 occ. renseignées) médiane 926 m, q10 405 m, q90 1 494 m, q99 1 753 m, max 1 900 m ; médiane d'altitude 1 134 m en août, 1 115 m en septembre, 945 m en octobre, 645 m en novembre, 350 m en décembre : la montagne d'abord, puis la plaine (décalage altitudinal négatif au début comme à la fin, comme la trompette). Météo calée sur la trompette (Cantharellale hygrophile d'arrière-saison, mêmes stations humides) avec trois écarts : température optimale plus basse de 2 °C (pic plus tardif, octobre-décembre), meilleure tolérance au gel (seuil -5 °C comme le pied de mouton : elle supporte les premières gelées), seuil de chaleur à 26 °C (espèce de stations fraîches). Délai pluie → pousse, gel et persistance : terrain, confiance faible. Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 0.8,
+      "sapin_epicea": 1.0,
+      "chenes_decidus": 0.5,
+      "chataignier": 0.4,
+      "mixte_feuillus_dom": 0.8,
+      "mixte_coniferes_dom": 1.0,
+      "melange_feuillus": 0.5,
+      "melange_coniferes": 0.8,
+      "feuillus_indet": 0.4,
+      "coniferes_indet": 0.7,
+      "mixte_indet": 0.7,
+      "pin_sylvestre": 0.7,
+      "pin_crochets_cembro": 0.5,
+      "pin_maritime": 0.4,
+      "melange_pins": 0.6,
+      "autre_feuillu": 0.5,
+      "pin_laricio_noir": 0.4,
+      "autre_pin": 0.4,
+      "meleze": 0.3,
+      "chenes_sempervirents": 0.05,
+      "douglas": 0.5,
+      "autre_conifere": 0.1,
+      "pin_alep": 0.0,
+      "lande": 0.05,
+      "sans_couvert": 0.05,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.05,
+      "melange_coniferes_hors_pins": 1.0
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.6,
+      "sans_couvert": 0.05,
+      "plantation": 0.05,
+      "non_foret": 0.05
+    },
+    "ph": {
+      "min": 3.3,
+      "opt_low": 4.2,
+      "opt_high": 7.0,
+      "max": 8.2
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 200,
+      "opt_high": 1500,
+      "max": 2000
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 1.0,
+      "NW": 1.0,
+      "E": 0.95,
+      "W": 0.95,
+      "SE": 0.9,
+      "SW": 0.85,
+      "S": 0.85,
+      "flat": 1.0
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.25,
+      "ph": 0.3,
+      "altitude": 0.2,
+      "aspect": 0.1,
+      "slope": 0.15
+    },
+    "refs": {
+      "hosts": [
+        "trappe2004",
+        "dahlman2000",
+        "gbif2026",
+        "terrain_fr"
+      ],
+      "cover": [
+        "trappe2004",
+        "terrain_fr"
+      ],
+      "ph": [
+        "terrain_fr"
+      ],
+      "altitude": [
+        "gbif2026"
+      ],
+      "aspect": [
+        "trappe2004",
+        "terrain_fr"
+      ],
+      "slope": [
+        "trappe2004",
+        "terrain_fr"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "08-01",
+      "end": "12-31"
+    },
+    "peak": {
+      "start": "10-01",
+      "end": "11-25"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 500,
+      "start_days_per_100m": -2,
+      "end_days_per_100m": -4,
+      "max_days": 35
+    },
+    "refs": [
+      "gbif2026",
+      "kauserud2012",
+      "terrain_fr"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 21,
+      "c": {
+        "min": 2,
+        "opt_low": 6,
+        "opt_high": 14,
+        "max": 20
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 40,
+        "opt_low": 80,
+        "opt_high": 180,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 10,
+        "opt_low": 14,
+        "opt_high": 28,
+        "max": 42
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.2,
+      "opt_low": 0.5,
+      "opt_high": 0.95,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -5,
+      "ramp_c": 2,
+      "nights": 3,
+      "window_days": 7,
+      "factor": 0.4
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -20,
+      "severe_mm": -40,
+      "moderate_factor": 0.35,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 26,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 80,
+        "opt_low": 180,
+        "opt_high": 450,
+        "max": 900
+      },
+      "floor": 0.65
+    },
+    "persistence": {
+      "days": 25
+    },
+    "weights": {
+      "temp": 0.2,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.3
+    },
+    "refs": {
+      "temp_mean": [
+        "kauserud2012",
+        "terrain_fr"
+      ],
+      "rain": [
+        "salerni2002",
+        "pietka2012",
+        "terrain_fr"
+      ],
+      "trigger": [
+        "pietka2012",
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "frost": [
+        "terrain_fr",
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "straatsma2001",
+        "karavani2018"
+      ],
+      "memory": [
+        "straatsma2001",
+        "agreda2015"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "karavani2018"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Petite chanterelle grêle en entonnoir, chapeau brun à gris-brun souvent percé au centre, pied creux jaune vif. Dessous, pas de vraies lames mais des plis espacés et fourchus, gris à jaunâtres, qui descendent sur le pied.",
+    "habitat": "Forêts humides et moussues : sapinières, pessières et pinèdes de montagne, mais aussi hêtraies et chênaies fraîches de plaine dans le Nord-Ouest. Elle pousse en troupes nombreuses dans la mousse, souvent sur ou contre du bois mort très pourri.",
+    "season": "Champignon d'arrière-saison : d'août en montagne à décembre en plaine, le gros de la pousse d'octobre à fin novembre. Elle supporte les premières gelées et se ramasse parfois encore en janvier là où l'hiver est doux.",
+    "confusions": [
+      {
+        "name": "Cortinaires mortels (cortinaire très joli, cortinaire couleur de rocou)",
+        "latin": "Cortinarius rubellus, Cortinarius orellanus",
+        "risk": "Mortel : atteinte des reins qui se déclare plusieurs jours, voire deux à trois semaines, après le repas, souvent irréversible (dialyse, greffe). En Suède, des intoxications graves ont suivi des cueillettes prises pour des chanterelles en tube.",
+        "tell": "Chapeau conique à mamelon, roux-fauve, de vraies lames brun rouille sous le chapeau, pied plein et non creux ; ils poussent dans les mêmes mousses humides sous les conifères. La chanterelle en tube a un pied creux et des plis fourchus, jamais de lames rouille.",
+        "refs": [
+          "holmdahl1995",
+          "wikipedia_rubellus",
+          "wikipedia_sv_tratt"
+        ]
+      },
+      {
+        "name": "Léotie lubrique",
+        "latin": "Leotia lubrica",
+        "risk": "Suspecte, sans intérêt ; pousse dans les mêmes mousses, parfois mêlée aux chanterelles.",
+        "tell": "Petite tête gélatineuse, bosselée et visqueuse, vert-jaune olivâtre, à marge enroulée, sans plis ni lames dessous.",
+        "refs": [
+          "wikipedia_fr_tubaeformis",
+          "wikipedia_sv_tratt"
+        ]
+      },
+      {
+        "name": "Chanterelle jaune",
+        "latin": "Craterellus lutescens",
+        "risk": "Aucun risque connu : espèce voisine, recherchée elle aussi.",
+        "tell": "Dessous presque lisse ou à peine veiné, orangé, au lieu de plis nets gris-jaune ; pied orange vif, odeur fruitée plus forte ; lieux plus humides, souvent calcaires.",
+        "refs": [
+          "wikipedia_fr_tubaeformis",
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Craterellus_tubaeformis_110921w.JPG/1280px-Craterellus_tubaeformis_110921w.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Craterellus_tubaeformis_110921w.JPG",
+      "author": "Strobilomyces",
+      "license": "CC BY-SA 3.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017",
+      "wikipedia_fr_tubaeformis"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — hydnes et craterelles : caractères distinctifs, confusions et comestibilité",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "holmdahl1995": "Holmdahl J. & Blohmé I. 1995, Nephrol. Dial. Transplant. 10:1920-1922 — 22 intoxications par Cortinarius speciosissimus (= C. rubellus) en Suède de 1979 à 1993, 9 insuffisances rénales terminales ; résumé lu, texte intégral non consulté. Le fait que les victimes l'aient pris pour Craterellus tubaeformis, des hygrophores ou des girolles est rapporté par Wikipédia (en, « Cortinarius rubellus »), qui cite cet article",
+      "wikipedia_rubellus": "Wikipédia (en), « Cortinarius rubellus », lu le 8 nov. 2026 — orellanine, insuffisance rénale souvent irréversible ; confusions rapportées avec la chanterelle en tube et la girolle (Holmdahl & Blohmé 1995, Short et al. 1980, Lancet) ; confiance moyenne (encyclopédie sourcée)",
+      "wikipedia_sv_tratt": "Wikipédia (sv), « Trattkantarell », lu le 8 nov. 2026 — C. tubaeformis ectomycorhizienne ; confondue avec le cortinaire très joli (« toppig giftspindling »), mortel, qui pousse dans les mêmes milieux ; léotie lubrique comme sosie fréquent ; confiance moyenne",
+      "wikipedia_fr_tubaeformis": "Wikipédia (fr), « Craterellus tubaeformis », lu le 8 nov. 2026 — description, confusions avec C. lutescens, C. melanoxeros, Leotia lubrica et des omphales ; vendue fraîche comme « chanterelle grise » ; accumule le césium 137 ; confiance moyenne"
+    }
+  },
+  "references": {
+    "dahlman2000": "Dahlman M., Danell E. & Spatafora J.W. 2000, Mycol. Res. 104:388-394 — systématique moléculaire de Craterellus : Craterellus distinct de Cantharellus, espèces de Cantharellus subgen. Leptocantharellus (dont C. tubaeformis) rattachées à Craterellus, genre ectomycorhizien",
+    "trappe2004": "Trappe M.J. 2004, Mycologia 96:498-509 — C. tubaeformis dans le nord-ouest de l'Oregon (64 placettes) : mycorhizes confirmées par PCR-RFLP sur pruche de l'Ouest, aussi sur douglas et épicéa de Sitka ; 88 % de la biomasse sur bois mort très décomposé ; occurrence liée à l'âge du peuplement et au volume de bois mort, sans lien avec la pente, l'altitude ni l'exposition ; résumé lu, texte intégral non consulté ; population peut-être distincte de l'européenne",
+    "kauserud2012": "Kauserud H. et al. 2012, PNAS 109:14488-14493 — phénologie de fructification en Europe : les espèces d'automne fructifient plus tard, saisons allongées avec le réchauffement",
+    "straatsma2001": "Straatsma G., Ayer F. & Egli S. 2001, Mycol. Res. 105:515-523 — La Chanéaz (Suisse), 21 ans de relevés hebdomadaires dans une forêt mixte : phénologie des espèces automnales, productivité liée à la pluie et à la température de l'été ; confiance moyenne pour les valeurs d'espèce",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents",
+    "pietka2012": "Piętka et al. 2012, Leśne Prace Badawcze — girolle : corrélation pluie r = 0,72 avec ~1 mois de délai ; transposé aux Cantharellales à croissance lente, confiance faible",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pluie et humidité du sol à 1 mois, T max négatives, production de champignons comestibles",
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
+    "terrain_fr": "Sources de terrain françaises (guides, sociétés mycologiques) — mousses humides des sapinières, pessières et hêtraies, souvent sur bois très pourri, sols acides ou humus acide sur calcaire (Jura) ; champignon d'arrière-saison qui supporte les premières gelées ; délai pluie → pousse de 2 à 4 semaines, sporophores persistant 3 à 4 semaines ; confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — C. tubaeformis FR 2 001 occ. géolocalisées : oct. 512, sept. 283, nov. 273, déc. 114, août 81, janv. 59 (dont 25 au 1er janvier) ; altitude (390 occ. renseignées) médiane 926 m, q10 405 m, q90 1 494 m, q99 1 753 m, max 1 900 m ; médiane d'altitude 1 134 m en août, 1 115 m en septembre, 945 m en octobre, 645 m en novembre, 350 m en décembre ; foyers : Jura 275, Doubs 182, Hautes-Pyrénées 153, Isère 93 ; 79 occ. datées du 1er avril et 25 du 1er janvier, sans date réelle, ignorées",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; la chanterelle en tube supporte les premières gelées (seuil -5 °C, 3 nuits, × 0,4, comme le pied de mouton), confiance faible"
+  }
+}

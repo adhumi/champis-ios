@@ -22,4 +22,6 @@ public enum ScoringError: Error, Equatable, Sendable {
     case nonContiguousSeries(CivilDate, CivilDate)
     case lengthMismatch(String, Int, Int)
     case invalidDate(String)
+    /// Une espèce emploie un facteur optionnel dont la série n'est pas fournie (`soil_temp`).
+    case missingSeries(String)
 }
