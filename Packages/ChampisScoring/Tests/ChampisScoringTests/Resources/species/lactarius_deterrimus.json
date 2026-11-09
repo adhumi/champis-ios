@@ -1,0 +1,303 @@
+{
+  "id": "lactarius_deterrimus",
+  "schema_version": 1,
+  "group": {
+    "id": "lactaires",
+    "fr": "Lactaires"
+  },
+  "names": {
+    "fr": "Lactaire de l'épicéa",
+    "la": "Lactarius deterrimus"
+  },
+  "notes": "« Lactaire délicieux de l'épicéa », section Deliciosi : orangé, verdissant fortement, lait orange virant au rouge vineux en une demi-heure ; mycorhizien strict de l'épicéa (Picea abies ; seule exception connue : mycorhizes arbutoïdes sur busserole à la limite des arbres, Mühlmann & Göbl 2006, sans effet sur la carte). Partout où l'épicéa pousse ou a été planté : pessières et sapinières-pessières de montagne, plantations de plaine, avec l'épicéa dans les hêtraies et chênaies-charmaies, lisières, clairières et coupes ; massif dans les jeunes peuplements de 10 à 20 ans et au bord des chemins forestiers (Wikipédia DE et EN). Presque tous les sols, acides comme basiques, pauvres à assez riches ; absent des sols très eutrophes ; préférence possible pour le calcaire : plage pH très large, poids pH faible (0,15). Limite du modèle : BD Forêt V2 ne sépare pas sapin et épicéa (poste G61 → hôte `sapin_epicea`, de même `melange_coniferes_hors_pins`) ; une sapinière pure reçoit donc le même poids qu'une pessière. Pondération : `sapin_epicea` et `melange_coniferes_hors_pins` 0,7 (plus que L. salmonicolor, 0,55, car l'épicéa domine les plantations de plaine et l'espèce suit tout peuplement d'épicéas, jeune ou âgé) ; `sans_couvert` 0,25 et couvert « sans couvert » 0,3 pour les jeunes plantations (FF0) ; mélèze 0,15 et pin cembro/à crochets 0,1 pour les mélanges subalpins avec l'épicéa. Part réelle sapin/épicéa du poste G61 non vérifiée ici. GBIF FR (1 160 occ. géolocalisées, lu le 8 nov. 2026) : sept. 302, oct. 237, août 135, nov. 73, juil. 41, déc. 19, juin 18 ; altitude (436 occ. renseignées) q1 220 m, q10 560 m, médiane 1 090 m, q90 1 530 m, q99 1 940 m, max 2 000 m (relevés biaisés vers la montagne : 650 occ. entre 45 et 47° N) ; médiane d'altitude 1 230 m en juillet, 1 200 m en août, 1 170 m en septembre, 880 m en octobre, 700 m en novembre : la montagne d'abord (−2 et −3 j/100 m au-dessus de 800 m). Les 22 occurrences de janvier (dont 15 datées du 1er janvier ; ailleurs, sporophores surannés gelés jusqu'en février selon Wikipédia DE) sont ignorées : saison arrêtée au 12-15. Bloc météo : celui de L. deliciosus (même section ; aucune étude météo propre trouvée), à valider ; délai pluie → pousse, gel et persistance : terrain (confiance faible). Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 0.1,
+      "sapin_epicea": 0.7,
+      "chenes_decidus": 0.0,
+      "chataignier": 0.0,
+      "mixte_feuillus_dom": 0.3,
+      "mixte_coniferes_dom": 0.55,
+      "melange_feuillus": 0.05,
+      "melange_coniferes": 0.5,
+      "feuillus_indet": 0.05,
+      "coniferes_indet": 0.4,
+      "mixte_indet": 0.25,
+      "pin_sylvestre": 0.05,
+      "pin_crochets_cembro": 0.1,
+      "pin_maritime": 0.0,
+      "melange_pins": 0.05,
+      "autre_feuillu": 0.05,
+      "pin_laricio_noir": 0.0,
+      "autre_pin": 0.05,
+      "meleze": 0.15,
+      "chenes_sempervirents": 0.0,
+      "douglas": 0.1,
+      "autre_conifere": 0.05,
+      "pin_alep": 0.0,
+      "lande": 0.05,
+      "sans_couvert": 0.25,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.05,
+      "melange_coniferes_hors_pins": 0.7
+    },
+    "cover": {
+      "fermee": 0.9,
+      "ouverte": 1.0,
+      "sans_couvert": 0.3,
+      "plantation": 0.0,
+      "non_foret": 0.2
+    },
+    "ph": {
+      "min": 3.3,
+      "opt_low": 4.2,
+      "opt_high": 7.8,
+      "max": 8.5
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 200,
+      "opt_high": 1700,
+      "max": 2200
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.85,
+      "W": 0.85,
+      "SE": 0.75,
+      "SW": 0.7,
+      "S": 0.65,
+      "flat": 0.9
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.3,
+      "ph": 0.15,
+      "altitude": 0.25,
+      "aspect": 0.18,
+      "slope": 0.12
+    },
+    "refs": {
+      "hosts": [
+        "wikipedia_de_deterrimus",
+        "wikipedia_en_deterrimus",
+        "muhlmann2006",
+        "bdforet_g61"
+      ],
+      "cover": [
+        "wikipedia_de_deterrimus"
+      ],
+      "ph": [
+        "wikipedia_de_deterrimus",
+        "wikipedia_en_deterrimus"
+      ],
+      "altitude": [
+        "gbif2026",
+        "wikipedia_de_deterrimus"
+      ],
+      "aspect": [
+        "terrain_fr"
+      ],
+      "slope": [
+        "terrain_fr"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "07-01",
+      "end": "12-15"
+    },
+    "peak": {
+      "start": "08-25",
+      "end": "10-20"
+    },
+    "ramp_days": 25,
+    "altitude_shift": {
+      "reference_m": 800,
+      "start_days_per_100m": -2,
+      "end_days_per_100m": -3,
+      "max_days": 30
+    },
+    "refs": [
+      "gbif2026",
+      "wikipedia_de_deterrimus",
+      "wikipedia_en_deterrimus",
+      "terrain_fr"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 3,
+        "opt_low": 8,
+        "opt_high": 16,
+        "max": 22
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 150,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 7,
+        "opt_low": 12,
+        "opt_high": 22,
+        "max": 35
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -4,
+      "ramp_c": 2,
+      "nights": 3,
+      "window_days": 7,
+      "factor": 0.35
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 18
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.3,
+      "trigger": 0.25,
+      "soil_moisture": 0.2
+    },
+    "refs": {
+      "temp_mean": [
+        "delavarga2013",
+        "terrain_fr"
+      ],
+      "rain": [
+        "taye2016",
+        "terrain_fr"
+      ],
+      "trigger": [
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "taye2016",
+        "terrain_fr"
+      ],
+      "frost": [
+        "gel_rampe2026",
+        "wikipedia_de_deterrimus"
+      ],
+      "heat": [
+        "delavarga2013"
+      ],
+      "memory": [
+        "taye2016"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Lactaire orangé, au chapeau peu zoné qui se tache fortement de vert en vieillissant ou au toucher, et au pied sans fossettes. Son lait orange vire au rouge vineux en une demi-heure.",
+    "habitat": "Uniquement sous l'épicéa, partout où il pousse ou a été planté : forêts d'épicéas de montagne comme plantations de plaine. Très abondant dans les jeunes plantations et au bord des chemins forestiers, sur presque tous les sols. La carte ne sait pas distinguer l'épicéa du sapin : une sapinière peut y ressortir à tort.",
+    "season": "De juillet à novembre, surtout de fin août à mi-octobre. La montagne donne d'abord, la plaine ensuite.",
+    "confusions": [
+      {
+        "name": "Lactaire à fossettes",
+        "latin": "Lactarius scrobiculatus",
+        "risk": "Toxique : troubles digestifs, saveur amère à brûlante.",
+        "tell": "Gros chapeau jaune à marge laineuse, lait blanc qui vire au jaune soufre, sous les épicéas en montagne. Le lactaire de l'épicéa a un lait orange, jamais blanc.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017",
+          "wikipedia_en_scrobiculatus"
+        ]
+      },
+      {
+        "name": "Lactaire à toison",
+        "latin": "Lactarius torminosus",
+        "risk": "Toxique : nausées, vomissements et diarrhées violentes.",
+        "tell": "Lait blanc et très âcre, chapeau rose pâle à marge laineuse, sous les bouleaux, fréquents dans et autour des plantations d'épicéas. Le lactaire de l'épicéa a un lait orange.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017",
+          "wikipedia_fr_torminosus"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Lactarius-deterrimus-Fichten-Reizker.jpg/1280px-Lactarius-deterrimus-Fichten-Reizker.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Lactarius-deterrimus-Fichten-Reizker.jpg",
+      "author": "Holger Krisp",
+      "license": "CC BY 3.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — lactaires à lait orange ou rouge sous conifères, lactaires à lait blanc âcre toxiques",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "wikipedia_fr_torminosus": "Wikipédia FR, Lactarius torminosus, lu le 8 nov. 2026 — lactaire à toison, mycorhizien surtout des bouleaux, très irritant pour le système digestif consommé cru (toxines âcres)",
+      "wikipedia_en_scrobiculatus": "Wikipédia EN, Lactarius scrobiculatus, lu le 8 nov. 2026 — forêts de conifères et de bouleaux, lieux humides ; chair amère à âcre, jugé non comestible par la plupart des auteurs, troubles gastro-intestinaux"
+    }
+  },
+  "references": {
+    "wikipedia_de_deterrimus": "Wikipédia DE, Fichten-Reizker (Lactarius deterrimus), lu le 8 nov. 2026 — mycorhizien strict de l'épicéa : pessières, sapinières-pessières, forêts tourbeuses, plantations, avec l'épicéa dans les hêtraies et chênaies-charmaies, lisières, clairières, coupes ; massif dans les jeunes peuplements de 10-20 ans au bord des chemins ; presque tous les sols (sable, tourbe, calcaire, rankers, sols bruns), acides à basiques, absent des sols très eutrophes ; fin juin à novembre, surtout août-octobre, surannés gelés jusqu'en février ; collines et montagne, aussi en plaine",
+    "wikipedia_en_deterrimus": "Wikipédia EN, Lactarius deterrimus, lu le 8 nov. 2026 — associé à l'épicéa commun (et à la busserole), fin juin à novembre, surtout en pessière ; mêmes milieux et sols que Wikipédia DE",
+    "muhlmann2006": "Mühlmann O. & Göbl F. 2006, Mycorrhiza 16:245-250 — L. deterrimus, jusque-là tenu pour spécifique de Picea abies, forme aussi des mycorhizes arbutoïdes avec Arctostaphylos uva-ursi à la limite supérieure de la forêt (résumé lu, texte intégral non consulté)",
+    "bdforet_g61": "IGN, BD Forêt V2, descriptif de contenu (rév. nov. 2018), via mapping/bdforet_to_hosts.json — poste G61 « sapin ou épicéa » non séparable : l'hôte `sapin_epicea` mêle pessières et sapinières",
+    "taye2016": "Taye Z.M. et al. 2016, Fungal Ecology 23:30-41 — Lactarius groupe deliciosus (P. pinaster, Espagne) : pluie de fin d'été et début d'automne = premier facteur ; transposé à la section Deliciosi, confiance faible",
+    "delavarga2013": "de la Varga H. et al. 2013, Mycorrhiza 23:391-402 — L. deliciosus : sporophores corrélés positivement à la pluie et l'humidité, négativement aux T max et min ; transposé, confiance faible",
+    "agreda2015": "Ágreda et al. 2015, GCB — le bilan hydrique (P-ETP) prédit mieux que la pluie brute ; base du facteur water_balance",
+    "terrain_fr": "Sources de terrain françaises (guides, sociétés mycologiques) — pessières et plantations d'épicéas, versants frais ; délai pluie → pousse de 2 à 3 semaines, sporophores persistant 2 à 3 semaines ; confiance faible",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; paramètres de L. deliciosus repris (seuil -4 °C, 3 nuits), confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — L. deterrimus FR 1 160 occ. géolocalisées : sept. 302, oct. 237, août 135, nov. 73, juil. 41, janv. 22 (dont 15 au 1er janvier, ignorées), déc. 19, juin 18 ; altitude (436 occ. renseignées) q1 220 m, q10 560 m, médiane 1 090 m, q90 1 530 m, q99 1 940 m, max 2 000 m ; médiane d'altitude 1 230 m en juillet, 1 200 m en août, 1 170 m en septembre, 880 m en octobre, 700 m en novembre"
+  }
+}

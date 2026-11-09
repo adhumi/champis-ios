@@ -1,0 +1,331 @@
+{
+  "id": "imleria_badia",
+  "schema_version": 1,
+  "group": {
+    "id": "bolets_bais",
+    "fr": "Bolets bais"
+  },
+  "names": {
+    "fr": "Bolet bai",
+    "la": "Imleria badia"
+  },
+  "notes": "Bolet très commun des sols acides, mycorhizien d'un large éventail d'arbres : épicéa, pins, sapin, mélèze, et aussi hêtre, chênes, châtaignier ; absent des sols calcaires (Wikipédia EN citant Haas 1969 ; Wikipédia FR « sur sol non calcaire »), d'où un trapèze pH plus acide que celui de B. edulis et un poids pH élevé (0,35). Hôtes : conifères à 1,0 (sapin/épicéa, pin sylvestre), feuillus acidiphiles 0,6-0,7 ; pin d'Alep et chênes sempervirents bas (calcaire méditerranéen, chêne vert) ; douglas 0,5 et mélèze 0,6 à valider. Altitude : du littoral à la montagne (Wikipédia DE « von der Küste bis in die Alpen ») ; GBIF FR q10 105 m, q90 1 472 m, q99 1 805 m → optimum 0-1 500 m, max 2 100 m. Saison : GBIF FR (2 455 occ., lu le 8 nov. 2026) pic octobre (813) puis septembre (471) et novembre (268), poussées estivales dès juin (53) et juillet (69) les étés humides (Wikipédia DE) ; décembre 73 : se prolonge jusqu'en décembre et, les hivers doux, en janvier (Wikipédia FR) ; la saison s'arrête au 12-31 (le schéma ne passe pas le 1er janvier) ; les 61 occ. de janvier sont en partie des relevés datés au 1er janvier sans date réelle et en partie des pousses tardives : ignorées pour le pic. Altitude_shift : au-dessus de 1 000 m le pic est en septembre et rien n'est noté en novembre, sous 500 m le pic est en octobre et la saison court jusqu'en décembre → début avancé (−2 j/100 m) et fin avancée (−4 j/100 m) au-dessus de 400 m, bornés à 35 j. Bloc météo : recopié de boletus_edulis (bolet mycorhizien généraliste, même saison d'automne) sans modification, faute d'étude météo propre au bolet bai ; à valider sur les retours terrain (confiance faible). Couvert, exposition, pente : transposés de B. edulis (confiance faible). Bioaccumule fortement le césium 137 (pigments badione A et norbadione A de la cuticule) et le mercure : à mentionner dans la fiche publique si Adrien le souhaite (Wikipédia FR, EN, DE).",
+  "terrain": {
+    "hosts": {
+      "hetre": 0.7,
+      "sapin_epicea": 1.0,
+      "chenes_decidus": 0.6,
+      "chataignier": 0.7,
+      "mixte_feuillus_dom": 0.8,
+      "mixte_coniferes_dom": 0.9,
+      "melange_feuillus": 0.55,
+      "melange_coniferes": 0.85,
+      "feuillus_indet": 0.5,
+      "coniferes_indet": 0.7,
+      "mixte_indet": 0.6,
+      "pin_sylvestre": 1.0,
+      "pin_crochets_cembro": 0.7,
+      "pin_maritime": 0.85,
+      "melange_pins": 0.85,
+      "autre_feuillu": 0.45,
+      "pin_laricio_noir": 0.5,
+      "autre_pin": 0.6,
+      "meleze": 0.6,
+      "chenes_sempervirents": 0.2,
+      "douglas": 0.5,
+      "autre_conifere": 0.05,
+      "pin_alep": 0.05,
+      "lande": 0.1,
+      "sans_couvert": 0.1,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.9
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.6,
+      "sans_couvert": 0.05,
+      "plantation": 0.0,
+      "non_foret": 0.2
+    },
+    "ph": {
+      "min": 3.0,
+      "opt_low": 3.6,
+      "opt_high": 5.8,
+      "max": 7.2
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 1500,
+      "max": 2100
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.85,
+      "W": 0.85,
+      "SE": 0.75,
+      "SW": 0.7,
+      "S": 0.65,
+      "flat": 0.9
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 20,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.2,
+      "ph": 0.35,
+      "altitude": 0.2,
+      "aspect": 0.17,
+      "slope": 0.08
+    },
+    "refs": {
+      "hosts": [
+        "wikipedia_en2026",
+        "wikipedia_fr2026",
+        "wikipedia_de2026"
+      ],
+      "cover": [
+        "terrain_fr"
+      ],
+      "ph": [
+        "wikipedia_en2026",
+        "wikipedia_fr2026",
+        "wikipedia_de2026"
+      ],
+      "altitude": [
+        "gbif2026",
+        "wikipedia_de2026"
+      ],
+      "aspect": [
+        "bonet2008"
+      ],
+      "slope": [
+        "bonet2008"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "06-15",
+      "end": "12-31"
+    },
+    "peak": {
+      "start": "09-10",
+      "end": "10-31"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 400,
+      "start_days_per_100m": -2,
+      "end_days_per_100m": -4,
+      "max_days": 35
+    },
+    "refs": [
+      "gbif2026",
+      "wikipedia_de2026",
+      "wikipedia_fr2026"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 5,
+        "opt_low": 10,
+        "opt_high": 16,
+        "max": 22
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 150,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 6,
+        "opt_low": 10,
+        "opt_high": 20,
+        "max": 32
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -2,
+      "ramp_c": 2,
+      "nights": 2,
+      "window_days": 7,
+      "factor": 0.2
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 12
+    },
+    "weights": {
+      "temp": 0.3,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.2
+    },
+    "refs": {
+      "temp_mean": [
+        "bielefeld2025",
+        "straatsma2001",
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "rain": [
+        "bielefeld2025",
+        "salerni2002",
+        "terrain_fr"
+      ],
+      "trigger": [
+        "salerni2023",
+        "straatsma2001",
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "olano2020",
+        "karavani2018"
+      ],
+      "frost": [
+        "bielefeld2025",
+        "kauserud2012",
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "salerni2023",
+        "terrain_fr"
+      ],
+      "memory": [
+        "olano2020",
+        "buntgen2015",
+        "tahvanainen2016"
+      ],
+      "persistence": [
+        "terrain_fr",
+        "vcu2024"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "bielefeld2025"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Bolet à chapeau brun châtaigne, lisse et un peu gras par temps humide, pores jaune crème à jaune-vert qui bleuissent au toucher, pied jaunâtre strié de brun, sans réseau. La chair blanc-jaune bleuit légèrement à la coupe.",
+    "habitat": "Forêts sur sols acides, jamais sur calcaire : pessières, sapinières et pinèdes surtout, mais aussi hêtraies, chênaies et châtaigneraies, souvent dans la mousse. Du littoral à la montagne.",
+    "season": "Surtout de septembre à novembre, avec un pic en octobre ; quelques poussées dès juin les étés humides, et jusqu'en décembre les automnes doux. En montagne la saison commence et finit plus tôt.",
+    "confusions": [
+      {
+        "name": "Bolet amer",
+        "latin": "Tylopilus felleus",
+        "risk": "Pas toxique, mais d'une amertume qui gâche tout le plat.",
+        "tell": "Réseau brun foncé sur le pied, pores blancs qui rosissent avec l'âge et ne bleuissent pas, saveur très amère au bout de la langue.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Bolets à pores rouges (bolet de Satan et proches)",
+        "latin": "Rubroboletus satanas, Suillellus luridus",
+        "risk": "Toxiques, surtout crus ou mal cuits : troubles digestifs violents.",
+        "tell": "Pores rouges ou orangés, pied souvent rouge ou ponctué de rouge. Le bolet bai bleuit lui aussi, mais ses pores restent jaunes et son pied n'a jamais de rouge.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Bolets à chapeau velouté (xérocomes)",
+        "latin": "Xerocomus subtomentosus, Xerocomellus spp.",
+        "risk": "Pas dangereux pour la plupart, mais de qualité médiocre et souvent mous ou parasités.",
+        "tell": "Chapeau sec et velouté, souvent craquelé, pores jaune vif à larges mailles. Le bolet bai a un chapeau lisse, gras par temps humide, brun châtaigne.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017",
+          "wikipedia_fr2026"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/2025-11-04_D500-1630_Achim-Lammerts_Imleria-badia.jpg/1280px-2025-11-04_D500-1630_Achim-Lammerts_Imleria-badia.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:2025-11-04_D500-1630_Achim-Lammerts_Imleria-badia.jpg",
+      "author": "Achim Lammerts",
+      "license": "CC BY-SA 4.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017",
+      "wikipedia_fr2026"
+    ],
+    "references": {
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — descriptions, confusions et comestibilité des espèces européennes",
+      "wikipedia_fr2026": "Wikipédia FR, « Bolet bai », lu le 8 nov. 2026 — pas d'espèce toxique qui lui ressemble réellement ; ressemblances avec des xérocomes (Xerocomellus pruinatus), le cèpe bronzé, Cyanoboletus pulverulentus ; d'après Eyssartier & Roux 2017"
+    }
+  },
+  "references": {
+    "wikipedia_fr2026": "Wikipédia FR, « Bolet bai », lu le 8 nov. 2026 — ectomycorhizien surtout sous conifères, aussi sous feuillus, « sur sol non calcaire », préfère les sols acides ; saison été-automne, prolongée jusqu'au milieu de l'hiver les années douces ; forte capacité de concentration du césium 137 (cite Eyssartier & Roux 2017, Estadès & Lannoy 2004, CRIIRAD 1997) ; confiance moyenne (encyclopédie)",
+    "wikipedia_en2026": "Wikipedia EN, « Imleria badia », lu le 8 nov. 2026 — forêts de conifères ou mixtes, sous pins, épicéas, aussi sous hêtre ; absent des sols calcaires (Haas 1969) ; mycorhizes décrites avec Picea abies, « bien adapté aux peuplements acides » (Kottke et al. 1998, Mycorrhiza 7:267-275) et avec Pinus radiata (Duñabeitia et al. 1996, Mycologia 88:897-908) ; août-novembre dans les îles Britanniques ; bioaccumulation du césium 137 (pigment norbadione A) et du mercure ; confiance moyenne (encyclopédie, sources primaires non ouvertes)",
+    "wikipedia_de2026": "Wikipedia DE, « Maronen-Röhrling », lu le 8 nov. 2026 — surtout en forêt de conifères à sol acide (« bodensauren Nadelwäldern »), vieilles pessières et sous mélèzes ; de la côte aux Alpes ; dès juin-juillet les étés humides, saison principale mi-septembre à fin novembre, avant les gelées ; ¹³⁷Cs encore au-dessus de 600 Bq/kg dans certaines régions d'Allemagne ; confiance moyenne (encyclopédie)",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — Imleria badia FR 2 455 occ. géolocalisées : oct. 813, sept. 471, nov. 268, août 182, déc. 73, juil. 69, juin 53, janv. 61 ; altitude (385 occ. renseignées) q10 105 m, médiane 914 m, q90 1 472 m, q99 1 805 m, max 2 300 m ; ≥ 1 000 m : pic en septembre (75) devant octobre (37), août 44, rien en novembre ; < 500 m : octobre 30, septembre 26, novembre 12, décembre 6",
+    "agreda2015": "Ágreda et al. 2015, GCB — le bilan hydrique (P-ETP) prédit mieux que la pluie brute ; base du facteur water_balance",
+    "bonet2008": "Bonet et al. 2008, Ann. For. Sci. 65:206 — pinèdes des Pyrénées (P. sylvestris, P. uncinata, 1 000-2 000 m) : expositions nord et altitude positives, pente forte négative",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pinèdes méditerranéennes (Catalogne) : pluie et humidité du sol à 1 mois, T max sept.-oct. négatives, production de champignons comestibles dont Lactarius",
+    "bielefeld2025": "Brejon Lamartinière & Hoffman 2025, Predicting porcini, bioRxiv 10.64898/2025.12.12.693895 — modèle journalier B. edulis, hêtraies, 2015-2024 : T moy 20 j optimum ≈13 °C, pluie moyenne 26 j linéaire",
+    "straatsma2001": "Straatsma, Ayer & Egli 2001, Mycol. Res. — ~3 semaines après la pluie ; pic quand la moyenne hebdo passe sous 14 °C",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents, meilleur corrélat (chênaies toscanes)",
+    "salerni2023": "Salerni et al. 2023, Italian Mycology — pluies ≥ 20 mm/j, effet maximal au 12e jour ; hausses brusques de T max inhibent",
+    "olano2020": "Olano et al. 2020, Agric. For. Meteorol. — humidité du sol juillet-nov. r = 0,72 ; pluie de septembre ; NDVI n-1",
+    "buntgen2015": "Büntgen et al. 2015, Fungal Ecology — pluies juillet-sept. positives, retard d'une semaine après 2004 (Pinar Grande)",
+    "tahvanainen2016": "Tahvanainen 2016, Dissertationes Forestales — modèle finlandais : pluie d'août positive, T août négative",
+    "kauserud2012": "Kauserud et al. 2012, PNAS 109:14488 — recul des premières gelées = allongement de saison",
+    "vcu2024": "Thèse VCU 2024, Pinar Grande 1995-2023 — saison de Boletus 32 ± 13 jours",
+    "terrain_fr": "Sources de terrain françaises et valeurs transposées de B. edulis faute d'étude propre au bolet bai — couvert, délai pluie → pousse (6-15 j), persistance (~12 j), bloc météo ; confiance faible",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil, à affiner : la marche (≥ nights nuits ≤ tmin_c → × factor) faisait basculer deux cellules météo voisines de « bon » à « très faible » pour un dixième de degré ; aucune référence plus fine sur la sensibilité au gel partiel ; confiance faible"
+  }
+}

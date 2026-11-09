@@ -21,7 +21,7 @@ S(p, e, J) = T(p, e) × M_eff(c(p), e, J, alt(p)) × Φ(e, J, alt(p))
 
 1. **Une seule fonction trapèze**, `trapezoid(x, min, opt_low, opt_high, max)` : 0 hors `[min, max]`, 1 dans `[opt_low, opt_high]`, linéaire entre. Elle sert partout (terrain, météo). Ne pas en réimplémenter une variante.
 2. **`T = host × Σ(w_i × f_i)`** : l'hôte est multiplicatif ; `cover`, `ph`, `altitude`, `aspect`, `slope` sont pondérés (somme des poids = 1). Règles dures : altitude hors `[min, max]` → 0 ; hors forêt → 0 ; `ph` a un plancher de 0,15 ; donnée manquante → facteur 0,5 (sauf hôte : hors forêt = 0).
-3. **`M = (Σ w × f) × frost × water_balance × heat × memory`**, puis persistance `M_eff(J) = max(M(J), max_k M(J−k) × (1 − k/days))`, puis frost et water_balance **réappliqués** sur `M_eff` (les sporophores existants gèlent ou sèchent).
+3. **`M = (Σ w × f) × frost × water_balance × heat × memory`** (la somme porte temp, rain, trigger, soil_moisture et le facteur optionnel soil_temp, température du sol 0–7 cm corrigée à l'altitude comme l'air ; absent = poids 0), puis persistance `M_eff(J) = max(M(J), max_k M(J−k) × (1 − k/days))`, puis frost et water_balance **réappliqués** sur `M_eff` (les sporophores existants gèlent ou sèchent).
 4. **Trigger = meilleur événement de pluie de la fenêtre**, pas le dernier. Un événement = `≥ event_mm` sur `event_days` jours consécutifs, hors jours de neige.
 5. **Correction altitudinale des températures** : −0,6 °C/100 m × (alt pixel − alt cellule), par classes de 300 m. Toujours, pour temp_mean, frost, heat.
 6. **`rain_sum`, jamais `precipitation_sum`** (la neige n'est pas une pluie déclenchante).

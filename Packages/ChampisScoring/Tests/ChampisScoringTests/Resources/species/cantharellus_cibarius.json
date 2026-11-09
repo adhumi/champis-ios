@@ -265,6 +265,16 @@
     "season": "De juin à novembre, pic de la mi-août à la mi-octobre ; plus tard en montagne.",
     "confusions": [
       {
+        "name": "Cortinaires mortels (cortinaire très joli, cortinaire couleur de rocou)",
+        "latin": "Cortinarius rubellus, Cortinarius orellanus",
+        "risk": "Mortel : atteinte des reins qui se déclare plusieurs jours, voire deux à trois semaines, après le repas, souvent irréversible (dialyse, greffe). En Suède, des intoxications graves ont suivi des cueillettes prises pour des girolles ou des chanterelles en tube.",
+        "tell": "Chapeau conique à mamelon, roux-fauve, de vraies lames brun rouille sous le chapeau, pied fibreux souvent marqué de bandes jaunâtres ; ils poussent dans les mousses humides des forêts de conifères acides. La girolle a des plis épais, fourchus et décurrents, de la même couleur jaune d'œuf que le chapeau, jamais de lames rouille.",
+        "refs": [
+          "holmdahl1995",
+          "wikipedia_rubellus"
+        ]
+      },
+      {
         "name": "Fausse girolle",
         "latin": "Hygrophoropsis aurantiaca",
         "risk": "Peu toxique mais sans intérêt ; cause de troubles digestifs chez certaines personnes.",
@@ -297,7 +307,9 @@
     ],
     "references": {
       "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — caractères distinctifs du bolet amer, des bolets à pores rouges, de la fausse girolle et du clitocybe de l'olivier",
-      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes"
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "holmdahl1995": "Holmdahl J. & Blohmé I. 1995, Nephrol. Dial. Transplant. 10:1920-1922 — 22 intoxications par Cortinarius speciosissimus (= C. rubellus) en Suède de 1979 à 1993, 9 insuffisances rénales terminales ; résumé lu, texte intégral non consulté. Le fait que les victimes l'aient pris pour Craterellus tubaeformis, des hygrophores ou des girolles est rapporté par Wikipédia (en, « Cortinarius rubellus »), qui cite cet article",
+      "wikipedia_rubellus": "Wikipédia (en), « Cortinarius rubellus », lu le 8 nov. 2026 — orellanine, insuffisance rénale souvent irréversible ; confusions rapportées avec la chanterelle en tube et la girolle (Holmdahl & Blohmé 1995, Short et al. 1980, Lancet) ; confiance moyenne (encyclopédie sourcée)"
     }
   },
   "references": {

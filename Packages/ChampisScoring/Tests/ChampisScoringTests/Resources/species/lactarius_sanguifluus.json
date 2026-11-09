@@ -1,0 +1,307 @@
+{
+  "id": "lactarius_sanguifluus",
+  "schema_version": 1,
+  "group": {
+    "id": "lactaires",
+    "fr": "Lactaires"
+  },
+  "names": {
+    "fr": "Lactaire sanguin",
+    "la": "Lactarius sanguifluus"
+  },
+  "notes": "Lactaire de la section Deliciosi à lait rouge vineux dès la coupe, ectomycorhizien strict des pins sur sols calcaires (Wikipédia FR, EN, DE) : pin noir et laricio, pin d'Alep, pin sylvestre, dans les pinèdes claires, lisières et pelouses boisées chaudes du Sud-Est, de la Provence et des Causses ; thermophile, plus rare et dispersé vers le nord (GBIF : 56 occ. au nord de 47° N). Très recherché en Provence (« pignen », « sanguin »). Couvre de fait les autres « sanguins » de même écologie, souvent cueillis ensemble sous ce nom : L. semisanguifluus (même exigence, sous pin sylvestre surtout, accepte des sols plus frais et un peu moins basiques et plus d'ombre, août-novembre ; Wikipédia DE ; GBIF FR 174 occ.) et L. vinosus (= L. rubrozonatus, sous pins, méridional et littoral, séparé de L. sanguifluus par Nuytinck & Verbeken 2003 ; GBIF FR 4 occ.) : pas de fichier propre, ce fichier et le groupe « Lactaires » les couvrent. Hôtes : pins de sols calcaires pondérés 0,9-1 ; pin maritime 0,4 (surtout sur sols acides, Landes, Maures, Estérel ; le pH départage) ; aucun feuillu. pH : calcicole, plage décalée vers le haut comme C. alborufescens (littérature pH ~7-8, élargie de +0,6 pour SoilGrids, plancher bas pour semisanguifluus) ; confiance moyenne. GBIF FR (248 occ. géolocalisées, lu le 8 nov. 2026) : oct. 94, nov. 78, déc. 17, sept. 13 ; 71 % des occurrences au sud de 45° N ; altitude (94 occ. renseignées) médiane 680 m, q10 80 m, q90 1 070 m, q99 1 900 m, max 2 000 m ; médiane d'altitude 850 m en octobre, 560 m en novembre, ~130 m en décembre (la montagne d'abord) : fin de saison avancée en altitude (−4 j/100 m, comme L. deliciosus). Les 12 occurrences de janvier (dont 6 datées du 1er janvier, relevés sans date réelle) sont ignorées ; la saison s'arrête au 12-31 alors que quelques sanguins se ramassent encore en janvier sur le littoral (le schéma ne passe pas le 1er janvier). Bloc météo : celui de L. deliciosus (même section, mêmes milieux, pluie de fin d'été et d'automne premier facteur, Taye 2016, Bonet 2012 : études du groupe deliciosus transposées), température décalée de +1 à +2 °C (espèce thermophile d'octobre-novembre en Méditerranée) ; délai pluie → pousse, gel et persistance : terrain, à valider (confiance faible). Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 0.0,
+      "sapin_epicea": 0.05,
+      "chenes_decidus": 0.0,
+      "chataignier": 0.0,
+      "mixte_feuillus_dom": 0.2,
+      "mixte_coniferes_dom": 0.5,
+      "melange_feuillus": 0.0,
+      "melange_coniferes": 0.5,
+      "feuillus_indet": 0.0,
+      "coniferes_indet": 0.5,
+      "mixte_indet": 0.3,
+      "pin_sylvestre": 0.9,
+      "pin_crochets_cembro": 0.4,
+      "pin_maritime": 0.4,
+      "melange_pins": 0.9,
+      "autre_feuillu": 0.0,
+      "pin_laricio_noir": 1.0,
+      "autre_pin": 0.8,
+      "meleze": 0.05,
+      "chenes_sempervirents": 0.1,
+      "douglas": 0.05,
+      "autre_conifere": 0.1,
+      "pin_alep": 0.9,
+      "lande": 0.3,
+      "sans_couvert": 0.1,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.05,
+      "melange_coniferes_hors_pins": 0.05
+    },
+    "cover": {
+      "fermee": 0.8,
+      "ouverte": 1.0,
+      "sans_couvert": 0.1,
+      "plantation": 0.0,
+      "non_foret": 0.3
+    },
+    "ph": {
+      "min": 5.8,
+      "opt_low": 6.6,
+      "opt_high": 8.2,
+      "max": 8.6
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 50,
+      "opt_high": 1200,
+      "max": 2100
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.85,
+      "SW": 0.85,
+      "S": 0.8,
+      "flat": 0.95
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.25,
+      "ph": 0.35,
+      "altitude": 0.15,
+      "aspect": 0.15,
+      "slope": 0.1
+    },
+    "refs": {
+      "hosts": [
+        "wikipedia_fr_sanguifluus",
+        "wikipedia_de_sanguifluus",
+        "nuytinck2003"
+      ],
+      "cover": [
+        "wikipedia_en_sanguifluus",
+        "bonet2012"
+      ],
+      "ph": [
+        "wikipedia_fr_sanguifluus",
+        "wikipedia_de_sanguifluus",
+        "terrain_fr"
+      ],
+      "altitude": [
+        "gbif2026"
+      ],
+      "aspect": [
+        "bonet2008"
+      ],
+      "slope": [
+        "bonet2008"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "09-01",
+      "end": "12-31"
+    },
+    "peak": {
+      "start": "10-01",
+      "end": "11-20"
+    },
+    "ramp_days": 25,
+    "altitude_shift": {
+      "reference_m": 500,
+      "start_days_per_100m": 0,
+      "end_days_per_100m": -4,
+      "max_days": 40
+    },
+    "refs": [
+      "gbif2026",
+      "wikipedia_en_sanguifluus",
+      "wikipedia_de_sanguifluus",
+      "terrain_fr"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 5,
+        "opt_low": 9,
+        "opt_high": 17,
+        "max": 23
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 150,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 7,
+        "opt_low": 12,
+        "opt_high": 22,
+        "max": 35
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -4,
+      "ramp_c": 2,
+      "nights": 3,
+      "window_days": 7,
+      "factor": 0.35
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 18
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.3,
+      "trigger": 0.25,
+      "soil_moisture": 0.2
+    },
+    "refs": {
+      "temp_mean": [
+        "delavarga2013",
+        "wikipedia_de_sanguifluus",
+        "terrain_fr"
+      ],
+      "rain": [
+        "taye2016",
+        "bonet2012"
+      ],
+      "trigger": [
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "taye2016",
+        "karavani2018"
+      ],
+      "frost": [
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "delavarga2013",
+        "karavani2018"
+      ],
+      "memory": [
+        "taye2016",
+        "bonet2012"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "karavani2018"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Lactaire orangé à rosé, au chapeau creusé au centre et souvent taché de gris-vert, qui laisse couler dès la cassure un lait rouge vin. En Provence, on appelle « sanguins » plusieurs lactaires très proches, de même milieu, qu'on cueille ensemble.",
+    "habitat": "Toujours sous les pins et sur sols calcaires : pin noir, pin d'Alep et pin sylvestre, dans les pinèdes claires, les lisières et les pelouses boisées du Sud-Est, de la Provence et des Causses, plus rarement plus au nord. Du bord de mer à la montagne, surtout entre 100 et 1 200 m.",
+    "season": "D'octobre à fin novembre pour l'essentiel, jusqu'en décembre près de la Méditerranée. En montagne, il pousse dès septembre et la saison s'y arrête plus tôt.",
+    "confusions": [
+      {
+        "name": "Lactaires à lait blanc âcre (lactaire à lait jaunissant, lactaire zoné et proches)",
+        "latin": "Lactarius chrysorrheus, Lactarius zonarius",
+        "risk": "Toxiques : troubles digestifs.",
+        "tell": "Lait blanc, parfois jaunissant à l'air, saveur brûlante, plutôt sous les chênes, fréquents dans les bois mêlés de pins et de chênes du Midi. Chez le lactaire sanguin, le lait est rouge vin dès la coupe, jamais blanc.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Lactaire à toison",
+        "latin": "Lactarius torminosus",
+        "risk": "Toxique : nausées, vomissements et diarrhées violentes.",
+        "tell": "Lait blanc et très âcre, chapeau rose pâle à marge laineuse, sous les bouleaux. Le lactaire sanguin a un lait rouge vin et pousse sous les pins.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017",
+          "wikipedia_fr_torminosus"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Weinroter_Kiefern-Reizker_Lactarius_sanguifluus.jpg/1280px-Weinroter_Kiefern-Reizker_Lactarius_sanguifluus.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Weinroter_Kiefern-Reizker_Lactarius_sanguifluus.jpg",
+      "author": "Holger Krisp",
+      "license": "CC BY 3.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — lactaires à lait orange ou rouge sous conifères, lactaires à lait blanc âcre toxiques",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "wikipedia_fr_torminosus": "Wikipédia FR, Lactarius torminosus, lu le 8 nov. 2026 — lactaire à toison, mycorhizien surtout des bouleaux, très irritant pour le système digestif consommé cru (toxines âcres)"
+    }
+  },
+  "references": {
+    "wikipedia_fr_sanguifluus": "Wikipédia FR, « Lactaire sanguin » (Lactarius sanguifluus), lu le 8 nov. 2026, citant Eyssartier & Roux 2017, Courtecuisse & Duhem 2013 et Nuytinck & Verbeken 2005 (Mycotaxon 92:125-168) — ectomycorhizien strict des pins sur sols calcaires, sept.-nov. en Europe du Sud, jusqu'en décembre dans le Sud ; « pignen » en Provence ; L. vinosus mêlé au sanguin sous les pins dans le Midi",
+    "wikipedia_en_sanguifluus": "Wikipédia EN, Lactarius sanguifluus, lu le 8 nov. 2026 — pins sur sols calcaires, fructifie de septembre à novembre en Europe du Sud ; aux Pays-Bas en lisière chaude et ensoleillée de pinède sur dune calcaire ; espèce comestible jugée vulnérable à la cueillette commerciale dans un projet de liste rouge espagnole",
+    "wikipedia_de_sanguifluus": "Wikipédia DE, Weinroter Kiefern-Reizker et Spangrüner Kiefern-Reizker, lus le 8 nov. 2026 — L. sanguifluus thermophile, sols riches en calcaire, sous pins, surtout méditerranéen, rare en Europe centrale (liste rouge allemande RL3) ; L. semisanguifluus de mêmes exigences, souvent avec lui, accepte des sols plus frais et moins basiques et plus d'ombre, surtout sous pin sylvestre, d'août à novembre",
+    "nuytinck2003": "Nuytinck J. & Verbeken A. 2003, Mycological Progress 2:227-234 — Lactarius sanguifluus versus Lactarius vinosus : caractères macroscopiques, ornementation sporale et ITS séparent les deux espèces (résumé lu, texte intégral non consulté)",
+    "taye2016": "Taye Z.M. et al. 2016, Fungal Ecology 23:30-41 — pinèdes de P. pinaster, Espagne centrale, 17 ans : pluie de fin d'été et début d'automne = premier facteur de l'émergence et de la production de Lactarius groupe deliciosus ; transposé à L. sanguifluus (même section), confiance moyenne",
+    "bonet2012": "Bonet J.A. et al. 2012, Forest Ecology and Management 265:211-217 — Lactarius groupe deliciosus (P. pinaster, Catalogne) : production accrue dans les peuplements éclaircis, pluie d'août-septembre = facteur météo principal ; transposé, confiance moyenne",
+    "delavarga2013": "de la Varga H. et al. 2013, Mycorrhiza 23:391-402 — sporophores de L. deliciosus corrélés positivement à la pluie et l'humidité, négativement aux T max et min (pinèdes d'Espagne centrale) ; transposé",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pinèdes méditerranéennes (Catalogne) : pluie et humidité du sol à 1 mois, T max sept.-oct. négatives, production de champignons comestibles dont Lactarius",
+    "agreda2015": "Ágreda et al. 2015, GCB — le bilan hydrique (P-ETP) prédit mieux que la pluie brute ; base du facteur water_balance",
+    "bonet2008": "Bonet et al. 2008, Ann. For. Sci. 65:206 — pinèdes des Pyrénées (P. sylvestris, P. uncinata, 1 000-2 000 m) : expositions nord et altitude positives, pente forte négative ; transposé",
+    "terrain_fr": "Sources de terrain françaises (guides, sociétés mycologiques) — sanguins des pinèdes calcaires provençales en octobre-novembre, 2 à 3 semaines après les pluies d'automne, sporophores persistant 2 à 3 semaines, plus chaud que le lactaire délicieux ; confiance faible",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; paramètres de L. deliciosus repris (seuil -4 °C, 3 nuits), confiance faible",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — L. sanguifluus FR 248 occ. géolocalisées : oct. 94, nov. 78, déc. 17, sept. 13, janv. 12 (dont 6 au 1er janvier, ignorées) ; 176 occ. entre 41 et 45° N ; altitude (94 occ. renseignées) q1 10 m, q10 80 m, médiane 680 m, q90 1 070 m, q99 1 900 m, max 2 000 m ; médiane d'altitude 850 m en octobre, 560 m en novembre ; L. semisanguifluus FR 174 occ. (oct. 49, nov. 19 ; 52 occ. du 1er avril d'un seul jeu de données, ignorées), médiane d'altitude 625 m ; L. vinosus FR 4 occ."
+  }
+}

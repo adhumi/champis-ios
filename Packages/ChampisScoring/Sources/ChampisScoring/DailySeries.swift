@@ -11,12 +11,16 @@ public struct DailySeries: Sendable {
     public let et0: [Double]
     public let soilMoisturePct: [Double]
     public let cellElevationM: Double
+    /// Température du sol 0–7 cm (°C, non corrigée), facteur optionnel du 9 nov. 2026 : `nil` quand
+    /// la source ne la fournit pas ; seule une espèce qui l'emploie en a besoin.
+    public let soilTemp: [Double]?
 
     private let firstOrdinal: Int
 
     public init(
         dates: [CivilDate], tMean: [Double], tMin: [Double], tMax: [Double], rain: [Double],
-        snow: [Double], et0: [Double], soilMoisturePct: [Double], cellElevationM: Double
+        snow: [Double], et0: [Double], soilMoisturePct: [Double], cellElevationM: Double,
+        soilTemp: [Double]? = nil
     ) throws {
         for (a, b) in zip(dates, dates.dropFirst()) where b.days(since: a) != 1 {
             throw ScoringError.nonContiguousSeries(a, b)
@@ -28,6 +32,9 @@ public struct DailySeries: Sendable {
         ] where values.count != n {
             throw ScoringError.lengthMismatch(name, values.count, n)
         }
+        if let soilTemp, soilTemp.count != n {
+            throw ScoringError.lengthMismatch("soil_temp", soilTemp.count, n)
+        }
         self.dates = dates
         self.tMean = tMean
         self.tMin = tMin
@@ -37,6 +44,7 @@ public struct DailySeries: Sendable {
         self.et0 = et0
         self.soilMoisturePct = soilMoisturePct
         self.cellElevationM = cellElevationM
+        self.soilTemp = soilTemp
         self.firstOrdinal = dates.first?.ordinal ?? 0
     }
 

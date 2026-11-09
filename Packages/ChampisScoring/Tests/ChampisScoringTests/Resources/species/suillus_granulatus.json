@@ -1,0 +1,324 @@
+{
+  "id": "suillus_granulatus",
+  "schema_version": 1,
+  "group": {
+    "id": "nonnettes",
+    "fr": "Nonnettes"
+  },
+  "names": {
+    "fr": "Bolet granulé",
+    "la": "Suillus granulatus"
+  },
+  "notes": "Nonnette sans anneau, strictement mycorhizienne des pins à deux aiguilles : pin sylvestre, pin noir et laricio, pin maritime, pin d'Alep (Wikipédia FR, DE). Pinèdes claires, jeunes plantations, parcs, lisières, pelouses à pins : couvert ouvert à 1,0, fermé à 0,7. Sols : souvent sur calcaire (Wikipédia FR ; Wikipédia DE « toujours sur sols alcalins ») mais aussi sur sols acides (Wikipédia EN citant Richardson 2000) → trapèze pH déplacé vers le neutre-basique, 4,0-8,6, optimum 5,2-8,0, poids 0,25, confiance faible (aucune valeur publiée ouverte). Pin d'Alep 0,6 seulement : en Méditerranée les nonnettes voisines (S. collinitus, S. bellinii, S. mediterraneensis) dominent et sont souvent notées sous le nom de granulatus ; pin à crochets/cembro 0,4 (cembro à cinq aiguilles). Altitude : des côtes aux zones alpines (Wikipédia DE) ; GBIF FR q10 90 m, médiane 812 m, q90 1 412 m, q99 2 156 m → optimum 0-1 500 m, max 2 200 m. Saison : GBIF FR (642 occ., lu le 8 nov. 2026) pic octobre (200), puis novembre (96) et septembre (84), et une poussée de fin de printemps nette : mai 26, juin 47, juillet 25, août 40, maximum local de juin aussi bien au nord qu'au sud de 45° N, et sous 500 m juin vaut la moitié d'octobre (8 contre 17) ; Wikipédia FR « du printemps à la fin de l'automne », Wikipédia DE juin-octobre. D'où un secondary_peak 05-20 → 06-30 à Φ = 0,5 (moins que les 0,6 de B. pinophilus : la poussée printanière pèse ~11 % des occurrences, contre une poussée d'avril-mai de B. pinophilus presque égale à celle de l'automne). Pas d'artefact d'avril (1 occ.) ; janvier 14 : relevés au 1er janvier ou pousses tardives, ignorés. Altitude_shift : au-dessus de 1 000 m le pic est en septembre et la poussée de juin presque absente (3) ; sous 500 m octobre-novembre → fin avancée de 3 j/100 m au-dessus de 500 m, début inchangé, bornés à 30 j. Le schéma décale la fin du pic secondaire avec la fin de saison : en montagne la fenêtre printanière raccourcit (05-20 → 05-31 à 1 500 m), ce qui correspond aux données mais par effet de bord du schéma, à noter. Bloc météo : recopié de lactarius_deliciosus (même hôte, même habitat), avec deux écarts : temp_mean optimum élargi à 8-18 °C, max 24 °C, pour ne pas étouffer la poussée de juin (confiance faible) ; persistence 12 j au lieu de 18 (chair molle, comme les bolets ; confiance faible). Consommation : troubles digestifs (effet laxatif selon la tolérance, troubles gastriques), cuticule à retirer, dermites de contact chez qui le manipule (Wikipédia FR, EN, DE citant Miller & Miller 2006 et Bruhn & Soderberg 1991) ; vente à l'état frais assortie d'une information sur la cuisson complète d'après Wikipédia FR (ANSES 2014, non vérifié à la source).",
+  "terrain": {
+    "hosts": {
+      "hetre": 0.0,
+      "sapin_epicea": 0.05,
+      "chenes_decidus": 0.0,
+      "chataignier": 0.0,
+      "mixte_feuillus_dom": 0.2,
+      "mixte_coniferes_dom": 0.5,
+      "melange_feuillus": 0.0,
+      "melange_coniferes": 0.5,
+      "feuillus_indet": 0.0,
+      "coniferes_indet": 0.5,
+      "mixte_indet": 0.3,
+      "pin_sylvestre": 1.0,
+      "pin_crochets_cembro": 0.4,
+      "pin_maritime": 0.9,
+      "melange_pins": 0.9,
+      "autre_feuillu": 0.0,
+      "pin_laricio_noir": 1.0,
+      "autre_pin": 0.8,
+      "meleze": 0.05,
+      "chenes_sempervirents": 0.0,
+      "douglas": 0.05,
+      "autre_conifere": 0.05,
+      "pin_alep": 0.6,
+      "lande": 0.3,
+      "sans_couvert": 0.2,
+      "robinier": 0.0,
+      "peupleraie": 0.0,
+      "herbacee": 0.0,
+      "default": 0.05,
+      "melange_coniferes_hors_pins": 0.05
+    },
+    "cover": {
+      "fermee": 0.7,
+      "ouverte": 1.0,
+      "sans_couvert": 0.2,
+      "plantation": 0.0,
+      "non_foret": 0.3
+    },
+    "ph": {
+      "min": 4.0,
+      "opt_low": 5.2,
+      "opt_high": 8.0,
+      "max": 8.6
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 1500,
+      "max": 2200
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.85,
+      "SW": 0.8,
+      "S": 0.8,
+      "flat": 0.95
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.3,
+      "ph": 0.25,
+      "altitude": 0.2,
+      "aspect": 0.15,
+      "slope": 0.1
+    },
+    "refs": {
+      "hosts": [
+        "wikipedia_fr2026",
+        "wikipedia_de2026",
+        "wikipedia_en2026"
+      ],
+      "cover": [
+        "wikipedia_fr2026",
+        "wikipedia_de2026",
+        "terrain_fr"
+      ],
+      "ph": [
+        "wikipedia_fr2026",
+        "wikipedia_de2026",
+        "wikipedia_en2026",
+        "terrain_fr"
+      ],
+      "altitude": [
+        "gbif2026",
+        "wikipedia_de2026"
+      ],
+      "aspect": [
+        "bonet2008"
+      ],
+      "slope": [
+        "bonet2008"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "05-01",
+      "end": "12-15"
+    },
+    "peak": {
+      "start": "09-20",
+      "end": "11-10"
+    },
+    "ramp_days": 25,
+    "altitude_shift": {
+      "reference_m": 500,
+      "start_days_per_100m": 0,
+      "end_days_per_100m": -3,
+      "max_days": 30
+    },
+    "refs": [
+      "gbif2026",
+      "wikipedia_fr2026",
+      "wikipedia_de2026"
+    ],
+    "secondary_peak": {
+      "start": "05-20",
+      "end": "06-30",
+      "phi": 0.5,
+      "note": "Poussée de fin de printemps, nette en plaine (GBIF FR, maximum local de juin)"
+    }
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 20,
+      "c": {
+        "min": 3,
+        "opt_low": 8,
+        "opt_high": 18,
+        "max": 24
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 150,
+        "max": 600
+      }
+    },
+    "trigger": {
+      "event_mm": 20,
+      "event_days": 3,
+      "lag_days": {
+        "min": 7,
+        "opt_low": 12,
+        "opt_high": 22,
+        "max": 35
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -4,
+      "ramp_c": 2,
+      "nights": 3,
+      "window_days": 7,
+      "factor": 0.35
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 60,
+        "opt_low": 150,
+        "opt_high": 400,
+        "max": 800
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 12
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.3,
+      "trigger": 0.25,
+      "soil_moisture": 0.2
+    },
+    "refs": {
+      "temp_mean": [
+        "delavarga2013",
+        "gbif2026",
+        "terrain_fr"
+      ],
+      "rain": [
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "trigger": [
+        "terrain_fr"
+      ],
+      "soil_moisture": [
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "frost": [
+        "terrain_fr",
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "delavarga2013",
+        "terrain_fr"
+      ],
+      "memory": [
+        "karavani2018",
+        "terrain_fr"
+      ],
+      "persistence": [
+        "terrain_fr"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "karavani2018"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Bolet à chapeau jaune-brun à roux, gluant par temps humide, pores jaunes qui laissent perler des gouttelettes laiteuses chez les jeunes, pied clair ponctué de granulations, sans anneau. Sa cuticule gluante est mise en cause dans des troubles digestifs et des irritations de la peau chez certaines personnes.",
+    "habitat": "Uniquement sous les pins à deux aiguilles (pin sylvestre, pin noir, pin maritime, pin d'Alep), souvent en troupes dans les pinèdes claires, les jeunes plantations, les parcs et les lisières herbeuses, de préférence sur calcaire. Du littoral à la montagne.",
+    "season": "Surtout de septembre à novembre, avec un pic en octobre, mais aussi une poussée de fin de printemps, en mai et juin, en plaine. En montagne la saison d'automne commence en septembre et s'arrête plus tôt.",
+    "confusions": [
+      {
+        "name": "Nonnette voilée",
+        "latin": "Suillus luteus",
+        "risk": "Pas dangereuse, mais mêmes troubles digestifs possibles chez certaines personnes.",
+        "tell": "Anneau membraneux bien visible sur le pied, chapeau brun chocolat. Le bolet granulé n'a pas d'anneau.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017",
+          "wikipedia_fr2026"
+        ]
+      },
+      {
+        "name": "Nonnettes méditerranéennes (bolet à base rose et proches)",
+        "latin": "Suillus collinitus, Suillus bellinii, Suillus mediterraneensis",
+        "risk": "Pas dangereuses, mais mêmes troubles digestifs possibles chez certaines personnes.",
+        "tell": "Mycélium rose à la base du pied (S. collinitus, S. mediterraneensis), chapeau décoloré par plages blanchâtres (S. bellinii).",
+        "refs": [
+          "wikipedia_fr2026",
+          "courtecuisse2013"
+        ]
+      },
+      {
+        "name": "Bolet poivré",
+        "latin": "Chalciporus piperatus",
+        "risk": "Pas toxique, mais d'une saveur brûlante qui gâche tout le plat.",
+        "tell": "Petit bolet à pores rouille à cuivrés, pied jaune vif à la base, saveur poivrée. Le bolet granulé a des pores jaunes.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0e/Suillus-granulatus.jpg/1280px-Suillus-granulatus.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Suillus-granulatus.jpg",
+      "author": "Holger Krisp",
+      "license": "CC BY 3.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017",
+      "wikipedia_fr2026"
+    ],
+    "references": {
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — descriptions, confusions et comestibilité des espèces européennes",
+      "wikipedia_fr2026": "Wikipédia FR, « Suillus granulatus », lu le 8 nov. 2026 — confusions avec S. collinitus (mycélium rose), S. bellinii (chapeau décoloré par plages), S. mediterraneensis, S. luteus (anneau) ; laxatif selon la tolérance, cuticule à peler, dermites de contact ; d'après Eyssartier & Roux 2017 et Courtecuisse & Duhem 2013"
+    }
+  },
+  "references": {
+    "wikipedia_fr2026": "Wikipédia FR, « Suillus granulatus », lu le 8 nov. 2026 — uniquement sous pins (maritime, sylvestre, Alep, Monterey), souvent en grand nombre sur sol calcaire, jeunes plantations, zones herbeuses ou éclaircies ; du printemps à la fin de l'automne ; laxatif selon la tolérance, cuticule à peler, dermites de contact signalées ; vente à l'état frais assortie d'une information sur la cuisson complète (2016, d'après ANSES 2014, non ouvert) ; confiance moyenne (encyclopédie)",
+    "wikipedia_en2026": "Wikipedia EN, « Suillus granulatus », lu le 8 nov. 2026 — avec les pins, « sur sols calcaires comme acides », parfois en grand nombre (Richardson 2000, Ecology and Biogeography of Pinus) ; souvent confondu avec S. luteus (Min et al. 2014, Mycobiology 42:221-228) ; troubles gastriques rapportés (Miller & Miller 2006) ; dermite de contact chez qui le manipule (Bruhn & Soderberg 1991, Mycopathologia 115:191-195, non ouvert) ; confiance moyenne (encyclopédie)",
+    "wikipedia_de2026": "Wikipedia DE, « Körnchen-Röhrling », lu le 8 nov. 2026 — mycorhizien des pins à deux aiguilles des côtes aux zones alpines, endroits clairs, parcs, lisières, pâturages ; « stets auf alkalischen Böden » ; juin à octobre ; peut être difficile à digérer, intolérances individuelles possibles, cuticule à retirer ; plus fréquent au sud qu'au nord de l'Europe ; confiance moyenne (encyclopédie, section sans appel de note)",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — Suillus granulatus FR 642 occ. géolocalisées : oct. 200, nov. 96, sept. 84, juin 47, août 40, mai 26, juil. 25, janv. 14, déc. 13 ; maximum local en juin au nord (23) comme au sud de 45° N (16) ; < 500 m : juin 8 contre oct. 17 ; ≥ 1 000 m : sept. 19, oct. 12, août 10, juin 3 ; altitude (144 occ. renseignées) q10 90 m, médiane 812 m, q90 1 412 m, q99 2 156 m, max 2 300 m ; pas de pic artificiel en avril (1 occ.)",
+    "delavarga2013": "de la Varga H. et al. 2013, Mycorrhiza 23:391-402 — dynamique saisonnière du mycélium de B. edulis et L. deliciosus en pinèdes d'Espagne centrale : sporophores de L. deliciosus corrélés positivement à la pluie et l'humidité, négativement aux T max et min",
+    "agreda2015": "Ágreda et al. 2015, GCB — le bilan hydrique (P-ETP) prédit mieux que la pluie brute ; base du facteur water_balance",
+    "bonet2008": "Bonet et al. 2008, Ann. For. Sci. 65:206 — pinèdes des Pyrénées (P. sylvestris, P. uncinata, 1 000-2 000 m) : expositions nord et altitude positives, pente forte négative",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. 248:432 — pinèdes méditerranéennes (Catalogne) : pluie et humidité du sol à 1 mois, T max sept.-oct. négatives, production de champignons comestibles dont Lactarius",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil ; L. deliciosus tolère des gelées un peu plus fortes que les cèpes (seuil -4 °C, 3 nuits), confiance faible",
+    "terrain_fr": "Sources de terrain françaises et valeurs transposées de L. deliciosus (mycorhizien des pins, pinèdes claires) faute d'étude propre à l'espèce — couvert, délai pluie → pousse, gel, persistance ramenée à ~12 j pour un bolet à chair molle ; confiance faible"
+  }
+}

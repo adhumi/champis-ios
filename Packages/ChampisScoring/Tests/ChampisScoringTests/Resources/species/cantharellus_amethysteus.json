@@ -1,0 +1,320 @@
+{
+  "id": "cantharellus_amethysteus",
+  "schema_version": 1,
+  "group": {
+    "id": "girolles",
+    "fr": "Girolles"
+  },
+  "names": {
+    "fr": "Girolle améthyste",
+    "la": "Cantharellus amethysteus"
+  },
+  "notes": "BONUS du groupe girolles, à valider. Statut : décrite comme variété (C. cibarius var. amethysteus Quél.), traitée comme espèce à part entière par la révision multigène de Cantharellus en Europe (Olariaga et al. 2017, types séquencés, ITS2, LSU, RPB2, TEF-1) et par la Liste rouge mondiale de l'UICN (2025, préoccupation mineure, « espèce bien connue d'Europe, de la Méditerranée à la Scandinavie », rare à occasionnelle) ; GBIF l'accepte (clé 5249555). Olariaga et al. 2017 la disent absente des régions à climat méditerranéen : poids quasi nuls sur chêne vert et pin d'Alep. Fiabilité des occurrences GBIF : moyenne. Les écailles lilas du chapeau la rendent reconnaissable sur le terrain, et les relevés français viennent surtout de sociétés mycologiques (Association mycologique de Bigorre, CRPF Midi-Pyrénées) et d'iNaturalist ; mais des girolles à reflets violacés peuvent être notées amethysteus, et à l'inverse les occurrences « C. cibarius » en contiennent (voir cantharellus_cibarius). Les 172 occ. entre 42 et 43° N sont pyrénéennes (Hautes-Pyrénées, Ariège), pas méditerranéennes. Hôtes : Wikipédia (fr) cite hêtre, chênes, châtaignier, noisetier, épicéa et pins, sur sols peu ou pas calcaires ; GBIF la place surtout en montagne (médiane 1 103 m), donc dans les hêtraies-sapinières et pessières : poids forts sur hêtre, sapin-épicéa et les mélanges, moyens sur chênes et châtaignier, faibles sur pins. pH : acidophile comme C. cibarius, plage reprise de cibarius (terrain, confiance faible). GBIF FR (707 occ. géolocalisées, lu le 8 nov. 2026) : sept. 166, oct. 108, août 98, juil. 25, juin 15, nov. 10 ; les 50 occ. d'avril (48 au 1er avril) et 9 de janvier (8 au 1er janvier) sont des artefacts de date : ignorées. Altitude (178 occ. renseignées) médiane 1 103 m, q10 478 m, q90 1 485 m, q99 1 761 m, max 1 900 m ; médiane d'altitude 845 m en juillet, 1 175 m en août, 1 100 m en septembre, 864 m en octobre, 425 m en novembre : en altitude le pic est en août-septembre, en plaine (20 occ. seulement sous 500 m) en septembre-novembre. Décalage : référence 900 m, début inchangé (données de plaine trop rares pour trancher), fin -3 j/100 m comme cibarius. Météo reprise de C. cibarius (même genre, même délai pluie → pousse, même persistance) avec un seul écart : trapèze de température décalé de -1 °C, l'espèce étant surtout montagnarde (GBIF). Confiance faible pour toutes les valeurs propres à l'espèce. Quantiles pH SoilGrids aux occurrences encore à calculer (`champis-pipeline check`).",
+  "terrain": {
+    "hosts": {
+      "hetre": 1.0,
+      "sapin_epicea": 0.9,
+      "chenes_decidus": 0.7,
+      "chataignier": 0.6,
+      "mixte_feuillus_dom": 0.9,
+      "mixte_coniferes_dom": 0.9,
+      "melange_feuillus": 0.7,
+      "melange_coniferes": 0.6,
+      "feuillus_indet": 0.6,
+      "coniferes_indet": 0.6,
+      "mixte_indet": 0.7,
+      "pin_sylvestre": 0.5,
+      "pin_crochets_cembro": 0.3,
+      "pin_maritime": 0.2,
+      "melange_pins": 0.4,
+      "autre_feuillu": 0.6,
+      "pin_laricio_noir": 0.3,
+      "autre_pin": 0.3,
+      "meleze": 0.2,
+      "chenes_sempervirents": 0.05,
+      "douglas": 0.2,
+      "autre_conifere": 0.05,
+      "pin_alep": 0.0,
+      "lande": 0.05,
+      "sans_couvert": 0.1,
+      "robinier": 0.0,
+      "peupleraie": 0.05,
+      "herbacee": 0.0,
+      "default": 0.1,
+      "melange_coniferes_hors_pins": 0.9
+    },
+    "cover": {
+      "fermee": 1.0,
+      "ouverte": 0.7,
+      "sans_couvert": 0.1,
+      "plantation": 0.1,
+      "non_foret": 0.1
+    },
+    "ph": {
+      "min": 3.3,
+      "opt_low": 4.2,
+      "opt_high": 6.2,
+      "max": 7.4
+    },
+    "altitude_m": {
+      "min": 0,
+      "opt_low": 400,
+      "opt_high": 1500,
+      "max": 2000
+    },
+    "aspect": {
+      "N": 1.0,
+      "NE": 0.95,
+      "NW": 0.95,
+      "E": 0.9,
+      "W": 0.9,
+      "SE": 0.8,
+      "SW": 0.8,
+      "S": 0.7,
+      "flat": 0.9
+    },
+    "slope_deg": {
+      "min": 0,
+      "opt_low": 0,
+      "opt_high": 25,
+      "max": 40
+    },
+    "weights": {
+      "cover": 0.18,
+      "ph": 0.45,
+      "altitude": 0.18,
+      "aspect": 0.13,
+      "slope": 0.06
+    },
+    "refs": {
+      "hosts": [
+        "olariaga2017",
+        "iucn2025",
+        "wikipedia_fr_amethysteus",
+        "gbif2026"
+      ],
+      "cover": [
+        "pilz2006",
+        "amycoforest2013"
+      ],
+      "ph": [
+        "wikipedia_fr_amethysteus",
+        "pilz2003",
+        "danell1994"
+      ],
+      "altitude": [
+        "gbif2026"
+      ],
+      "aspect": [
+        "populaire_scandinave"
+      ],
+      "slope": [
+        "populaire_scandinave"
+      ]
+    }
+  },
+  "phenology": {
+    "season": {
+      "start": "06-15",
+      "end": "11-15"
+    },
+    "peak": {
+      "start": "08-05",
+      "end": "10-05"
+    },
+    "ramp_days": 30,
+    "altitude_shift": {
+      "reference_m": 900,
+      "start_days_per_100m": 0,
+      "end_days_per_100m": -3,
+      "max_days": 30
+    },
+    "refs": [
+      "gbif2026",
+      "andrew2018",
+      "amycoforest2013"
+    ]
+  },
+  "weather": {
+    "temp_mean": {
+      "window_days": 21,
+      "c": {
+        "min": 5,
+        "opt_low": 10,
+        "opt_high": 17,
+        "max": 23
+      }
+    },
+    "rain": {
+      "window_days": 28,
+      "mm": {
+        "min": 30,
+        "opt_low": 60,
+        "opt_high": 130,
+        "max": 300
+      }
+    },
+    "trigger": {
+      "event_mm": 15,
+      "event_days": 3,
+      "lag_days": {
+        "min": 10,
+        "opt_low": 14,
+        "opt_high": 28,
+        "max": 40
+      }
+    },
+    "soil_moisture_pct": {
+      "min": 0.15,
+      "opt_low": 0.4,
+      "opt_high": 0.9,
+      "max": 1.0
+    },
+    "frost": {
+      "tmin_c": -2,
+      "ramp_c": 2,
+      "nights": 2,
+      "window_days": 7,
+      "factor": 0.2
+    },
+    "water_balance": {
+      "window_days": 14,
+      "moderate_mm": -25,
+      "severe_mm": -45,
+      "moderate_factor": 0.4,
+      "severe_factor": 0.15
+    },
+    "heat": {
+      "tmax_c": 28,
+      "days": 3,
+      "window_days": 7,
+      "factor": 0.5
+    },
+    "memory": {
+      "window_days": 90,
+      "mm": {
+        "min": 80,
+        "opt_low": 180,
+        "opt_high": 450,
+        "max": 900
+      },
+      "floor": 0.7
+    },
+    "persistence": {
+      "days": 30
+    },
+    "weights": {
+      "temp": 0.25,
+      "rain": 0.3,
+      "trigger": 0.2,
+      "soil_moisture": 0.25
+    },
+    "refs": {
+      "temp_mean": [
+        "straatsma_egli2001",
+        "bielefeld2025",
+        "pilz2003",
+        "gbif2026"
+      ],
+      "rain": [
+        "salerni2002",
+        "bielefeld2025",
+        "pietka2012"
+      ],
+      "trigger": [
+        "pietka2012",
+        "karavani2018",
+        "bielefeld2025",
+        "populaire_scandinave"
+      ],
+      "soil_moisture": [
+        "karavani2018",
+        "danell1994"
+      ],
+      "frost": [
+        "danell1994",
+        "gel_rampe2026"
+      ],
+      "heat": [
+        "straatsma_egli2001",
+        "vonbonsdorff2015"
+      ],
+      "memory": [
+        "tahvanainen2019",
+        "straatsma_egli2001",
+        "danell1994"
+      ],
+      "persistence": [
+        "pilz2003"
+      ],
+      "water_balance": [
+        "agreda2015",
+        "bielefeld2025"
+      ]
+    }
+  },
+  "about": {
+    "summary": "Girolle jaune à chair blanche, odeur fruitée discrète ; son chapeau est moucheté de fines écailles lilas à violacées, parfois au point de paraître tout mauve. Dessous, des plis épais et fourchus, jaune pâle, qui descendent sur le pied.",
+    "habitat": "Surtout en montagne : hêtraies, hêtraies-sapinières et pessières sur sols acides, aussi sous chênes, châtaigniers et noisetiers, dans les lieux frais et humides. Absente du climat méditerranéen.",
+    "season": "De juin à novembre, le gros de la pousse d'août à début octobre en montagne, un peu plus tard en plaine.",
+    "confusions": [
+      {
+        "name": "Fausse girolle",
+        "latin": "Hygrophoropsis aurantiaca",
+        "risk": "Peu toxique mais sans intérêt ; cause de troubles digestifs chez certaines personnes.",
+        "tell": "De vraies lames, fines, serrées et molles, là où la girolle a des plis épais et fourchus ; orangé plus vif, chair souple, pousse sur bois pourri ou aiguilles.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      },
+      {
+        "name": "Clitocybe de l'olivier",
+        "latin": "Omphalotus olearius",
+        "risk": "Toxique : vomissements et diarrhées violents quelques heures après le repas.",
+        "tell": "Pousse en touffes sur les souches et les racines (chênes, oliviers), lames vraies et serrées, chair orangée et non blanche. Surtout dans le Sud, en plaine.",
+        "refs": [
+          "courtecuisse2013",
+          "eyssartier2017"
+        ]
+      }
+    ],
+    "photo": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/Cantharellus_amethysteus_BW53_%288%29.jpg/1280px-Cantharellus_amethysteus_BW53_%288%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Cantharellus_amethysteus_BW53_(8).jpg",
+      "author": "Jerzy Opioła",
+      "license": "CC BY-SA 4.0"
+    },
+    "refs": [
+      "courtecuisse2013",
+      "eyssartier2017",
+      "wikipedia_fr_amethysteus"
+    ],
+    "references": {
+      "eyssartier2017": "Eyssartier G. & Roux P., 2017, Le guide des champignons France et Europe, 4e éd., Belin — caractères distinctifs du bolet amer, des bolets à pores rouges, de la fausse girolle et du clitocybe de l'olivier",
+      "courtecuisse2013": "Courtecuisse R. & Duhem B., 2013, Guide des champignons de France et d'Europe, Delachaux et Niestlé — descriptions, confusions et comestibilité des espèces européennes",
+      "wikipedia_fr_amethysteus": "Wikipédia (fr), « Cantharellus amethysteus », lu le 8 nov. 2026 — basionyme Cantharellus cibarius var. amethysteus Quél. ; chapeau moucheté de petites écailles lilas à violacées sur fond jaune ochracé ; mycorhizienne sous feuillus (hêtre, chênes, châtaignier, noisetier) et conifères (épicéa, pins), plutôt sur sol non ou peu calcaire, lieux humides, été et automne ; confusions avec C. cibarius et C. ferruginascens ; confiance faible (encyclopédie peu sourcée)"
+    }
+  },
+  "references": {
+    "olariaga2017": "Olariaga I., Moreno G., Manjón J.L., Salcedo I., Hofstetter V., Rodríguez D. & Buyck B. 2017, Fungal Diversity 83:263-292 — révision multigène (ITS2, LSU, RPB2, TEF-1) de Cantharellus en Europe, types séquencés : C. amethysteus espèce distincte, largement répandue en Europe mais absente des régions à climat méditerranéen ; résumé et extraits lus, texte intégral non consulté",
+    "iucn2025": "Westrip J. (rév. Dahlberg A.) 2025, Liste rouge mondiale de l'UICN, Cantharellus amethysteus (évaluée le 3 janv. 2024, préoccupation mineure) — espèce bien connue d'Europe, de la Méditerranée à la Scandinavie, rare à occasionnelle, tendance inconnue ; justification lue par un résumé de recherche, fiche non ouverte",
+    "wikipedia_fr_amethysteus": "Wikipédia (fr), « Cantharellus amethysteus », lu le 8 nov. 2026 — basionyme Cantharellus cibarius var. amethysteus Quél. ; chapeau moucheté de petites écailles lilas à violacées sur fond jaune ochracé ; mycorhizienne sous feuillus (hêtre, chênes, châtaignier, noisetier) et conifères (épicéa, pins), plutôt sur sol non ou peu calcaire, lieux humides, été et automne ; confusions avec C. cibarius et C. ferruginascens ; confiance faible (encyclopédie peu sourcée)",
+    "pilz2003": "Pilz, Norvell, Danell & Molina 2003, USDA GTR-576 — synthèse : pH 4,0-5,5, 14 genres d'hôtes, persistance moyenne 44 j (Largent & Sime 1995, Norvell 1995), optimum 20 °C en culture",
+    "pilz2006": "Pilz, Molina & Mayo 2006, J. Forestry — éclaircie forte réduit la production 3-5 ans",
+    "pietka2012": "Piętka et al. 2012, Leśne Prace Badawcze — hôtes, pinèdes/pessières moussues, corrélation pluie r = 0,72 avec ~1 mois de délai",
+    "danell1994": "Danell 1994, Mycorrhiza 5 — colonisation épicéa/pin sylvestre, sensibilité à l'inondation, sécheresse ou gel arrêtent la fructification",
+    "amycoforest2013": "Guide de mycosylviculture Amycoforest (CRPF, 2013) — plaine mai-nov., montagne juil.-sept., coupe rase = -10 ans",
+    "straatsma_egli2001": "Straatsma & Egli 2001, NBT — production corrélée négativement à T de juillet, positivement à la pluie de juin",
+    "bielefeld2025": "Brejon Lamartinière & Hoffman 2025, bioRxiv — transposé de B. edulis : T 20 j optimum 13 °C, pluie 26 j",
+    "salerni2002": "Salerni et al. 2002 — cumul de pluie des 30 jours précédents",
+    "karavani2018": "Karavani et al. 2018, Agric. For. Meteorol. — pluie significative à 1 mois, humidité du sol 1 mois après",
+    "vonbonsdorff2015": "von Bonsdorff, Finlande 2015 (RCI) — juin frais et pluvieux idéal, juillet caniculaire interrompt",
+    "tahvanainen2019": "Tahvanainen, Miina & Kurttila 2019, Forests — offre nationale = f(pluie juin+juillet), r juillet = 0,53",
+    "populaire_scandinave": "Kantarellkartet (Oslo), Hurbra.se — 1-3 semaines après pluie significative, versants nord ; confiance faible",
+    "agreda2015": "Ágreda et al. 2015, GCB — bilan hydrique (P-ETP) ; base du facteur water_balance",
+    "andrew2018": "Andrew et al. 2018, Ecology — l'altitude avance la fructification automnale jusqu'à 30 j",
+    "gbif2026": "GBIF, API, France, lu le 8 nov. 2026 — C. amethysteus FR 707 occ. géolocalisées : sept. 166, oct. 108, août 98, juil. 25, juin 15, nov. 10 ; altitude (178 occ. renseignées) médiane 1 103 m, q10 478 m, q90 1 485 m, q99 1 761 m, max 1 900 m ; médiane d'altitude 845 m en juillet, 1 175 m en août, 1 100 m en septembre, 864 m en octobre, 425 m en novembre ; 172 occ. entre 42 et 43° N, toutes pyrénéennes ; 48 occ. datées du 1er avril et 8 du 1er janvier, sans date réelle, ignorées",
+    "gel_rampe2026": "Spec Champis, Scoring › gel en rampe, décision d'Adrien du 4 nov. 2026 — rampe de 2 °C au-dessus du seuil, à affiner : la marche (≥ nights nuits ≤ tmin_c → × factor) faisait basculer deux cellules météo voisines de « bon » à « très faible » pour un dixième de degré ; aucune référence plus fine sur la sensibilité au gel partiel ; confiance faible"
+  }
+}
