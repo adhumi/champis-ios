@@ -52,7 +52,7 @@ iPhone 6,9 pouces et iPad 13 pouces, mode clair, un secteur du Jura en pleine sa
 2. La fiche d'un point : libellé, phrases, onze jours, tendance, statut de la forêt.
 3. Mes coins : trois coins classés, tendances en mots.
 4. La fiche d'un coin : phrases du jour, onze jours, Itinéraire.
-5. « Noter » : la feuille trouvé / rien trouvé à ma position.
+5. « Trouvé ici » : la feuille des quantités, ouverte depuis le point touché sur la carte.
 6. Le Guide : une fiche d'espèce avec ses sources.
 
 ## Confidentialité de l'app (étiquettes App Store)
@@ -73,6 +73,6 @@ API à raison déclarée (`NSPrivacyAccessedAPITypes`) : `UserDefaults` (`CA92.1
 
 - Pas de compte, pas de connexion : tout est accessible dès l'ouverture.
 - La carte couvre la France seulement ; pour une vue parlante, ouvrir la carte sur le Jura (Mouthe, Doubs).
-- La localisation est demandée quand l'utilisateur veut se centrer sur sa position ou noter une observation à l'endroit où il est, jamais au lancement.
+- La localisation est demandée quand l'utilisateur veut se centrer sur sa position, jamais au lancement. Une observation se note au point touché sur la carte.
 - Les notifications « mes coins » sont calculées et envoyées par le serveur ; l'app ne fait aucun travail en arrière-plan.
 - Le statut public ou privé d'une forêt vient du service public de l'IGN (data.geopf.fr).

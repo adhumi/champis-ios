@@ -2,8 +2,9 @@ import SwiftUI
 
 /// « Trouvé ici » en deux tapes (refonte UX, lot 3, décision du 1er nov. 2026) : l'espèce du
 /// calque préremplie et modifiable, la position du point, la date du jour, et trois boutons de
-/// quantité. Toucher une quantité enregistre et ferme. Le formulaire complet (`ObservationForm`)
-/// reste dans le menu Retour terrain pour une autre date ou sa propre position.
+/// quantité. Toucher une quantité enregistre et ferme. C'est, avec « Rien trouvé ici », la seule
+/// façon de noter : depuis le point touché sur la carte (9 nov. 2026, plus de « Noter » à ma
+/// position ni de formulaire complet).
 struct QuickFoundSheet: View {
     nonisolated struct Quantity: Identifiable, Sendable {
         let value: Int
@@ -37,7 +38,7 @@ struct QuickFoundSheet: View {
                             Text(option.name).tag(option.id)
                         }
                     }
-                    LabeledContent("Où", value: ObservationForm.coordinates(point.latitude, point.longitude, nil))
+                    LabeledContent("Où", value: Self.coordinates(point.latitude, point.longitude))
                     LabeledContent("Quand", value: "aujourd'hui")
                 }
                 Section {
@@ -52,7 +53,7 @@ struct QuickFoundSheet: View {
                 } header: {
                     Text("Combien ?")
                 } footer: {
-                    Text("Position et date restent privées : elles servent seulement à calibrer le modèle. Une autre date ou votre position exacte : menu Retour terrain.")
+                    Text("Position et date restent privées : elles servent seulement à calibrer le modèle.")
                 }
             }
             .navigationTitle("Trouvé ici")
@@ -80,5 +81,10 @@ struct QuickFoundSheet: View {
             )
         }
         dismiss()
+    }
+
+    /// `47.12345, 6.12345` : le point touché, cinq décimales (environ un mètre).
+    static func coordinates(_ latitude: Double, _ longitude: Double) -> String {
+        String(format: "%.5f, %.5f", latitude, longitude)
     }
 }

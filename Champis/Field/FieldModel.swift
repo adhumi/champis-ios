@@ -110,7 +110,7 @@ final class FieldModel {
 
     /// « Rien trouvé ici » en une tape (lot 3) : une observation négative par espèce, enregistrée
     /// tout de suite, annulable pendant `undoWindow`, envoyée ensuite.
-    /// `accuracyM` : précision GPS quand le point est ma position (« Noter », étape B4).
+    /// `accuracyM` : précision GPS quand le point est une position mesurée ; `nil` pour un point touché.
     func recordNotFound(species: [String], latitude: Double, longitude: Double, accuracyM: Double? = nil) async {
         var ids: [UUID] = []
         for sid in species {

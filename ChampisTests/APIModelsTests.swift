@@ -20,6 +20,23 @@ struct APIModelsTests {
         #expect(layers[1].members == ["cantharellus_cibarius"])
         #expect(layers[2].key == .species("boletus_aereus"))
         #expect(layers[2].members == ["boletus_aereus"])
+
+        // sélecteur d'espèce (9 nov. 2026) : nom latin en sous-titre, vignette d'une espèce
+        #expect(layers.map(\.isGroup) == [true, true, false, false, false])
+        #expect(layers.map(\.latin) == ["Boletus spp.", "Cantharellus spp.", "Boletus aereus", "Boletus edulis", "Cantharellus cibarius"])
+        #expect(layers[0].illustration == "boletus_aereus")  // « Cèpe bronzé », plus court que « Cèpe de Bordeaux »
+        #expect(layers[3].illustration == "boletus_edulis")
+    }
+
+    @Test("Sélecteur d'espèce : genres d'un groupe et espèce de sa vignette, mêmes règles que le site")
+    func layerNames() {
+        #expect(LayerCatalog.groupLatin(["Lactarius deliciosus", "Lactifluus volemus", "Lactarius deterrimus"]) == "Lactarius, Lactifluus spp.")
+        #expect(LayerCatalog.groupLatin(["Boletus reticulatus (= B. aestivalis)", "Boletus edulis"]) == "Boletus spp.")
+        #expect(LayerCatalog.groupLatin([]) == "")
+        #expect(LayerCatalog.lead([(id: "c", fr: "Girolle pâle"), (id: "a", fr: "Girolle"), (id: "b", fr: "Girolle améthyste")]) == "a")
+        // à égalité de longueur, la première dans l'ordre alphabétique
+        #expect(LayerCatalog.lead([(id: "y", fr: "Pied bleu"), (id: "x", fr: "Bolet bai")]) == "x")
+        #expect(LayerCatalog.lead([]) == nil)
     }
 
     @Test("GET /tiles : URL relatives résolues sur l'API en mode proxy, absolues gardées")

@@ -18,6 +18,14 @@ nonisolated enum Basemap: String, CaseIterable, Identifiable, Sendable {
         case .satellite: "Satellite"
         }
     }
+
+    /// Symbole de l'option dans le menu du bouton de fond de carte.
+    var systemImage: String {
+        switch self {
+        case .standard: "map"
+        case .satellite: "globe.europe.africa"
+        }
+    }
 }
 
 /// Point touché sur la carte. `Identifiable` par ses coordonnées : une feuille par point (lot 3).
@@ -102,7 +110,10 @@ final class MapModel {
     private(set) var catalog: SpeciesCatalog?
     private(set) var manifest: TilesManifest?
     private(set) var weather = WeatherField()
-    private(set) var weatherStatus: String?
+    /// Ce que la carte dit sous elle, seulement quand c'est utile (9 nov. 2026) : météo hors ligne,
+    /// emprise trop grande, une part notable de l'emprise sans météo ou pas à jour. `nil` le reste
+    /// du temps : le nombre de cellules et l'heure du précalcul ne disent rien à qui cueille.
+    private(set) var weatherNotice: String?
     private(set) var isLoading = false
     private(set) var isLoadingWeather = false
     /// Erreur en clair de la carte (chargement, lecture d'un point, cache), avec sa reprise (étape B4).
@@ -152,11 +163,6 @@ final class MapModel {
     /// Demande de recentrage sur un point (un coin ouvert depuis Mes coins) : (numéro, coordonnée).
     private(set) var focusRequest: (id: Int, latitude: Double, longitude: Double)?
     private(set) var tileCacheSize: Int64?
-    /// La carte connaît ma position (point bleu) : le bouton « Noter » apparaît (étape B4).
-    private(set) var hasUserFix = false
-    /// Dernière position de la carte, gardée en mémoire seulement et hors observation : elle bouge
-    /// souvent, la vue ne la suit pas (seul `hasUserFix` est observé).
-    @ObservationIgnored private(set) var currentFix: LocationProvider.Fix?
 
     let overlay: ScoreTileOverlay
     /// Observations et coins (skill `field-feedback`).
@@ -229,15 +235,20 @@ final class MapModel {
         return date.adding(days: dayOffset).description
     }
 
-    var dayLabel: String {
-        let k = dayOffset
-        let relative = k == 0 ? "Aujourd'hui" : (k > 0 ? "J+\(k)" : "J−\(-k)")
-        guard let date = dayDate else { return relative }
-        return "\(relative) · \(Self.format(iso: date))"
-    }
-
     func speciesName(_ id: String) -> String {
         catalog?.species[id]?.names?.fr ?? id
+    }
+
+    /// Groupes du sélecteur d'espèce, avant le séparateur (9 nov. 2026).
+    var groupLayers: [Layer] { layers.filter(\.isGroup) }
+
+    /// Espèces seules du sélecteur, après le séparateur.
+    var speciesLayers: [Layer] { layers.filter { !$0.isGroup } }
+
+    /// Un message à montrer sous la carte : une erreur, ou une information qui change la lecture de
+    /// la carte (`weatherNotice`). Sinon, rien sous la carte.
+    var hasNotice: Bool {
+        problem != nil || weatherProblem != nil || weatherNotice != nil
     }
 
     /// Espèces du catalogue pour un sélecteur, par nom français.
@@ -291,7 +302,7 @@ final class MapModel {
             weather = WeatherField()
             weatherCoverage = nil
             fieldCoverage = [:]
-            weatherStatus = nil
+            weatherNotice = nil
             deptIndex = nil
             deptFeatures = []
         }
@@ -371,6 +382,8 @@ final class MapModel {
         zoom.map { $0 < Self.fieldZoom } ?? false
     }
 
+    /// Le potentiel terrain seul (`.terrain`) n'est plus proposé sur la carte depuis le 9 nov. 2026 :
+    /// la carte reste en score du jour. Le rendu de T seul demeure (fiche, tests du colorisateur).
     func setMode(_ mode: MapMode) {
         self.mode = mode
         pushSettings()
@@ -407,7 +420,7 @@ final class MapModel {
     private func refreshWeather(debounce: Bool = false) {
         weatherTask?.cancel()
         guard mode == .score, let layer = selectedLayer, let bbox = visibleBBox, let zoom, catalog != nil else {
-            weatherStatus = nil
+            weatherNotice = nil
             return
         }
         let requested = bbox.padded(by: Self.weatherPaddingDegrees)
@@ -417,6 +430,8 @@ final class MapModel {
         switch request {
         case .bbox:
             if Self.weatherAlreadyCovers(weatherCoverage, layer: layer.key, bbox: requested, day: nil, now: now) {
+                // une couverture vient d'une réponse complète : rien à dire sous la carte
+                weatherNotice = nil
                 return
             }
         case .field(let day):
@@ -424,6 +439,7 @@ final class MapModel {
                 || Self.weatherAlreadyCovers(
                     fieldCoverage[FieldCoverageKey(day: day, layer: layer.key)], layer: layer.key, bbox: requested, day: day, now: now
                 ) {
+                weatherNotice = nil
                 return
             }
         }
@@ -442,7 +458,7 @@ final class MapModel {
                     guard !Task.isCancelled else { return }
                     forgetCoverageIfNewDay(response.today)
                     weather.merge(response)
-                    weatherStatus = Self.status(for: response)
+                    weatherNotice = Self.notice(for: response)
                     weatherProblem = nil
                     weatherCoverage = Self.isComplete(response)
                         ? WeatherCoverage(bbox: requested, layer: layer.key, day: nil, at: .now) : nil
@@ -452,7 +468,7 @@ final class MapModel {
                     guard !Task.isCancelled else { return }
                     forgetCoverageIfNewDay(response.today)
                     weather.merge(response)
-                    weatherStatus = Self.status(for: response)
+                    weatherNotice = Self.notice(for: response)
                     weatherProblem = nil
                     fieldCoverage[FieldCoverageKey(day: day, layer: layer.key)] = Self.isComplete(response)
                         ? WeatherCoverage(bbox: requested, layer: layer.key, day: day, at: .now) : nil
@@ -467,7 +483,7 @@ final class MapModel {
                 weatherCoverage = nil
                 if case .http(let status, let detail) = failure, status == 422 {
                     let fallback = request == .bbox ? "Zoomez pour afficher la météo" : "Jour hors de la fenêtre météo"
-                    weatherStatus = detail.isEmpty ? fallback : detail
+                    weatherNotice = detail.isEmpty ? fallback : detail
                     weatherProblem = nil
                 } else {
                     await useOfflineWeather(or: Problem("Météo indisponible", error: failure))
@@ -532,7 +548,7 @@ final class MapModel {
     private func useOfflineWeather(or problem: Problem) async {
         let snapshots = await offline.offlineWeather()
         guard !snapshots.isEmpty else {
-            weatherStatus = nil
+            weatherNotice = nil
             weatherProblem = problem
             return
         }
@@ -540,42 +556,36 @@ final class MapModel {
         for response in snapshots {
             weather.merge(response)
         }
-        weatherStatus = "Hors ligne : météo du \(Self.format(iso: weather.today ?? ""))"
+        weatherNotice = "Hors ligne : météo du \(Self.format(iso: weather.today ?? ""))"
         pushSettings()
     }
 
-    static func status(for response: WeatherBBoxResponse) -> String {
-        var parts = ["\(response.cells.count) cellule(s) météo"]
-        if let at = response.computedAt {
-            parts.append("calculée le \(Self.format(timestamp: at))")
+    /// Part de l'emprise (cellules servies et manquantes) au-delà de laquelle des cellules sans météo,
+    /// ou servies depuis un précalcul périmé, se disent sous la carte. En deçà, quelques cellules au
+    /// bord de l'écran ne valent pas un message permanent.
+    nonisolated static let noticeShare = 0.25
+
+    /// Message sous la carte pour une réponse météo, ou `nil` s'il n'y a rien d'utile à dire. Sans
+    /// météo, un pixel est transparent : à ne pas lire comme un mauvais score, d'où le message.
+    /// Fonction pure, testée.
+    nonisolated static func notice(cells: Int, stale: Int, missing: Int) -> String? {
+        let total = Double(cells + missing)
+        guard total > 0 else { return nil }
+        if Double(missing) >= noticeShare * total {
+            return "Pas de météo sur une partie de la carte : ces zones restent transparentes."
         }
-        if response.cells.contains(where: { $0.stale }) {
-            parts.append("cache périmé")
+        if Double(stale) >= noticeShare * total {
+            return "Météo pas à jour sur une partie de la carte : le score peut y être décalé."
         }
-        if !response.unavailable.isEmpty {
-            var missing = "\(response.unavailable.count) sans météo"
-            if let retry = response.retryAfter {
-                missing += ", réessai dans \(retry) s"
-            }
-            parts.append(missing)
-        }
-        return parts.joined(separator: " · ")
+        return nil
     }
 
-    /// Statut d'un champ compact : cellules, date du précalcul, cellules périmées et manquantes en clair.
-    static func status(for response: WeatherFieldResponse) -> String {
-        var parts = ["\(response.cells.count) cellule(s) météo"]
-        if let at = response.computedAt {
-            parts.append("calculée le \(Self.format(timestamp: at))")
-        }
-        let stale = response.cells.count { $0.stale }
-        if stale > 0 {
-            parts.append("cache périmé pour \(stale) cellule(s)")
-        }
-        if response.unavailable > 0 {
-            parts.append("\(response.unavailable) sans météo")
-        }
-        return parts.joined(separator: " · ")
+    nonisolated static func notice(for response: WeatherBBoxResponse) -> String? {
+        notice(cells: response.cells.count, stale: response.cells.count { $0.stale }, missing: response.unavailable.count)
+    }
+
+    nonisolated static func notice(for response: WeatherFieldResponse) -> String? {
+        notice(cells: response.cells.count, stale: response.cells.count { $0.stale }, missing: response.unavailable)
     }
 
     // MARK: - Limites des départements (proposition d'embarquer)
@@ -883,14 +893,6 @@ final class MapModel {
             locationManager.requestWhenInUseAuthorization()
         }
         followRequest += 1
-    }
-
-    /// Position du point bleu de la carte (`MKMapView`), pour « Noter » : en mémoire seulement.
-    func userLocationChanged(_ fix: LocationProvider.Fix?) {
-        currentFix = fix
-        if hasUserFix != (fix != nil) {
-            hasUserFix = fix != nil
-        }
     }
 
     // MARK: - Erreurs en clair (étape B4)
