@@ -265,6 +265,21 @@ struct ParityTests {
         #expect(throws: ScoringError.self) { try CivilDate(iso: "2026-02-30") }
     }
 
+    @Test("Saison à cheval sur le 1er janvier : le pied bleu court du 15 août au 31 janvier")
+    func seasonAcrossNewYear() throws {
+        let nuda = try species("lepista_nuda")
+        let edulis = try species("boletus_edulis")
+        #expect(try Phenology.seasonWraps(nuda.phenology) && !Phenology.seasonWraps(edulis.phenology))
+        let ref = try #require(nuda.phenology.altitudeShift).referenceM
+        #expect(try Phenology.window(nuda, day: CivilDate(iso: "2026-11-01"), altM: ref) == 1.0)
+        #expect(try Phenology.window(nuda, day: CivilDate(iso: "2027-01-01"), altM: ref) == Phenology.phiFloor)
+        #expect(try Phenology.window(nuda, day: CivilDate(iso: "2027-01-31"), altM: ref) == Phenology.phiFloor)
+        #expect(try Phenology.window(nuda, day: CivilDate(iso: "2027-02-01"), altM: ref) == 0)
+        #expect(try Phenology.window(nuda, day: CivilDate(iso: "2027-01-01"), altM: 1100) == 0)  // fin avancée de 32 j
+        #expect(try Phenology.window(nuda, day: CivilDate(iso: "2028-02-29"), altM: ref) == 0)
+        #expect(try Phenology.window(edulis, day: CivilDate(iso: "2027-01-01"), altM: 0) == 0)  // année civile : inchangé
+    }
+
     @Test("Une série trop courte est une erreur, jamais une approximation")
     func shortSeriesThrows() throws {
         let sp = try species("boletus_edulis")

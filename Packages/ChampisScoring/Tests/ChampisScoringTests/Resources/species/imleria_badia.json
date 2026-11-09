@@ -9,7 +9,7 @@
     "fr": "Bolet bai",
     "la": "Imleria badia"
   },
-  "notes": "Bolet très commun des sols acides, mycorhizien d'un large éventail d'arbres : épicéa, pins, sapin, mélèze, et aussi hêtre, chênes, châtaignier ; absent des sols calcaires (Wikipédia EN citant Haas 1969 ; Wikipédia FR « sur sol non calcaire »), d'où un trapèze pH plus acide que celui de B. edulis et un poids pH élevé (0,35). Hôtes : conifères à 1,0 (sapin/épicéa, pin sylvestre), feuillus acidiphiles 0,6-0,7 ; pin d'Alep et chênes sempervirents bas (calcaire méditerranéen, chêne vert) ; douglas 0,5 et mélèze 0,6 à valider. Altitude : du littoral à la montagne (Wikipédia DE « von der Küste bis in die Alpen ») ; GBIF FR q10 105 m, q90 1 472 m, q99 1 805 m → optimum 0-1 500 m, max 2 100 m. Saison : GBIF FR (2 455 occ., lu le 8 nov. 2026) pic octobre (813) puis septembre (471) et novembre (268), poussées estivales dès juin (53) et juillet (69) les étés humides (Wikipédia DE) ; décembre 73 : se prolonge jusqu'en décembre et, les hivers doux, en janvier (Wikipédia FR) ; la saison s'arrête au 12-31 (le schéma ne passe pas le 1er janvier) ; les 61 occ. de janvier sont en partie des relevés datés au 1er janvier sans date réelle et en partie des pousses tardives : ignorées pour le pic. Altitude_shift : au-dessus de 1 000 m le pic est en septembre et rien n'est noté en novembre, sous 500 m le pic est en octobre et la saison court jusqu'en décembre → début avancé (−2 j/100 m) et fin avancée (−4 j/100 m) au-dessus de 400 m, bornés à 35 j. Bloc météo : recopié de boletus_edulis (bolet mycorhizien généraliste, même saison d'automne) sans modification, faute d'étude météo propre au bolet bai ; à valider sur les retours terrain (confiance faible). Couvert, exposition, pente : transposés de B. edulis (confiance faible). Bioaccumule fortement le césium 137 (pigments badione A et norbadione A de la cuticule) et le mercure : à mentionner dans la fiche publique si Adrien le souhaite (Wikipédia FR, EN, DE).",
+  "notes": "Bolet très commun des sols acides, mycorhizien d'un large éventail d'arbres : épicéa, pins, sapin, mélèze, et aussi hêtre, chênes, châtaignier ; absent des sols calcaires (Wikipédia EN citant Haas 1969 ; Wikipédia FR « sur sol non calcaire »), d'où un trapèze pH plus acide que celui de B. edulis et un poids pH élevé (0,35). Hôtes : conifères à 1,0 (sapin/épicéa, pin sylvestre), feuillus acidiphiles 0,6-0,7 ; pin d'Alep et chênes sempervirents bas (calcaire méditerranéen, chêne vert) ; douglas 0,5 et mélèze 0,6 à valider. Altitude : du littoral à la montagne (Wikipédia DE « von der Küste bis in die Alpen ») ; GBIF FR q10 105 m, q90 1 472 m, q99 1 805 m → optimum 0-1 500 m, max 2 100 m. Saison : GBIF FR (2 455 occ., lu le 8 nov. 2026) pic octobre (813) puis septembre (471) et novembre (268), poussées estivales dès juin (53) et juillet (69) les étés humides (Wikipédia DE) ; décembre 73 : se prolonge jusqu'en décembre et, les hivers doux, en janvier (Wikipédia FR) ; saison jusqu'au 15 janvier (saison à cheval sur le 1er janvier, décision du 9 nov. 2026) ; les 61 occ. de janvier sont en partie des relevés datés au 1er janvier sans date réelle et en partie des pousses tardives : ignorées pour le pic. Altitude_shift : au-dessus de 1 000 m le pic est en septembre et rien n'est noté en novembre, sous 500 m le pic est en octobre et la saison court jusqu'en décembre → début avancé (−2 j/100 m) et fin avancée (−4 j/100 m) au-dessus de 400 m, bornés à 35 j. Bloc météo : recopié de boletus_edulis (bolet mycorhizien généraliste, même saison d'automne) sans modification, faute d'étude météo propre au bolet bai ; à valider sur les retours terrain (confiance faible). Couvert, exposition, pente : transposés de B. edulis (confiance faible). Bioaccumule fortement le césium 137 (pigments badione A et norbadione A de la cuticule) et le mercure : à mentionner dans la fiche publique si Adrien le souhaite (Wikipédia FR, EN, DE).",
   "terrain": {
     "hosts": {
       "hetre": 0.7,
@@ -115,7 +115,7 @@
   "phenology": {
     "season": {
       "start": "06-15",
-      "end": "12-31"
+      "end": "01-15"
     },
     "peak": {
       "start": "09-10",
@@ -257,7 +257,7 @@
   "about": {
     "summary": "Bolet à chapeau brun châtaigne, lisse et un peu gras par temps humide, pores jaune crème à jaune-vert qui bleuissent au toucher, pied jaunâtre strié de brun, sans réseau. La chair blanc-jaune bleuit légèrement à la coupe.",
     "habitat": "Forêts sur sols acides, jamais sur calcaire : pessières, sapinières et pinèdes surtout, mais aussi hêtraies, chênaies et châtaigneraies, souvent dans la mousse. Du littoral à la montagne.",
-    "season": "Surtout de septembre à novembre, avec un pic en octobre ; quelques poussées dès juin les étés humides, et jusqu'en décembre les automnes doux. En montagne la saison commence et finit plus tôt.",
+    "season": "Surtout de septembre à novembre, avec un pic en octobre ; quelques poussées dès juin les étés humides, et jusqu'en décembre, voire mi-janvier, les hivers doux. En montagne la saison commence et finit plus tôt.",
     "confusions": [
       {
         "name": "Bolet amer",

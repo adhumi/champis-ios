@@ -1,7 +1,7 @@
 {
  "generated_by": {
   "scoring_version": "1.0.0",
-  "species_hash": "8387dd7d"
+  "species_hash": "c152d3c9"
  },
  "cases": [
   {
@@ -9608,31 +9608,31 @@
    "species": "craterellus_lutescens",
    "date": "2026-01-01",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.6
   },
   {
    "species": "craterellus_lutescens",
    "date": "2026-01-08",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.425
   },
   {
    "species": "craterellus_lutescens",
    "date": "2026-01-15",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_lutescens",
    "date": "2026-01-22",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_lutescens",
    "date": "2026-01-29",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_lutescens",
@@ -9926,7 +9926,7 @@
    "species": "craterellus_lutescens",
    "date": "2026-01-01",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_lutescens",
@@ -10232,13 +10232,13 @@
    "species": "craterellus_lutescens",
    "date": "2026-12-24",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_lutescens",
    "date": "2026-12-31",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_lutescens",
@@ -10532,13 +10532,13 @@
    "species": "craterellus_lutescens",
    "date": "2026-12-03",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_lutescens",
    "date": "2026-12-10",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_lutescens",
@@ -10568,43 +10568,43 @@
    "species": "craterellus_tubaeformis",
    "date": "2026-01-01",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.475
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-01-08",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.3
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-01-15",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-01-22",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-01-29",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-02-05",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-02-12",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
@@ -10886,25 +10886,25 @@
    "species": "craterellus_tubaeformis",
    "date": "2026-01-01",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-01-08",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-01-15",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-01-22",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
@@ -11192,13 +11192,13 @@
    "species": "craterellus_tubaeformis",
    "date": "2026-12-24",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-12-31",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
@@ -11492,25 +11492,25 @@
    "species": "craterellus_tubaeformis",
    "date": "2026-12-03",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-12-10",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-12-17",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
    "date": "2026-12-24",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "craterellus_tubaeformis",
@@ -13448,25 +13448,25 @@
    "species": "imleria_badia",
    "date": "2026-01-01",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "imleria_badia",
    "date": "2026-01-08",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "imleria_badia",
    "date": "2026-01-15",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "imleria_badia",
    "date": "2026-01-22",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "imleria_badia",
@@ -13766,7 +13766,7 @@
    "species": "imleria_badia",
    "date": "2026-01-01",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "imleria_badia",
@@ -14072,13 +14072,13 @@
    "species": "imleria_badia",
    "date": "2026-12-24",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "imleria_badia",
    "date": "2026-12-31",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "imleria_badia",
@@ -14372,13 +14372,13 @@
    "species": "imleria_badia",
    "date": "2026-12-03",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "imleria_badia",
    "date": "2026-12-10",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "imleria_badia",
@@ -17288,31 +17288,31 @@
    "species": "lactarius_sanguifluus",
    "date": "2026-01-01",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
    "date": "2026-01-08",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
    "date": "2026-01-15",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
    "date": "2026-01-22",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
    "date": "2026-01-29",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
@@ -17606,7 +17606,7 @@
    "species": "lactarius_sanguifluus",
    "date": "2026-01-01",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
@@ -17912,13 +17912,13 @@
    "species": "lactarius_sanguifluus",
    "date": "2026-12-24",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
    "date": "2026-12-31",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
@@ -18206,19 +18206,19 @@
    "species": "lactarius_sanguifluus",
    "date": "2026-11-26",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
    "date": "2026-12-03",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
    "date": "2026-12-10",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lactarius_sanguifluus",
@@ -19208,37 +19208,37 @@
    "species": "lepista_nuda",
    "date": "2026-01-01",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.28
   },
   {
    "species": "lepista_nuda",
    "date": "2026-01-08",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-01-15",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-01-22",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-01-29",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-02-05",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
@@ -19526,19 +19526,19 @@
    "species": "lepista_nuda",
    "date": "2026-01-01",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-01-08",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-01-15",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
@@ -19826,19 +19826,19 @@
    "species": "lepista_nuda",
    "date": "2026-12-17",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-12-24",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-12-31",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
@@ -20126,25 +20126,25 @@
    "species": "lepista_nuda",
    "date": "2026-11-26",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-12-03",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-12-10",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
    "date": "2026-12-17",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "lepista_nuda",
@@ -24968,55 +24968,55 @@
    "species": "tricholoma_terreum",
    "date": "2026-01-01",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.73
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-01-08",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.52
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-01-15",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.31
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-01-22",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-01-29",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-02-05",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-02-12",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-02-19",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-02-26",
    "alt_m": 100,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
@@ -25286,31 +25286,31 @@
    "species": "tricholoma_terreum",
    "date": "2026-01-01",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-01-08",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-01-15",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-01-22",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-01-29",
    "alt_m": 700,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
@@ -25604,7 +25604,7 @@
    "species": "tricholoma_terreum",
    "date": "2026-01-01",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
@@ -25898,25 +25898,25 @@
    "species": "tricholoma_terreum",
    "date": "2026-12-10",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-12-17",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-12-24",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
    "date": "2026-12-31",
    "alt_m": 1400,
-   "expected": 0.0
+   "expected": 0.25
   },
   {
    "species": "tricholoma_terreum",
