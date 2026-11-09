@@ -4,7 +4,7 @@ Champis ne voit pas les champignons. Il estime, pour chaque carré de forêt de 
 
 ## Le terrain
 
-Les essences d'arbres, le sol, l'altitude, l'exposition et la pente sont calculés une fois pour toute la France à partir de cartes publiques. Une hêtraie sur sol acide à mi-pente nord n'offre pas les mêmes chances qu'une plantation de peupliers. Ce potentiel ne change pas d'un jour à l'autre : c'est la couche « potentiel toute saison » du menu de calque.
+Les essences d'arbres, le sol, l'altitude, l'exposition et la pente sont calculés une fois pour toute la France à partir de cartes publiques. Une hêtraie sur sol acide à mi-pente nord n'offre pas les mêmes chances qu'une plantation de peupliers. Ce potentiel ne change pas d'un jour à l'autre : la fiche d'un point le dit en mots, de « terrain très favorable » à « terrain peu favorable ».
 
 ## La météo
 
