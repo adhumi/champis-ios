@@ -119,3 +119,7 @@ cd Packages/ChampisScoring && swift test
 ## Icône
 
 `Champis/AppIcon.icon` est un document Icon Composer (Xcode 26+) : fond dégradé ciel, deux calques de forêt stylisée (bande claire avec sapins, bande sombre au premier plan), puis un groupe Liquid Glass avec deux calques séparés, `pied` et `chapeau`, teintés cèpe de Bordeaux. Les couleurs et les réglages de verre (reflet, translucidité, ombre) se modifient dans Icon Composer ; les formes sont les SVG de `Assets/`, canevas 1024 points. `Assets.xcassets/AppIcon.appiconset` garde un PNG 1024 plat en repli pour les emplacements qui n'utilisent pas le document.
+
+## Licence
+
+Code sous licence MIT (`LICENSE`). Les copies du référentiel (textes, espèces, palette, vecteurs), les icônes tirées des aquarelles et les skills de tiers gardent leur licence : voir `NOTICE.md`.
