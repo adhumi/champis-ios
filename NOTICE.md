@@ -15,6 +15,3 @@ Ce qui suit n'est pas du code de ce dépôt et garde sa propre licence.
 Les photos des fiches d'espèces viennent de Wikimedia Commons ; chacune garde la licence de son
 auteur, affichée sous la photo. Les données dont le modèle est tiré (IGN, Copernicus, SoilGrids,
 Open-Meteo, GBIF) sont décrites dans l'article « Les données et leurs sources » de l'app.
-
-Le nom « Champis » et l'icône de l'app (`Champis/AppIcon.icon`) identifient l'app publiée par
-Adrien Humilière : une version modifiée et redistribuée doit porter un autre nom et une autre icône.
