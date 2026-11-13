@@ -86,6 +86,21 @@ private struct PaletteCase: Decodable {
     }
 }
 
+private struct InterpCase: Decodable {
+    struct Expected: Decodable {
+        let containing: String
+        let ids: [String]
+        let weights: [Double]
+        let value: Double?
+    }
+
+    let lat: Double
+    let lon: Double
+    /// Cellule → `M_eff × Φ` ; une cellule absente n'a pas de météo.
+    let values: [String: Double]
+    let expected: Expected
+}
+
 private struct VectorFile<Case: Decodable>: Decodable {
     let cases: [Case]
 }
@@ -205,6 +220,39 @@ struct ParityTests {
         }
         let f = try WeatherIndex.weatherIndexRaw(sp, series(Array(repeating: 11, count: n)), day: day, altM: 700)
         #expect(f.soilTemp == 1.0)
+    }
+
+    @Test("Interpolation entre cellules : coins, poids et valeur, voisines manquantes comprises")
+    func cellInterpolation() throws {
+        let cases = try vectors("interp", as: InterpCase.self)
+        #expect(cases.count >= 50)
+        for c in cases {
+            let corners = CellInterpolation.corners(lat: c.lat, lon: c.lon)
+            #expect(corners.containing.id == c.expected.containing, "\(c.lat), \(c.lon)")
+            #expect(corners.cells.map(\.id) == c.expected.ids, "\(c.lat), \(c.lon)")
+            #expect(corners.weights.count == c.expected.weights.count)
+            for (got, expected) in zip(corners.weights, c.expected.weights) {
+                #expect(close(got, expected), "\(c.lat), \(c.lon)")
+            }
+            let got = CellInterpolation.interpolate(corners) { c.values[$0.id] }
+            if let expected = c.expected.value {
+                let value = try #require(got, "\(c.lat), \(c.lon)")
+                #expect(close(value, expected), "\(c.lat), \(c.lon)")
+            } else {
+                #expect(got == nil, "\(c.lat), \(c.lon)")
+            }
+        }
+    }
+
+    @Test("Identifiant de cellule : coin sud-ouest en km, aller et retour")
+    func cellGridIndex() throws {
+        let cell = try #require(CellInterpolation.GridIndex(id: "c_0930_6680"))
+        #expect(cell.i == 186 && cell.j == 1336)
+        #expect(cell.id == "c_0930_6680")
+        #expect(CellInterpolation.GridIndex(i: 22, j: 1360).id == "c_0110_6800")
+        #expect(CellInterpolation.GridIndex(id: "c_1") == nil)
+        #expect(CellInterpolation.GridIndex(id: "c_0931_6680") == nil)
+        #expect(CellInterpolation.GridIndex(id: "x_0930_6680") == nil)
     }
 
     @Test("Groupe : max des espèces, première par ordre alphabétique à égalité")

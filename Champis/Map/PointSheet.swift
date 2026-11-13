@@ -247,13 +247,15 @@ struct PointSheet: View {
             DisclosureGroup("Chiffres et facteurs") {
                 LabeledContent(info.mode == .score ? "Score S" : "Potentiel T", value: Self.number(scored.value))
                 LabeledContent("Potentiel terrain T", value: Self.number(scored.terrain))
-                if let row = scored.row ?? model.pointRow {
-                    LabeledContent("M_eff × Φ", value: Self.number(row.factor))
+                // `factor` est interpolé entre les cellules voisines, comme la couleur de la carte ;
+                // `M_eff` et `Φ` sont ceux de la cellule qui porte le point (bbox ou GET /weather).
+                let row = scored.row ?? model.pointRow
+                if let factor = scored.factor ?? row?.factor {
+                    LabeledContent("M_eff × Φ", value: Self.number(factor))
+                }
+                if let row {
                     LabeledContent("Indice météo M_eff", value: Self.number(row.mEff))
                     LabeledContent("Fenêtre Φ", value: Self.number(row.phi))
-                } else if let factor = scored.factor {
-                    // champ compact (sous le zoom 9) : le produit seul, le détail arrive par GET /weather
-                    LabeledContent("M_eff × Φ", value: Self.number(factor))
                 }
                 LabeledContent("Classe d'altitude", value: altitudeText(scored))
                 if let cell = scored.cell {
@@ -266,6 +268,11 @@ struct PointSheet: View {
                                 FactorRow(label: factor.label, value: value)
                             }
                         }
+                    }
+                    if scored.interpolated {
+                        Text("Le score est interpolé entre les cellules météo voisines. M_eff, Φ et les facteurs sont ceux de la cellule qui porte ce point.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
                     Text("Chaque facteur vaut de 0 à 1. Les facteurs terrain (essence, pH, exposition) ne sont pas dans les tuiles.")
                         .font(.footnote)

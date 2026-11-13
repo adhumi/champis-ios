@@ -20,7 +20,7 @@ S(p, e, J) = T(p, e) × M_eff(c(p), e, J, alt(p)) × Φ(e, J, alt(p))
 ## Règles à respecter dans tout code
 
 1. **Une seule fonction trapèze**, `trapezoid(x, min, opt_low, opt_high, max)` : 0 hors `[min, max]`, 1 dans `[opt_low, opt_high]`, linéaire entre. Elle sert partout (terrain, météo). Ne pas en réimplémenter une variante.
-2. **`T = host × Σ(w_i × f_i)`** : l'hôte est multiplicatif ; `cover`, `ph`, `altitude`, `aspect`, `slope` et, si l'espèce l'emploie, `edge` (distance à la lisière, facteur optionnel du 9 nov. 2026) sont pondérés (somme des poids = 1). Règles dures : altitude hors `[min, max]` → 0 ; hors forêt → 0 ; `ph` a un plancher de 0,15 ; donnée manquante → facteur 0,5 (sauf hôte : hors forêt = 0).
+2. **`T = host × Σ(w_i × f_i)`** : l'hôte est multiplicatif ; `cover`, `ph`, `altitude`, `aspect`, `slope` et, si l'espèce l'emploie, `edge` (distance à la lisière, facteur optionnel du 9 nov. 2026) et `water` (distance à l'eau BD TOPO, palier 3 du 12 nov. 2026) sont pondérés (somme des poids = 1). Règles dures : altitude hors `[min, max]` → 0 ; hors forêt → 0, sauf sur les pixels BD TOPO (peupleraie, bois, verger, haie, lande) pour une espèce qui les nomme dans `terrain.hosts_topo` (poids nommé, jamais de `default`, pixel non nommé = sans donnée) ; `ph` a un plancher de 0,15 ; donnée manquante → facteur 0,5 (sauf hôte : hors forêt = 0).
 3. **`M = (Σ w × f) × frost × water_balance × heat × memory`** (la somme porte temp, rain, trigger, soil_moisture et le facteur optionnel soil_temp, température du sol 0–7 cm corrigée à l'altitude comme l'air ; absent = poids 0), puis persistance `M_eff(J) = max(M(J), max_k M(J−k) × (1 − k/days))`, puis frost et water_balance **réappliqués** sur `M_eff` (les sporophores existants gèlent ou sèchent).
 4. **Trigger = meilleur événement de pluie de la fenêtre**, pas le dernier. Un événement = `≥ event_mm` sur `event_days` jours consécutifs, hors jours de neige.
 5. **Correction altitudinale des températures** : −0,6 °C/100 m × (alt pixel − alt cellule), par classes de 300 m. Toujours, pour temp_mean, frost, heat.
@@ -29,6 +29,7 @@ S(p, e, J) = T(p, e) × M_eff(c(p), e, J, alt(p)) × Φ(e, J, alt(p))
 8. **`Φ`** : 0 hors saison, 0,25 dès `season.start`, 1 au pic, rampes linéaires de `ramp_days` ; `secondary_peak` fusionné par max ; `altitude_shift` décale début et fin séparément (positif = plus tard). Une saison dont la fin précède le début passe le 1er janvier (ordinaux de dates, la saison en cours a commencé cette année ou l'année d'avant) ; les autres s'arrêtent au 31 décembre, décalage compris.
 9. **Groupe d'affichage** : l'UI montre `group` (cèpes, girolles) ; score du groupe = **max** des espèces du groupe, et la fiche indique quelle espèce porte le score.
 10. **Seuils d'affichage** (ne pas en inventer d'autres) : ≥ 0,75 excellent · ≥ 0,55 bon · ≥ 0,35 moyen · ≥ 0,15 faible · sinon très faible. Ils ne donnent que les **mots** (fiche, coins, notifications, graduations de la légende). La **couleur d'un pixel** est une échelle linéaire (6 nov. 2026) : un seul violet `scale.hex` dont l'alpha est le score, `alpha = floor(255 × (alpha_min + (alpha_max − alpha_min) × S) + 0,5)`, `S` borné à [0, 1] ; l'overlay est dessiné à l'opacité 1. Le `hex` d'un seuil est la couleur de pastille de sa classe (violet au milieu de la classe sur blanc), jamais celle d'un pixel. Tout vient de `shared/palette.json`.
+11. **Météo interpolée entre cellules** (13 nov. 2026) : la valeur d'une cellule est celle de son centre ; pour la carte, la fiche au toucher et les coins, `f = M_eff × Φ` est interpolé en bilinéaire entre les centres des quatre cellules qui encadrent le point (grille Lambert-93 de 5 km), par espèce, jour et classe d'altitude, avant `S = T × f` et le max du groupe. Poids renormalisés sur les coins qui ont une valeur ; la cellule qui contient le point doit en avoir une, sinon pas de météo (transparent). On n'interpole jamais les entrées météo, ni `T`. Les facteurs « pourquoi » et l'indice par département restent par cellule.
 
 ## Où vit quoi
 
@@ -38,12 +39,13 @@ Depuis le découpage des dépôts (6 nov. 2026), le code de référence est dans
 | --- | --- | --- |
 | trapèze, `T` | champis-api : `pipeline/champis_pipeline/scoring.py` | — (jamais ailleurs) |
 | `M`, `Φ`, `M_eff`, groupes | champis-api : `api/champis_api/scoring.py` (importe le trapèze du pipeline) | `champis-ios/Packages/ChampisScoring` — validé par les vecteurs de test (skill `scoring-parity`) ; le site prend les valeurs de l'API, sans portage |
+| interpolation entre cellules | champis-api : `api/champis_api/interp.py` | `ChampisScoring` (Swift) et `field.js` du site (JavaScript), validés par `shared/vectors/interp.json` |
 | seuils, palette | `shared/palette.json` | chargé tel quel par tous les clients |
 
 ## Vocabulaire
 
 - **hôte** : clé du vocabulaire `mapping/bdforet_to_hosts.json` → `hosts` (`hetre`, `sapin_epicea`, `chenes_decidus`…). Jamais un code TFV brut ni un nom d'arbre libre.
-- **cellule météo** : point de la grille `weather_grid.json` (~5 km) ; l'API ne connaît pas les pixels, seulement les cellules et leur altitude.
+- **cellule météo** : point de la grille `weather_grid.json` (~5 km), carré aligné Lambert-93 dont l'`id` donne le coin sud-ouest en km ; l'API ne connaît pas les pixels, seulement les cellules et leur altitude.
 - **espèce** vs **groupe** : une espèce = un JSON ; un groupe = ce que l'utilisateur voit.
 
 ## Pièges connus

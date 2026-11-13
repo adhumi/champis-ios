@@ -10,13 +10,17 @@ nonisolated struct PointInfo: Identifiable, Sendable {
         let species: String
         /// Potentiel terrain du pixel, dans [0, 1].
         let terrain: Double
-        /// `M_eff × Φ` appliqué (mode score) ; `nil` en mode terrain.
+        /// `M_eff × Φ` appliqué (mode score), interpolé entre les cellules météo voisines ; `nil` en
+        /// mode terrain.
         let factor: Double?
         /// `T` (mode terrain) ou `S = T × M_eff × Φ` (mode score).
         let value: Double
         /// Ligne complète (`M`, `M_eff`, `Φ`) quand la météo vient de `/weather/bbox` ; `nil` sous le
         /// champ compact, la fiche la prend alors de `GET /weather?cell=` (`MapModel.pointRow`).
+        /// C'est la ligne de `cell`, la cellule qui porte le point : son `M_eff × Φ` diffère de
+        /// `factor` quand celui-ci est interpolé.
         let row: WeatherRow?
+        /// Cellule météo qui porte le point (ses facteurs expliquent le score).
         let cell: WeatherCellInfo?
         let stale: Bool
         /// Indice `k` lu dans la couche A (`[300k, 300k + 300[` m), `nil` si inconnu.
@@ -27,6 +31,8 @@ nonisolated struct PointInfo: Identifiable, Sendable {
         let altFallback: Bool
         /// `T` du pixel pour chaque espèce de la couche (pour un coin : le backend n'a que la météo).
         var terrains: [String: Double] = [:]
+        /// `factor` mêle la météo de cellules voisines (spec › Scoring › Interpolation, 13 nov. 2026).
+        var interpolated = false
     }
 
     nonisolated enum Outcome: Sendable {
@@ -83,7 +89,8 @@ nonisolated enum PointInspector {
             altClass = colorizer.altitudeClass(alt, at: i)
         }
         let useWeather = settings.mode == .score
-        let cell = useWeather ? settings.weather.nearestCell(lat: latitude, lon: longitude) : nil
+        // Même météo que la couleur de la carte : interpolée entre les centres des cellules voisines.
+        let sample = useWeather ? settings.weather.sample(lat: latitude, lon: longitude) : nil
 
         var best: PointInfo.Scored?
         var sawTerrain = false
@@ -102,15 +109,18 @@ nonisolated enum PointInspector {
             if useWeather {
                 // `factor` vient de `/weather/bbox` ou du champ compact `/weather/field` (sous le zoom 9) ;
                 // la ligne complète n'existe que pour le premier, la fiche charge le reste par `GET /weather`.
-                guard let cell, let date = settings.date,
-                      let alt = cell.altKey(classIndex: altClass, encoding: colorizer.palette.altEncoding),
-                      let factor = cell.factor(species: sid, date: date, altKey: alt.key)
+                let encoding = colorizer.palette.altEncoding
+                guard let sample, let date = settings.date,
+                      let alt = sample.home.altKey(classIndex: altClass, encoding: encoding),
+                      let factor = sample.factor(species: sid, date: date, classIndex: altClass, encoding: encoding)
                 else { continue }
+                let cell = sample.home
                 candidate = PointInfo.Scored(
                     species: sid, terrain: terrain, factor: factor, value: terrain * factor,
                     row: cell.row(species: sid, date: date, altKey: alt.key),
                     cell: cell.info, stale: cell.stale, altClass: altClass, altKey: alt.key, altFallback: alt.fallback
                 )
+                candidate.interpolated = sample.isInterpolated
             }
             if let current = best, candidate.value <= current.value { continue }
             best = candidate

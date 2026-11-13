@@ -169,17 +169,20 @@ struct TileColorizerTests {
         let weather = try Self.weather()
         let tile = Self.tile([(0, 254, 255)])
         let layer = [TileColorizer.SpeciesTile(species: "boletus_edulis", png: tile)]
-        // Tuile 6/33/22 : son coin haut gauche (5,6 E, 48,9 N) est à 200 km de c_1, et ses blocs de
-        // 16 px font 24 km : aucun centre de bloc n'est à moins de 7,5 km de la seule cellule
+        // Tuile 6/33/22 : son coin haut gauche (5,6 E, 48,9 N) est à 200 km de c_1 : le pixel 0 n'a
+        // pas de météo, son bloc non plus
         let far = TileColorizer.Request(z: 6, x: 33, y: 22, mode: .score, date: "2026-10-30", tiles: layer, alt: nil, weather: weather)
         #expect(colorizer.values(far).allSatisfy { $0.isNaN })
-        #expect(TileColorizer.blockCells(z: 6, x: 33, y: 22, weather: weather).allSatisfy { $0 == nil })
-        // Zoom 9 (blocs de 3 km) : le bloc qui contient la cellule la trouve, le coin de la tuile (50 km) non
+        #expect(TileColorizer.blockSamples(z: 6, x: 33, y: 22, weather: weather).home[0] < 0)
+        // Zoom 9 (blocs de 2 px, 400 m) : le bloc qui contient la cellule la trouve, le coin de la tuile (50 km) non
         let p = TileMath.tile(lon: 8.4, lat: 47.0, z: 9)
-        let cells = TileColorizer.blockCells(z: 9, x: p.x, y: p.y, weather: weather)
-        #expect(cells.count == 256)
-        #expect(cells[0] == nil)
-        #expect(cells[(p.py / TileColorizer.weatherBlock) * 16 + p.px / TileColorizer.weatherBlock]?.info.id == "c_1")
+        let samples = TileColorizer.blockSamples(z: 9, x: p.x, y: p.y, weather: weather)
+        #expect(samples.block == 2 && samples.blocks == 128)
+        #expect(samples.home.count == 128 * 128)
+        #expect(samples.home[0] < 0)
+        let h = samples.home[(p.py / samples.block) * samples.blocks + p.px / samples.block]
+        let homeID = h >= 0 ? samples.cells[h].info.id : nil
+        #expect(homeID == "c_1")
         let i = p.py * Self.size + p.px
         let request = TileColorizer.Request(
             z: 9, x: p.x, y: p.y, mode: .score, date: "2026-10-30", tiles: [.init(species: "boletus_edulis", png: Self.tile([(i, 254, 255), (0, 254, 255)]))],
@@ -240,5 +243,31 @@ struct TileColorizerTests {
         #expect(decoded.data[3] == 255 && decoded.data[7] == 0)  // pixel 0 opaque, pixel 1 transparent
         #expect(!TileImage.empty.isEmpty)
         #expect(TileImage.png(rgba: [0, 0, 0], size: Self.size) == nil)
+    }
+
+    @Test("Taille du bloc d'interpolation : 16 px dès le zoom 12, moitié par niveau en dessous, 2 px au moins")
+    func blockSizes() {
+        #expect([6, 8, 9, 10, 11, 12, 15].map { TileColorizer.blockSize(z: $0) } == [2, 2, 2, 4, 8, 16, 16])
+    }
+
+    @Test("Météo interpolée entre les centres des cellules voisines ; à plat sans voisine ; rien sans la cellule du pixel")
+    func interpolatedWeather() throws {
+        let colorizer = TileColorizer(palette: try Self.palette())
+        // premier cas de interp.json : 47,1234 N 6,3187 E, quatre cellules, valeur 0,3677
+        let p = TileMath.tile(lon: 6.3187, lat: 47.1234, z: 15)
+        let i = p.py * Self.size + p.px
+        let layer = [TileColorizer.SpeciesTile(species: "boletus_edulis", png: Self.tile([(i, 254, 255)]))]
+        func value(_ weather: WeatherField) -> Double {
+            colorizer.values(TileColorizer.Request(
+                z: 15, x: p.x, y: p.y, mode: .score, date: "2026-10-30", tiles: layer, alt: nil, weather: weather
+            ))[i]
+        }
+        // le poids se prend au centre du bloc de 16 px (53 m) : à 0,01 près de la valeur au point
+        let all = try WeatherFieldTests.gridField()
+        #expect(abs(value(all) - 0.367743328) < 0.01)
+        let alone = try WeatherFieldTests.gridField(skipping: ["c_0945_6670", "c_0945_6675", "c_0950_6675"])
+        #expect(abs(value(alone) - 0.1) < 1e-9)
+        let closed = try WeatherFieldTests.gridField(skipping: ["c_0950_6670"], unavailable: ["c_0950_6670"])
+        #expect(value(closed).isNaN)
     }
 }

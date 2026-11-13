@@ -7,7 +7,7 @@ description: Garantir que le scoring (trapèze, M, Φ, M_eff, groupes, palette) 
 
 Le scoring de référence est en Python, dans `adhumi/champis-api` (`api/champis_api/scoring.py`, trapèze dans `pipeline/champis_pipeline/scoring.py`). L'app recalcule `M × Φ` localement (hors ligne, changement de jour sans réseau). Ce portage n'a pas le droit de diverger.
 
-Le site **ne porte pas** le scoring (décision du 30 oct. 2026) : sans hors ligne web, il affiche `M_eff` et `Φ` tels que l'API les renvoie pour les 11 jours, et ne lit de `shared/` que la palette. La parité ne concerne donc que Python et Swift.
+Le site **ne porte pas** le scoring (décision du 30 oct. 2026) : sans hors ligne web, il affiche `M_eff` et `Φ` tels que l'API les renvoie pour les 11 jours, et ne lit de `shared/` que la palette. La parité de `M` et `Φ` ne concerne donc que Python et Swift. Seule exception : l'interpolation de la météo entre cellules (13 nov. 2026), que le site applique aussi ; son `web/field.js` rejoue `interp.json`.
 
 ## Le contrat : `shared/vectors/`
 
@@ -19,6 +19,7 @@ shared/vectors/phi.json             [{ "species": "…", "date": "2026-10-16", "
 shared/vectors/m.json               [{ "species": "…", "series": { daily arrays J−118 → J+7 }, "cell_elevation": 700, "alt_class": 1350, "expected": { "M": …, "M_eff": …, "factors": {…} } }, …]
 shared/vectors/group.json           [{ "group": "cepes", "scores": {…}, "expected": { "score": …, "leading": "boletus_aereus" } }, …]
 shared/vectors/palette.json         [{ "score": 0.55, "expected": { "label": "bon", "hex": "…", "rgba": [99, 49, 121, 140] } }, …]
+shared/vectors/interp.json          [{ "lat": 47.12, "lon": 6.32, "values": { "c_0930_6680": 0.8, … }, "expected": { "containing": "c_0930_6680", "ids": [SO, SE, NO, NE], "weights": […], "value": 0.61 } }, …]
 ```
 
 Chaque fichier contient un champ `"generated_by": { "scoring_version": …, "species_hash": … }`. Les vecteurs couvrent au minimum : les bornes exactes du trapèze (x = min, opt_low, opt_high, max, et ±ε), les seuils de palette exacts (0,15 / 0,35 / 0,55 / 0,75) et l'alpha du pixel aux bornes et aux demi-niveaux d'arrondi (`rgba`, échelle linéaire du 6 nov. 2026), chaque facteur multiplicatif à 0 et à 1, la persistance avec un M passé dominant, le décalage altitudinal aux bornes `max_days`, `secondary_peak`, un 29 février.
@@ -38,6 +39,7 @@ Les deux suites tournent en CI ; une PR qui change le scoring Python sans régé
 
 - **Couleur d'un pixel** : `rgb` de `palette.scale.hex`, alpha = `floor(255 × (alpha_min + (alpha_max − alpha_min) × min(max(S, 0), 1)) + 0.5)` en double précision ; les seuils ne servent qu'aux mots.
 - Même ordre d'opérations que Python (somme pondérée, puis facteurs multiplicatifs dans l'ordre frost, water_balance, heat, memory, puis persistance, puis frost et water_balance à nouveau). Réordonner change les arrondis.
+- **Interpolation entre cellules** (`interp.json`) : Lambert-93 par la formule directe GRS80 de `champis_api/interp.py` (mêmes constantes, jamais une bibliothèque de projection), coins dans l'ordre SO, SE, NO, NE, `floor` pour les indices, somme des poids dans cet ordre ; une cellule absente de `values` n'a pas de météo, et `value` est `null` quand celle qui contient le point n'en a pas.
 - Dates : jour de l'année calculé sur la date civile locale (`Europe/Paris`), `MM-DD` comparés comme chaînes ou comme (mois, jour), jamais via des timestamps.
 - Les paramètres d'espèce sont chargés depuis `/species` (JSON identique aux fichiers du dépôt) : aucun client n'embarque de valeur en dur.
 - Un client qui ne sait pas calculer un facteur (série manquante) l'affiche comme « indisponible » et n'invente pas 0,5 : c'est l'API qui applique la règle de la donnée manquante.

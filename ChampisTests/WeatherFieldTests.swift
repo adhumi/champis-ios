@@ -14,6 +14,32 @@ struct WeatherFieldTests {
         try Fixtures.decode(WeatherFieldResponse.self, Fixtures.weatherFieldJSON)
     }
 
+    /// Quatre cellules de la grille autour de 47,1234 N 6,3187 E, avec les valeurs du premier cas
+    /// de `interp.json` (classe 150 m, 30 octobre) ; `skipping` en retire, `unavailable` liste des
+    /// cellules sans météo comme le fait `/weather/bbox`.
+    static func gridField(skipping skipped: Set<String> = [], unavailable: [String] = []) throws -> WeatherField {
+        let values = ["c_0945_6670": 0.8, "c_0950_6670": 0.1, "c_0945_6675": 0.4, "c_0950_6675": 0.6]
+        let cells = values.keys.sorted().filter { !skipped.contains($0) }.map { id in
+            """
+            { "id": "\(id)", "lat": 47.12, "lon": 6.32, "elevation_m": 150.0, "alt_classes": [150.0],
+              "f": { "boletus_edulis": { "150": \(values[id] ?? 0) } } }
+            """
+        }.joined(separator: ",")
+        let listed = unavailable.map { "\"\($0)\"" }.joined(separator: ",")
+        let bbox = """
+        { "today": "2026-10-30", "computed_at": "2026-10-30T03:12:00+00:00", "scoring_version": "1.0.0",
+          "cells": [], "unavailable": [\(listed)], "retry_after": null }
+        """
+        let compact = """
+        { "today": "2026-10-30", "computed_at": "2026-10-30T03:12:00+00:00", "day": "2026-10-30",
+          "scoring_version": "1.0.0", "cells": [\(cells)], "unavailable": 0 }
+        """
+        var field = WeatherField()
+        field.merge(try Fixtures.decode(WeatherBBoxResponse.self, bbox))
+        field.merge(try Fixtures.decode(WeatherFieldResponse.self, compact))
+        return field
+    }
+
     static func altEncoding() throws -> Palette.AltEncoding {
         try Palette.decode(Data(Fixtures.paletteJSON.utf8)).altEncoding
     }
@@ -166,5 +192,42 @@ struct WeatherFieldTests {
         #expect(unknown.altKey(classIndex: nil, encoding: encoding) == nil)
         #expect(unknown.altKey(classIndex: 2, encoding: encoding)?.key == "150")
         #expect(WeatherField.Cell.key(forCenter: 150.0) == "150")
+    }
+
+    @Test("Interpolation entre cellules : la valeur du vecteur de parité, à plat sans voisine chargée")
+    func interpolation() throws {
+        let encoding = try Self.altEncoding()
+        let all = try Self.gridField()
+        let sample = try #require(all.sample(lat: 47.1234, lon: 6.3187))
+        #expect(sample.home.info.id == "c_0950_6670")
+        #expect(sample.isInterpolated)
+        let value = try #require(
+            sample.factor(species: "boletus_edulis", date: "2026-10-30", classIndex: nil, encoding: encoding)
+        )
+        #expect(abs(value - 0.367743328) < 1e-6)
+        // jour ou espèce que la cellule du point n'a pas : rien
+        #expect(sample.factor(species: "boletus_edulis", date: "2026-10-31", classIndex: nil, encoding: encoding) == nil)
+        #expect(sample.factor(species: "boletus_aereus", date: "2026-10-30", classIndex: nil, encoding: encoding) == nil)
+
+        let alone = try Self.gridField(skipping: ["c_0945_6670", "c_0945_6675", "c_0950_6675"])
+        let lone = try #require(alone.sample(lat: 47.1234, lon: 6.3187))
+        #expect(!lone.isInterpolated)
+        let flat = try #require(
+            lone.factor(species: "boletus_edulis", date: "2026-10-30", classIndex: nil, encoding: encoding)
+        )
+        #expect(abs(flat - 0.1) < 1e-9)
+    }
+
+    @Test("Cellule listée sans météo : rien, jamais la voisine ; hors grille : la plus proche, sans interpolation")
+    func cellWithoutWeather() throws {
+        let closed = try Self.gridField(skipping: ["c_0950_6670"], unavailable: ["c_0950_6670"])
+        let found = closed.sample(lat: 47.1234, lon: 6.3187) != nil
+        #expect(!found)
+        let offGrid = try Self.gridField(skipping: ["c_0950_6670"])
+        let near = try #require(offGrid.sample(lat: 47.1234, lon: 6.3187))
+        #expect(near.corners.isEmpty && !near.isInterpolated)
+        // une réponse ultérieure qui donne la cellule lève l'indisponibilité
+        let back = try Self.gridField(unavailable: ["c_0950_6670"])
+        #expect(back.sample(lat: 47.1234, lon: 6.3187)?.home.info.id == "c_0950_6670")
     }
 }

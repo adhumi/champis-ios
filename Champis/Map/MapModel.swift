@@ -671,7 +671,14 @@ final class MapModel {
             pointRow = row
             pointFactors = row?.factors
             pointSummary = row?.summary
-            pointDays = Self.pointDays(rows: rows, altKey: altKey, terrain: scored.terrain, species: scored.species)
+            // les onze jours suivent la carte : interpolés quand les cellules voisines ont le jour
+            // (/weather/bbox), sinon ceux de la cellule du point
+            let sample = weather.sample(lat: info.latitude, lon: info.longitude)
+            let encoding = palette?.altEncoding
+            pointDays = Self.pointDays(rows: rows, altKey: altKey, terrain: scored.terrain, species: scored.species) { day in
+                guard let sample, let encoding else { return nil }
+                return sample.factor(species: scored.species, date: day, classIndex: scored.altClass, encoding: encoding)
+            }
             if pointFactors == nil {
                 factorsStatus = "Facteurs indisponibles pour ce jour."
             }
@@ -698,10 +705,15 @@ final class MapModel {
     }
 
     /// `T × M_eff × Φ` pour chacun des jours renvoyés par l'API, à la classe d'altitude du pixel.
-    nonisolated static func pointDays(rows: [WeatherDay], altKey: String, terrain: Double, species: String) -> [CoinDay] {
+    /// `interpolated` donne `M_eff × Φ` interpolé entre cellules pour un jour (`nil` si inconnu :
+    /// le jour prend alors la valeur de la cellule du point).
+    nonisolated static func pointDays(
+        rows: [WeatherDay], altKey: String, terrain: Double, species: String,
+        interpolated: (String) -> Double? = { _ in nil }
+    ) -> [CoinDay] {
         rows.map { day in
-            let row = day.byAlt[altKey]
-            return CoinDay(date: day.date, value: row.map { terrain * $0.factor }, leading: row == nil ? nil : species)
+            let factor = interpolated(day.date) ?? day.byAlt[altKey]?.factor
+            return CoinDay(date: day.date, value: factor.map { terrain * $0 }, leading: factor == nil ? nil : species)
         }
     }
 
