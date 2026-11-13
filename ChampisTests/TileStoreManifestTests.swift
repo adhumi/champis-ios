@@ -376,4 +376,30 @@ struct TileStoreManifestTests {
             try await store.terrainTile(species: "boletus_edulis", z: 15, x: x, y: y)
         }
     }
+
+    @Test("Tuile A réécrite en tranches de 20 m : chaque pixel au centre de sa classe, inconnu conservé")
+    func classTileAsFineIndices() throws {
+        let palette = try WeatherFieldTests.finePalette()
+        let elev = try #require(palette.elevEncoding)
+        // quatre pixels gris + alpha : classes 0, 1 et 4, puis un pixel inconnu (alpha 0), puis nodata
+        let png = DecodedPNG(width: 5, height: 1, channels: 2, data: [0, 255, 1, 255, 4, 255, 2, 0, 255, 255])
+        let fine = TileStore.fineIndices(fromClasses: png, alt: palette.altEncoding, elev: elev)
+        #expect(fine.channels == 2 && fine.width == 5 && fine.height == 1)
+        // 150 m → tranche 7, 450 m → 22, 1 350 m → 67 ; milieu de tranche = centre de classe
+        #expect(fine.data == [7, 255, 22, 255, 67, 255, 255, 0, 255, 0])
+        #expect(CellInterpolation.elevation(index: 22, stepM: elev.stepM) == 450)
+    }
+
+    @Test("Manifeste : la couche E est choisie à côté de la couche A, jeu complet d'abord")
+    func elevationEntry() throws {
+        let tiles = [
+            Self.entry(kind: "A", name: "A-300m-da1b2c3.pmtiles", scoring: nil, deptsHash: "a1b2c3"),
+            Self.entry(kind: "E", name: "E-20m-d222222.pmtiles", scoring: nil, dept: "25", deptsHash: "222222"),
+            Self.entry(kind: "E", name: "E-20m-da1b2c3.pmtiles", scoring: nil, deptsHash: "a1b2c3"),
+        ]
+        let chosen = TileStore.chooseEntries(tiles, scoringVersion: "1.0.0")
+        #expect(chosen.alt?.name == "A-300m-da1b2c3.pmtiles")
+        #expect(chosen.elev?.name == "E-20m-da1b2c3.pmtiles")
+        #expect(TileStore.chooseEntries([tiles[0]], scoringVersion: "1.0.0").elev == nil)
+    }
 }

@@ -73,6 +73,17 @@ public struct Palette: Codable, Hashable, Sendable {
         public let nodata: Int
     }
 
+    /// Couche E (altitude fine, 13 nov. 2026) : gris = indice de la tranche de `stepM` mètres.
+    public struct ElevEncoding: Codable, Hashable, Sendable {
+        public let stepM: Double
+        public let nodata: Int
+
+        enum CodingKeys: String, CodingKey {
+            case nodata
+            case stepM = "step_m"
+        }
+    }
+
     public struct AltEncoding: Codable, Hashable, Sendable {
         public let channel: String
         public let classM: Double
@@ -108,6 +119,8 @@ public struct Palette: Codable, Hashable, Sendable {
     public let nodataHex: String
     public let tileEncoding: TileEncoding
     public let altEncoding: AltEncoding
+    /// Absent sur une API antérieure au 13 nov. 2026 : pas de couche E, la classe de la couche A.
+    public let elevEncoding: ElevEncoding?
     /// Absent sur une API antérieure au 5 nov. 2026 : l'app lit alors les `T`, jamais un `G`.
     public let groupTileEncoding: GroupTileEncoding?
 
@@ -116,6 +129,7 @@ public struct Palette: Codable, Hashable, Sendable {
         case nodataHex = "nodata_hex"
         case tileEncoding = "tile_encoding"
         case altEncoding = "alt_encoding"
+        case elevEncoding = "elev_encoding"
         case groupTileEncoding = "group_tile_encoding"
     }
 

@@ -150,7 +150,10 @@ final class OfflineModel {
                 current.terrain[species] = entry
             } else if entry.kind == "G", let channels = entry.channels, !channels.isEmpty {
                 current.groups.append(entry)
-            } else if entry.kind == "A" {
+            } else if entry.kind == "E" {
+                // altitude fine (13 nov. 2026) : préférée à la couche A, une seule est embarquée
+                current.altitude = entry
+            } else if entry.kind == "A", current.altitude?.kind != "E" {
                 current.altitude = entry
             }
             byCode[dept] = current

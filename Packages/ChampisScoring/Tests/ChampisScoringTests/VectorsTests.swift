@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import ChampisScoring
 
-/// En-tête commun aux six fichiers de vecteurs (`shared/vectors/*.json`).
+/// En-tête commun aux sept fichiers de vecteurs (`shared/vectors/*.json`).
 private struct VectorFile: Decodable {
     struct GeneratedBy: Decodable {
         let scoringVersion: String
@@ -21,7 +21,7 @@ private struct VectorFile: Decodable {
     }
 }
 
-private let vectorNames = ["trapezoid", "phi", "m", "group", "palette", "interp"]
+private let vectorNames = ["trapezoid", "phi", "m", "group", "palette", "interp", "alt"]
 
 private func loadVector(_ name: String) throws -> VectorFile {
     let url = try #require(
@@ -32,7 +32,7 @@ private func loadVector(_ name: String) throws -> VectorFile {
 }
 
 struct VectorsTests {
-    @Test("Les six fichiers de vecteurs sont présents et lisibles", arguments: vectorNames)
+    @Test("Les sept fichiers de vecteurs sont présents et lisibles", arguments: vectorNames)
     func vecteurPresent(name: String) throws {
         let file = try loadVector(name)
         #expect(!file.generatedBy.speciesHash.isEmpty)
@@ -46,7 +46,7 @@ struct VectorsTests {
         }
     }
 
-    @Test("Les six fichiers viennent de la même génération")
+    @Test("Les sept fichiers viennent de la même génération")
     func memeGeneration() throws {
         let hashes = try Set(vectorNames.map { try loadVector($0).generatedBy.speciesHash })
         #expect(hashes.count == 1)

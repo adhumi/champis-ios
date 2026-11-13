@@ -67,6 +67,10 @@ actor TileStore {
     private var groupBySpecies: [String: GroupFile] = [:]
     private var altReader: PMTilesReader?
     private var altName = ""
+    /// Couche E (altitude par pas de 20 m, 13 nov. 2026), préférée à la couche A quand la palette
+    /// porte son encodage : voir `altitudeTile(z:x:y:palette:)`.
+    private var elevReader: PMTilesReader?
+    private var elevName = ""
     /// Encodage des `G` (`palette.json › group_tile_encoding`) ; absent sur une vieille API : les `G`
     /// sont alors ignorés et les `T` lus, jamais un ordre de canaux deviné.
     private var groupEncoding: Palette.GroupTileEncoding?
@@ -76,6 +80,7 @@ actor TileStore {
     private var localGroups: [String: [GroupFile]] = [:]
     private var localTerrain: [String: [(name: String, reader: PMTilesReader)]] = [:]
     private var localAlt: [(name: String, reader: PMTilesReader)] = []
+    private var localElev: [(name: String, reader: PMTilesReader)] = []
     /// Tuiles décodées, absentes comprises (`nil`) : une tuile hors emprise ne se redemande pas.
     private var cache: [Key: DecodedPNG?] = [:]
     private var order: [Key] = []
@@ -92,7 +97,7 @@ actor TileStore {
         self.disk = disk
     }
 
-    var hasAltitudeLayer: Bool { altReader != nil }
+    var hasAltitudeLayer: Bool { altReader != nil || elevReader != nil }
     var species: Set<String> { Set(terrainReaders.keys).union(groupBySpecies.keys) }
     /// Espèces lues dans un `G` plutôt que dans leur `T` (réglages, tests).
     var groupedSpecies: Set<String> { Set(groupBySpecies.keys) }
@@ -111,7 +116,7 @@ actor TileStore {
     /// version de scoring) : un `G` d'un autre jeu laisserait des trous, les `T` restent la référence.
     nonisolated static func chooseEntries(
         _ tiles: [TilesManifest.Entry], scoringVersion: String
-    ) -> (terrain: [String: TilesManifest.Entry], groups: [TilesManifest.Entry], alt: TilesManifest.Entry?) {
+    ) -> (terrain: [String: TilesManifest.Entry], groups: [TilesManifest.Entry], alt: TilesManifest.Entry?, elev: TilesManifest.Entry?) {
         func rank(_ e: TilesManifest.Entry) -> (Int, Int, String) {
             (e.dept == nil ? 1 : 0, e.scoringVersion == scoringVersion ? 1 : 0, e.name)
         }
@@ -122,6 +127,7 @@ actor TileStore {
         var terrain: [String: TilesManifest.Entry] = [:]
         var groups: [String: TilesManifest.Entry] = [:]  // clé : groupe et partie
         var alt: TilesManifest.Entry?
+        var elev: TilesManifest.Entry?
         for entry in tiles {
             switch entry.kind {
             case "T":
@@ -139,6 +145,10 @@ actor TileStore {
                 if better(entry, than: alt) {
                     alt = entry
                 }
+            case "E":
+                if better(entry, than: elev) {
+                    elev = entry
+                }
             default:
                 continue
             }
@@ -151,7 +161,7 @@ actor TileStore {
                 }
             }
             .sorted { $0.name < $1.name }
-        return (terrain, kept, alt)
+        return (terrain, kept, alt, elev)
     }
 
     /// (Re)configure les lecteurs d'après le manifeste (voir `chooseEntries`). `palette` donne
@@ -162,6 +172,8 @@ actor TileStore {
         groupBySpecies = [:]
         altReader = nil
         altName = ""
+        elevReader = nil
+        elevName = ""
         groupEncoding = palette.groupTileEncoding
         tileEncoding = palette.tileEncoding
         cache = [:]
@@ -170,6 +182,10 @@ actor TileStore {
         if let entry = chosen.alt, let url = api.tileURL(entry) {
             altReader = PMTilesReader(source: RemoteRangeSource(url: url, session: session))
             altName = entry.name
+        }
+        if let entry = chosen.elev, let url = api.tileURL(entry) {
+            elevReader = PMTilesReader(source: RemoteRangeSource(url: url, session: session))
+            elevName = entry.name
         }
         for (sid, entry) in chosen.terrain {
             guard let url = api.tileURL(entry) else { continue }
@@ -191,6 +207,9 @@ actor TileStore {
         var keep = Set(terrainNames.values).union(groupBySpecies.values.map(\.name))
         if !altName.isEmpty {
             keep.insert(altName)
+        }
+        if !elevName.isEmpty {
+            keep.insert(elevName)
         }
         _ = try? disk?.prune(keeping: keep)
     }
@@ -223,6 +242,8 @@ actor TileStore {
         }
         altReader = alt
         altName = alt == nil ? "" : "A"
+        elevReader = nil
+        elevName = ""
         cache = [:]
         order = []
     }
@@ -232,6 +253,7 @@ actor TileStore {
         localGroups = [:]
         localTerrain = [:]
         localAlt = []
+        localElev = []
         for file in files {
             guard let reader = (try? LocalFileSource(url: file.url)).map({ PMTilesReader(source: $0) }) else { continue }
             let name = "local:" + file.url.lastPathComponent
@@ -244,13 +266,15 @@ actor TileStore {
                 }
             } else if file.kind == "A" {
                 localAlt.append((name: name, reader: reader))
+            } else if file.kind == "E" {
+                localElev.append((name: name, reader: reader))
             }
         }
         cache = [:]
         order = []
     }
 
-    var hasLocalFiles: Bool { !localGroups.isEmpty || !localTerrain.isEmpty || !localAlt.isEmpty }
+    var hasLocalFiles: Bool { !localGroups.isEmpty || !localTerrain.isEmpty || !localAlt.isEmpty || !localElev.isEmpty }
 
     /// Tuile `T` d'une espèce, décodée ; `nil` si l'espèce n'a pas de fichier ou la tuile n'existe pas.
     /// Les fichiers embarqués passent d'abord (`G` puis `T`) ; sans réseau, une tuile hors d'eux est
@@ -303,6 +327,56 @@ actor TileStore {
         } catch where !localAlt.isEmpty {
             return nil
         }
+    }
+
+    /// Tuile d'altitude telle que le coloriste l'attend pour cette palette. Sans encodage de la
+    /// couche E (API ancienne) : la tuile A, indices de classe. Avec : indices de tranche de 20 m,
+    /// lus dans la couche E (embarquée, puis en ligne) ou, si elle manque pour cette tuile, dans la
+    /// couche A convertie (`fineIndices`) : le pixel prend alors l'altitude du centre de sa classe,
+    /// et le score est celui d'avant la couche E.
+    func altitudeTile(z: Int, x: Int, y: Int, palette: Palette) async throws -> DecodedPNG? {
+        guard let elev = palette.elevEncoding else {
+            return try await altitudeTile(z: z, x: x, y: y)
+        }
+        for file in localElev {
+            if let png = try await tile(reader: file.reader, key: Key(name: file.name, z: z, x: x, y: y), useDisk: false) {
+                return png
+            }
+        }
+        if let reader = elevReader {
+            // une couche E injoignable ne prive pas de la couche A (embarquée ou en cache)
+            if let png = try? await tile(reader: reader, key: Key(name: elevName, z: z, x: x, y: y), useDisk: true) {
+                return png
+            }
+        }
+        guard let classes = try await altitudeTile(z: z, x: x, y: y) else { return nil }
+        return Self.fineIndices(fromClasses: classes, alt: palette.altEncoding, elev: elev)
+    }
+
+    /// Tuile A (indice de classe de `alt.classM` mètres) réécrite en indices de tranche de la
+    /// couche E : chaque pixel prend la tranche qui contient le centre de sa classe (classe 450 m,
+    /// pas de 20 m → tranche 22, dont le milieu est 450 m). Inconnu (alpha 0 ou nodata) → nodata.
+    nonisolated static func fineIndices(
+        fromClasses png: DecodedPNG, alt: Palette.AltEncoding, elev: Palette.ElevEncoding
+    ) -> DecodedPNG {
+        let c = png.channels
+        guard c >= 1, elev.stepM > 0 else { return png }
+        let count = png.data.count / c
+        let hasAlpha = c == 2 || c == 4
+        let limit = min(elev.nodata - 1, 254)
+        var data = [UInt8](repeating: 0, count: count * 2)
+        for i in 0..<count {
+            let k = Int(png.data[i * c])
+            if (hasAlpha && png.data[i * c + c - 1] == 0) || k == alt.nodata {
+                data[i * 2] = UInt8(clamping: elev.nodata)
+                data[i * 2 + 1] = 0
+            } else {
+                let index = Int(((Double(k) + 0.5) * alt.classM / elev.stepM).rounded(.down))
+                data[i * 2] = UInt8(clamping: min(index, limit))
+                data[i * 2 + 1] = 255
+            }
+        }
+        return DecodedPNG(width: png.width, height: png.height, channels: 2, data: data)
     }
 
     private func tile(reader: PMTilesReader, key: Key, useDisk: Bool) async throws -> DecodedPNG? {

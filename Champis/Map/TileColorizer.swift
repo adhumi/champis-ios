@@ -137,24 +137,25 @@ nonisolated struct TileColorizer: Sendable {
         return Double(v) / palette.tileEncoding.scale
     }
 
-    /// Indice de classe d'altitude du pixel `i` de la couche A ; `nil` si inconnu (alpha 0 ou nodata).
+    /// Indice d'altitude du pixel `i` de la tuile d'altitude ; `nil` si inconnu (alpha 0 ou nodata).
+    /// Indice de classe de 300 m (couche A) ou, quand la palette porte l'encodage de la couche E,
+    /// indice de tranche de 20 m (`TileStore` convertit alors les tuiles A).
     func altitudeClass(_ png: DecodedPNG, at i: Int) -> Int? {
         let c = png.channels
         if (c == 2 || c == 4) && png.data[i * c + c - 1] == 0 { return nil }
         let k = Int(png.data[i * c])
-        return k == palette.altEncoding.nodata ? nil : k
+        return k == (palette.elevEncoding?.nodata ?? palette.altEncoding.nodata) ? nil : k
     }
 
     /// `M_eff × Φ` pour une cellule, une espèce, un jour et l'indice de classe du pixel ; `nil` si
     /// l'API ne l'a pas (classe absente, jour hors des 11, espèce non demandée).
     func factor(cell: WeatherField.Cell, species: String, date: String, classIndex k: Int?) -> Double? {
-        guard let alt = cell.altKey(classIndex: k, encoding: palette.altEncoding) else { return nil }
-        return cell.factor(species: species, date: date, altKey: alt.key)
+        cell.factor(species: species, date: date, index: k, palette: palette)
     }
 
-    /// Classes d'altitude mémoïsées par cellule (0 ≤ k < 32 couvre les 4 800 m de la France) ; une
-    /// classe au-delà est calculée sans mémo.
-    static let memoClasses = 32
+    /// Indices d'altitude mémoïsés par cellule : tout l'octet, pour couvrir les 254 tranches de
+    /// 20 m de la couche E comme les classes de 300 m de la couche A.
+    static let memoClasses = 256
 
     /// Échantillon d'interpolation de chaque bloc de la tuile, pris au centre du bloc : un calcul
     /// par bloc, partagé par toutes les espèces de la couche.
