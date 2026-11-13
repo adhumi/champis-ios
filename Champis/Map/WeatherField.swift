@@ -13,8 +13,10 @@ nonisolated struct WeatherFactor: Hashable, Sendable {
 /// Météo reçue de `GET /weather/bbox` (11 jours, emprise bornée) et de `GET /weather/field` (un
 /// jour, sans plafond), fusionnée emprise après emprise et jour après jour : par cellule, par
 /// espèce, par jour et par classe d'altitude. Valeur pure et `Sendable`, lue par le coloriste hors
-/// du MainActor. Même logique que la carte web (`weatherRow`, `altCenter`, `nearestCell`), avec un
-/// index spatial (`CellIndex`) pour la cellule la plus proche.
+/// du MainActor. Même logique que la carte web (`field.js`) : la météo d'un point est interpolée
+/// entre les centres des cellules qui l'encadrent (`sample`, spec › Scoring › Interpolation de la
+/// météo entre cellules, 13 nov. 2026) ; hors grille, un index spatial (`CellIndex`) donne la
+/// cellule la plus proche.
 nonisolated struct WeatherField: Sendable {
     nonisolated struct Cell: Sendable {
         let info: WeatherCellInfo
@@ -69,8 +71,49 @@ nonisolated struct WeatherField: Sendable {
         }
     }
 
+    /// Ce qu'il faut pour interpoler la météo en un point : la cellule qui porte le point, les
+    /// cellules chargées des quatre coins (SO, SE, NO, NE ; `nil` si absente) et leurs poids
+    /// bilinéaires. Hors grille, `corners` est vide : la cellule la plus proche, sans interpolation.
+    nonisolated struct Sample: Sendable {
+        let home: Cell
+        let corners: [Cell?]
+        let weights: [Double]
+
+        /// Au moins une autre cellule que `home` participe à la valeur.
+        var isInterpolated: Bool {
+            corners.contains { $0 != nil && $0?.info.id != home.info.id }
+        }
+
+        /// Valeur interpolée : moyenne des coins qui en ont une, poids renormalisés ; `nil` si la
+        /// cellule qui porte le point n'en a pas (jamais la météo de la voisine).
+        func value(_ get: (Cell) -> Double?) -> Double? {
+            guard let base = get(home) else { return nil }
+            var num = 0.0
+            var den = 0.0
+            for (cell, weight) in zip(corners, weights) {
+                guard let cell, let v = get(cell) else { continue }
+                num += weight * v
+                den += weight
+            }
+            return den > 0 ? num / den : base
+        }
+
+        /// `M_eff × Φ` interpolé pour une espèce, un jour et l'indice de classe d'altitude du
+        /// pixel : chaque cellule donne sa valeur pour sa classe la plus proche.
+        func factor(species: String, date: String, classIndex k: Int?, encoding: Palette.AltEncoding) -> Double? {
+            value { cell in
+                guard let alt = cell.altKey(classIndex: k, encoding: encoding) else { return nil }
+                return cell.factor(species: species, date: date, altKey: alt.key)
+            }
+        }
+    }
+
     private(set) var today: String?
     private(set) var cells: [String: Cell] = [:]
+    /// Grille Lambert-93 de 5 km : indices → identifiant de la cellule chargée.
+    private(set) var grid: [CellInterpolation.GridIndex: String] = [:]
+    /// Cellules de la grille que l'API a listées sans météo : leurs pixels restent transparents.
+    private(set) var unavailableGrid: Set<CellInterpolation.GridIndex> = []
     /// Cellules sans météo listées par `/weather/bbox` ; `/weather/field` ne donne qu'un nombre.
     private(set) var unavailable: Set<String> = []
     private(set) var retryAfter: Int?
@@ -145,6 +188,38 @@ nonisolated struct WeatherField: Sendable {
 
     private mutating func rebuildIndex() {
         index = CellIndex(cells.values.map { CellIndex.Entry(id: $0.info.id, lat: $0.info.lat, lon: $0.info.lon) })
+        var grid: [CellInterpolation.GridIndex: String] = [:]
+        grid.reserveCapacity(cells.count)
+        for id in cells.keys {
+            if let g = CellInterpolation.GridIndex(id: id) {
+                grid[g] = id
+            }
+        }
+        self.grid = grid
+        unavailableGrid = Set(
+            unavailable.compactMap { CellInterpolation.GridIndex(id: $0) }.filter { grid[$0] == nil }
+        )
+    }
+
+    /// Cellule chargée aux indices `g` de la grille.
+    func cell(at g: CellInterpolation.GridIndex) -> Cell? {
+        grid[g].flatMap { cells[$0] }
+    }
+
+    /// L'API a listé cette cellule sans météo (et aucune réponse ne l'a donnée depuis).
+    func isUnavailable(_ g: CellInterpolation.GridIndex) -> Bool {
+        unavailableGrid.contains(g)
+    }
+
+    /// Échantillon d'interpolation d'un point ; `nil` sans météo (cellule listée sans météo, ou
+    /// hors grille à plus de 7,5 km de toute cellule).
+    func sample(lat: Double, lon: Double) -> Sample? {
+        let c = CellInterpolation.corners(lat: lat, lon: lon)
+        if let home = cell(at: c.containing) {
+            return Sample(home: home, corners: c.cells.map { cell(at: $0) }, weights: c.weights)
+        }
+        if isUnavailable(c.containing) { return nil }
+        return nearestCell(lat: lat, lon: lon).map { Sample(home: $0, corners: [], weights: []) }
     }
 
     /// Cellule la plus proche à moins de `CellIndex.maxDistanceKm` (7,5 km) ; `nil` au-delà ou

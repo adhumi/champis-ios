@@ -43,12 +43,15 @@ nonisolated struct RGBA: Hashable, Sendable {
 /// dessiné à l'opacité 1. Sans `scale` (API ancienne), couleur de la classe du pixel.
 ///
 /// - Mode terrain : valeur = max sur les espèces de la couche de `T`.
-/// - Mode score : valeur = max sur les espèces de `T × M_eff × Φ`, avec `M_eff × Φ` de la cellule
-///   météo la plus proche (par bloc de 16 × 16 px, une cellule fait 5 km, à moins de 7,5 km) et de
-///   la classe d'altitude lue par pixel dans la couche A (repli : altitude médiane de la cellule).
-///   `/weather/bbox` et `/weather/field` alimentent le même `WeatherField`.
-/// - Pixel hors forêt, nodata, sans cellule à moins de 7,5 km ou sans ligne météo : transparent.
-///   Jamais un 0,5 inventé, jamais la météo de la cellule voisine.
+/// - Mode score : valeur = max sur les espèces de `T × M_eff × Φ`, avec `M_eff × Φ` interpolé en
+///   bilinéaire entre les centres des cellules météo qui encadrent le pixel (spec › Scoring ›
+///   Interpolation de la météo entre cellules, 13 nov. 2026 ; poids calculés par bloc de pixels,
+///   `blockSize`), chaque cellule pour la classe d'altitude lue par pixel dans la couche A (repli :
+///   altitude médiane de la cellule). `/weather/bbox` et `/weather/field` alimentent le même
+///   `WeatherField`.
+/// - Pixel hors forêt, nodata, ou dont la cellule n'a pas de météo ni de ligne pour ce jour :
+///   transparent, jamais un 0,5 inventé, jamais la seule météo de la voisine. Hors grille, cellule
+///   la plus proche à moins de 7,5 km, sans interpolation.
 nonisolated struct TileColorizer: Sendable {
     nonisolated struct SpeciesTile: Sendable {
         let species: String
@@ -70,7 +73,32 @@ nonisolated struct TileColorizer: Sendable {
     }
 
     static let size = TileMath.tileSize
-    static let weatherBlock = 16
+    /// Bloc de pixels qui partage les mêmes poids d'interpolation : 16 px à partir du zoom 12
+    /// (≈ 430 m à 47° N, un douzième de cellule : le dégradé entre deux centres ne fait pas de
+    /// marche visible), moitié moins à chaque niveau en dessous, jamais moins de 2 px. Même règle
+    /// que la carte web (`Field.blockPx`).
+    static let maxBlock = 16
+    static let fullBlockZoom = 12
+
+    static func blockSize(z: Int) -> Int {
+        if z >= fullBlockZoom { return maxBlock }
+        return max(2, maxBlock >> (fullBlockZoom - z))
+    }
+
+    /// Échantillons d'interpolation d'une tuile, un par bloc (ligne par ligne) : les cellules
+    /// météo qui y participent, rangées une fois dans `cells`, et pour chaque bloc l'indice de la
+    /// cellule qui le porte (`home`, −1 sans météo), les indices de ses quatre coins (−1 si la
+    /// cellule n'est pas chargée) et leurs poids bilinéaires.
+    nonisolated struct BlockSamples: Sendable {
+        let block: Int
+        let blocks: Int
+        let cells: [WeatherField.Cell]
+        let home: [Int]
+        let corners: [Int]
+        let weights: [Double]
+
+        static let empty = BlockSamples(block: TileColorizer.maxBlock, blocks: 0, cells: [], home: [], corners: [], weights: [])
+    }
 
     let palette: Palette
     private let thresholds: [(min: Double, color: RGBA)]
@@ -118,34 +146,75 @@ nonisolated struct TileColorizer: Sendable {
     }
 
     /// `M_eff × Φ` pour une cellule, une espèce, un jour et l'indice de classe du pixel ; `nil` si
-    /// l'API ne l'a pas (classe absente, jour hors des 11, espèce non demandée). Jamais la cellule
-    /// voisine : une cellule sans donnée laisse ses pixels transparents.
+    /// l'API ne l'a pas (classe absente, jour hors des 11, espèce non demandée).
     func factor(cell: WeatherField.Cell, species: String, date: String, classIndex k: Int?) -> Double? {
         guard let alt = cell.altKey(classIndex: k, encoding: palette.altEncoding) else { return nil }
         return cell.factor(species: species, date: date, altKey: alt.key)
     }
 
-    /// Classes d'altitude mémoïsées par bloc (0 ≤ k < 32 couvre les 4 800 m de la France) ; une
+    /// Classes d'altitude mémoïsées par cellule (0 ≤ k < 32 couvre les 4 800 m de la France) ; une
     /// classe au-delà est calculée sans mémo.
     static let memoClasses = 32
 
-    /// Cellule météo de chaque bloc de 16 × 16 px de la tuile (centre du bloc), par l'index spatial :
-    /// 256 recherches de quelques dizaines de candidats chacune, quel que soit le nombre de cellules.
-    static func blockCells(z: Int, x: Int, y: Int, weather: WeatherField) -> [WeatherField.Cell?] {
-        let blocks = size / weatherBlock
-        var out: [WeatherField.Cell?] = []
-        out.reserveCapacity(blocks * blocks)
+    /// Échantillon d'interpolation de chaque bloc de la tuile, pris au centre du bloc : un calcul
+    /// par bloc, partagé par toutes les espèces de la couche.
+    static func blockSamples(z: Int, x: Int, y: Int, weather: WeatherField) -> BlockSamples {
+        let block = blockSize(z: z)
+        let blocks = size / block
+        var cells: [WeatherField.Cell] = []
+        var byGrid: [CellInterpolation.GridIndex: Int] = [:]
+        var byID: [String: Int] = [:]
+        var home = [Int](repeating: -1, count: blocks * blocks)
+        var corners = [Int](repeating: -1, count: blocks * blocks * 4)
+        var weights = [Double](repeating: 0, count: blocks * blocks * 4)
+
+        /// Indice dans `cells` de la cellule de la grille, −1 si elle n'est pas chargée.
+        func slot(_ g: CellInterpolation.GridIndex) -> Int {
+            if let known = byGrid[g] { return known }
+            var index = -1
+            if let cell = weather.cell(at: g) {
+                index = cells.count
+                cells.append(cell)
+                byID[cell.info.id] = index
+            }
+            byGrid[g] = index
+            return index
+        }
+
         for by in 0..<blocks {
             for bx in 0..<blocks {
                 let p = TileMath.lonLat(
                     z: z, x: x, y: y,
-                    px: (Double(bx) + 0.5) * Double(weatherBlock),
-                    py: (Double(by) + 0.5) * Double(weatherBlock)
+                    px: (Double(bx) + 0.5) * Double(block),
+                    py: (Double(by) + 0.5) * Double(block)
                 )
-                out.append(weather.nearestCell(lat: p.lat, lon: p.lon))
+                let b = by * blocks + bx
+                let c = CellInterpolation.corners(lat: p.lat, lon: p.lon)
+                let h = slot(c.containing)
+                if h >= 0 {
+                    home[b] = h
+                    for n in 0..<4 {
+                        corners[b * 4 + n] = slot(c.cells[n])
+                        weights[b * 4 + n] = c.weights[n]
+                    }
+                } else if !weather.isUnavailable(c.containing),
+                          let near = weather.nearestCell(lat: p.lat, lon: p.lon) {
+                    // hors grille : la cellule la plus proche à moins de 7,5 km, sans interpolation
+                    let index: Int
+                    if let known = byID[near.info.id] {
+                        index = known
+                    } else {
+                        index = cells.count
+                        cells.append(near)
+                        byID[near.info.id] = index
+                    }
+                    home[b] = index
+                    corners[b * 4] = index
+                    weights[b * 4] = 1
+                }
             }
         }
-        return out
+        return BlockSamples(block: block, blocks: blocks, cells: cells, home: home, corners: corners, weights: weights)
     }
 
     /// Valeur affichée de chaque pixel (`nan` = transparent).
@@ -155,17 +224,31 @@ nonisolated struct TileColorizer: Sendable {
         let useWeather = req.mode == .score
         guard !useWeather || req.date != nil else { return out }
         let date = req.date ?? ""
-        let blocks = Self.size / Self.weatherBlock
         let alt: DecodedPNG? = req.alt.flatMap { a in
             a.width == Self.size && a.height == Self.size && a.data.count >= n * a.channels ? a : nil
         }
 
-        // Cellule météo par bloc, une fois pour toutes les espèces de la couche.
-        let cellsByBlock = useWeather ? Self.blockCells(z: req.z, x: req.x, y: req.y, weather: req.weather) : []
-        // Facteur mémoïsé par (bloc, classe d'altitude) : tableau plat, pas de dictionnaire par pixel.
-        // `nan` = pas encore calculé ; −1 = pas de météo (pixel transparent).
+        // Poids d'interpolation par bloc, une fois pour toutes les espèces de la couche.
+        let samples = useWeather
+            ? Self.blockSamples(z: req.z, x: req.x, y: req.y, weather: req.weather)
+            : BlockSamples.empty
+        // Facteur d'une cellule mémoïsé par classe d'altitude : tableau plat, pas de dictionnaire
+        // par pixel. `nan` = pas encore calculé ; −1 = pas de météo.
         let memoStride = Self.memoClasses + 1
-        var memo = [Double](repeating: .nan, count: useWeather ? blocks * blocks * memoStride : 0)
+        var memo = [Double](repeating: .nan, count: samples.cells.count * memoStride)
+
+        /// `M_eff × Φ` de la cellule `ci` pour l'espèce et la classe `k` ; −1 si l'API ne l'a pas.
+        func cellFactor(_ ci: Int, species: String, classIndex k: Int?) -> Double {
+            let cell = samples.cells[ci]
+            if let k, k >= Self.memoClasses {
+                return factor(cell: cell, species: species, date: date, classIndex: k) ?? -1
+            }
+            let slot = ci * memoStride + (k.map { $0 + 1 } ?? 0)
+            if memo[slot].isNaN {
+                memo[slot] = factor(cell: cell, species: species, date: date, classIndex: k) ?? -1
+            }
+            return memo[slot]
+        }
 
         for tile in req.tiles {
             let png = tile.png
@@ -181,21 +264,25 @@ nonisolated struct TileColorizer: Sendable {
                 if useWeather {
                     let px = i % Self.size
                     let py = i / Self.size
-                    let b = (py / Self.weatherBlock) * blocks + px / Self.weatherBlock
-                    guard let cell = cellsByBlock[b] else { continue }
+                    let b = (py / samples.block) * samples.blocks + px / samples.block
+                    let h = samples.home[b]
+                    if h < 0 { continue }
                     let k = alt.flatMap { altitudeClass($0, at: i) }
-                    let f: Double
-                    if let k, k >= Self.memoClasses {
-                        f = factor(cell: cell, species: tile.species, date: date, classIndex: k) ?? -1
-                    } else {
-                        let slot = b * memoStride + (k.map { $0 + 1 } ?? 0)
-                        if memo[slot].isNaN {
-                            memo[slot] = factor(cell: cell, species: tile.species, date: date, classIndex: k) ?? -1
-                        }
-                        f = memo[slot]
+                    // la cellule qui porte le pixel doit avoir une valeur : jamais la seule voisine
+                    let base = cellFactor(h, species: tile.species, classIndex: k)
+                    if base < 0 { continue }
+                    var num = 0.0
+                    var den = 0.0
+                    for c in 0..<4 {
+                        let ci = samples.corners[b * 4 + c]
+                        if ci < 0 { continue }
+                        let f = ci == h ? base : cellFactor(ci, species: tile.species, classIndex: k)
+                        if f < 0 { continue }
+                        let w = samples.weights[b * 4 + c]
+                        num += w * f
+                        den += w
                     }
-                    if f < 0 { continue }
-                    v *= f
+                    v *= den > 0 ? num / den : base
                 }
                 if out[i].isNaN || v > out[i] {
                     out[i] = v
