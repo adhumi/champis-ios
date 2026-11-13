@@ -20,6 +20,7 @@ shared/vectors/m.json               [{ "species": "…", "series": { daily array
 shared/vectors/group.json           [{ "group": "cepes", "scores": {…}, "expected": { "score": …, "leading": "boletus_aereus" } }, …]
 shared/vectors/palette.json         [{ "score": 0.55, "expected": { "label": "bon", "hex": "…", "rgba": [99, 49, 121, 140] } }, …]
 shared/vectors/interp.json          [{ "lat": 47.12, "lon": 6.32, "values": { "c_0930_6680": 0.8, … }, "expected": { "containing": "c_0930_6680", "ids": [SO, SE, NO, NE], "weights": […], "value": 0.61 } }, …]
+shared/vectors/alt.json             [{ "index": 30, "step_m": 20.0, "values": { "450": 0.8, "750": 0.5 }, "expected": { "alt_m": 610.0, "value": 0.64 } }, …]
 ```
 
 Chaque fichier contient un champ `"generated_by": { "scoring_version": …, "species_hash": … }`. Les vecteurs couvrent au minimum : les bornes exactes du trapèze (x = min, opt_low, opt_high, max, et ±ε), les seuils de palette exacts (0,15 / 0,35 / 0,55 / 0,75) et l'alpha du pixel aux bornes et aux demi-niveaux d'arrondi (`rgba`, échelle linéaire du 6 nov. 2026), chaque facteur multiplicatif à 0 et à 1, la persistance avec un M passé dominant, le décalage altitudinal aux bornes `max_days`, `secondary_peak`, un 29 février.
@@ -40,6 +41,7 @@ Les deux suites tournent en CI ; une PR qui change le scoring Python sans régé
 - **Couleur d'un pixel** : `rgb` de `palette.scale.hex`, alpha = `floor(255 × (alpha_min + (alpha_max − alpha_min) × min(max(S, 0), 1)) + 0.5)` en double précision ; les seuils ne servent qu'aux mots.
 - Même ordre d'opérations que Python (somme pondérée, puis facteurs multiplicatifs dans l'ordre frost, water_balance, heat, memory, puis persistance, puis frost et water_balance à nouveau). Réordonner change les arrondis.
 - **Interpolation entre cellules** (`interp.json`) : Lambert-93 par la formule directe GRS80 de `champis_api/interp.py` (mêmes constantes, jamais une bibliothèque de projection), coins dans l'ordre SO, SE, NO, NE, `floor` pour les indices, somme des poids dans cet ordre ; une cellule absente de `values` n'a pas de météo, et `value` est `null` quand celle qui contient le point n'en a pas.
+- **Interpolation entre classes d'altitude** (`alt.json`) : altitude du pixel = `(index + 0,5) × step_m` (couche E), classes triées par centre, linéaire entre les deux centres qui encadrent l'altitude, valeur du premier ou du dernier au-delà ; une classe absente de `values` est ignorée, `value` est `null` si aucune n'a de valeur. Elle s'applique dans chaque cellule avant l'interpolation entre cellules.
 - Dates : jour de l'année calculé sur la date civile locale (`Europe/Paris`), `MM-DD` comparés comme chaînes ou comme (mois, jour), jamais via des timestamps.
 - Les paramètres d'espèce sont chargés depuis `/species` (JSON identique aux fichiers du dépôt) : aucun client n'embarque de valeur en dur.
 - Un client qui ne sait pas calculer un facteur (série manquante) l'affiche comme « indisponible » et n'invente pas 0,5 : c'est l'API qui applique la règle de la donnée manquante.

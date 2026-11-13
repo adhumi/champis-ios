@@ -230,4 +230,45 @@ struct WeatherFieldTests {
         let back = try Self.gridField(unavailable: ["c_0950_6670"])
         #expect(back.sample(lat: 47.1234, lon: 6.3187)?.home.info.id == "c_0950_6670")
     }
+
+    /// La palette de test avec l'encodage de la couche E (pas de 20 m), comme le référentiel
+    /// depuis le 13 nov. 2026.
+    static func finePalette() throws -> Palette {
+        let json = Fixtures.paletteJSON.replacingOccurrences(
+            of: "\"alt_encoding\"",
+            with: "\"elev_encoding\": { \"channel\": \"luminance\", \"step_m\": 20, \"nodata\": 255 }, \"alt_encoding\""
+        )
+        return try Palette.decode(Data(json.utf8))
+    }
+
+    @Test("Couche E : M_eff × Φ interpolé entre les deux classes qui encadrent l'altitude du pixel")
+    func betweenAltitudeClasses() throws {
+        let fine = try Self.finePalette()
+        #expect(fine.elevEncoding?.stepM == 20)
+        let coarse = try Palette.decode(Data(Fixtures.paletteJSON.utf8))
+        #expect(coarse.elevEncoding == nil)
+        // c_1 : classes 150 (0,5) et 450 (0,9) le 30 octobre, altitude médiane 620 m
+        let field = try Self.field()
+        let cell = try #require(field.cells["c_1"])
+        func at(_ k: Int?, _ palette: Palette) -> Double? {
+            cell.factor(species: "boletus_edulis", date: "2026-10-30", index: k, palette: palette)
+        }
+        // tranche 14 = 290 m, entre 150 et 450
+        let mid = try #require(at(14, fine))
+        #expect(abs(mid - (0.5 + (290.0 - 150.0) / 300.0 * 0.4)) < 1e-9)
+        // tranche 22 = 450 m : la valeur de la classe ; au-delà et en deçà : à plat
+        let centre = try #require(at(22, fine))
+        #expect(abs(centre - 0.9) < 1e-9)
+        let high = try #require(at(100, fine))
+        let low = try #require(at(0, fine))
+        #expect(abs(high - 0.9) < 1e-9 && abs(low - 0.5) < 1e-9)
+        // altitude inconnue : classe de l'altitude médiane de la cellule (450), avec ou sans couche E
+        let unknownFine = try #require(at(nil, fine))
+        let unknownCoarse = try #require(at(nil, coarse))
+        #expect(unknownFine == 0.9 && unknownCoarse == 0.9)
+        // sans encodage E, l'indice est une classe de 300 m : 0 → 150 m
+        let classZero = try #require(at(0, coarse))
+        #expect(classZero == 0.5)
+        #expect(at(14, fine) != nil && cell.factor(species: "boletus_edulis", date: "2026-11-02", altitude: 290) == nil)
+    }
 }

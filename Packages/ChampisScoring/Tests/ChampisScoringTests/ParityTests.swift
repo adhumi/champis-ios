@@ -101,6 +101,29 @@ private struct InterpCase: Decodable {
     let expected: Expected
 }
 
+private struct AltCase: Decodable {
+    struct Expected: Decodable {
+        let altM: Double
+        let value: Double?
+
+        enum CodingKeys: String, CodingKey {
+            case value
+            case altM = "alt_m"
+        }
+    }
+
+    let index: Int
+    let stepM: Double
+    /// Centre de classe (`"450"`) → `M_eff × Φ` ; une classe absente n'a pas de valeur.
+    let values: [String: Double]
+    let expected: Expected
+
+    enum CodingKeys: String, CodingKey {
+        case index, values, expected
+        case stepM = "step_m"
+    }
+}
+
 private struct VectorFile<Case: Decodable>: Decodable {
     let cases: [Case]
 }
@@ -242,6 +265,29 @@ struct ParityTests {
                 #expect(got == nil, "\(c.lat), \(c.lon)")
             }
         }
+    }
+
+    @Test("Interpolation entre classes d'altitude : altitude de la tranche, linéaire entre centres, à plat au-delà")
+    func betweenAltitudeClasses() throws {
+        let cases = try vectors("alt", as: AltCase.self)
+        #expect(cases.count >= 50)
+        for c in cases {
+            let altitude = CellInterpolation.elevation(index: c.index, stepM: c.stepM)
+            #expect(altitude == c.expected.altM, "indice \(c.index)")
+            let centers = c.values.keys.compactMap { Double($0) }.sorted()
+            let values = centers.map { c.values[String(Int($0))] }
+            let got = CellInterpolation.betweenClasses(altitude: altitude, centers: centers, values: values)
+            if let expected = c.expected.value {
+                let value = try #require(got, "indice \(c.index)")
+                #expect(close(value, expected), "indice \(c.index)")
+            } else {
+                #expect(got == nil, "indice \(c.index)")
+            }
+        }
+        // une classe sans valeur est ignorée : linéaire de 150 à 750
+        let skipped = CellInterpolation.betweenClasses(altitude: 450, centers: [150, 450, 750], values: [0.1, nil, 0.7])
+        let between = try #require(skipped)
+        #expect(close(between, 0.4))
     }
 
     @Test("Identifiant de cellule : coin sud-ouest en km, aller et retour")

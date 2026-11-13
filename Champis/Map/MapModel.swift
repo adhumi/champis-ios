@@ -674,10 +674,10 @@ final class MapModel {
             // les onze jours suivent la carte : interpolés quand les cellules voisines ont le jour
             // (/weather/bbox), sinon ceux de la cellule du point
             let sample = weather.sample(lat: info.latitude, lon: info.longitude)
-            let encoding = palette?.altEncoding
+            let palette = palette
             pointDays = Self.pointDays(rows: rows, altKey: altKey, terrain: scored.terrain, species: scored.species) { day in
-                guard let sample, let encoding else { return nil }
-                return sample.factor(species: scored.species, date: day, classIndex: scored.altClass, encoding: encoding)
+                guard let sample, let palette else { return nil }
+                return sample.factor(species: scored.species, date: day, index: scored.altIndex, palette: palette)
             }
             if pointFactors == nil {
                 factorsStatus = "Facteurs indisponibles pour ce jour."
@@ -827,7 +827,10 @@ final class MapModel {
         guard let scored = info.scored else { return nil }
         let target = selectedLayer.map { Self.apiTarget($0.key) } ?? scored.species
         let classM = Int(palette?.altEncoding.classM ?? 300)
-        let altClass = scored.altClass.map { $0 * classM + classM / 2 } ?? scored.altKey.flatMap { Int($0) } ?? 0
+        // l'altitude du pixel quand la couche E la donne (le backend interpole entre deux classes),
+        // sinon le centre de sa classe
+        let altClass = scored.altitudeM.map { Int($0) }
+            ?? scored.altClass.map { $0 * classM + classM / 2 } ?? scored.altKey.flatMap { Int($0) } ?? 0
         let terrains = scored.terrains.isEmpty ? [scored.species: scored.terrain] : scored.terrains
         return (target, altClass, terrains)
     }

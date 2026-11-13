@@ -106,4 +106,29 @@ public enum CellInterpolation {
         }
         return num / den
     }
+
+    // MARK: - Entre classes d'altitude
+
+    /// Altitude (m) au milieu de la tranche d'indice `index` de la couche E (pas `stepM`).
+    public static func elevation(index: Int, stepM: Double) -> Double {
+        (Double(index) + 0.5) * stepM
+    }
+
+    /// Valeur à l'altitude `altitude` d'une cellule dont `values[i]` est `M_eff × Φ` au centre
+    /// `centers[i]` (croissants) : linéaire entre les deux centres qui encadrent l'altitude, à plat
+    /// en dessous du premier et au-dessus du dernier ; une classe sans valeur (`nil`) est ignorée,
+    /// `nil` si aucune n'en a. Portage de `interp.between_classes` (champis-api), validé par
+    /// `shared/vectors/alt.json` (spec › Scoring › Interpolation entre classes d'altitude).
+    public static func betweenClasses(altitude: Double, centers: [Double], values: [Double?]) -> Double? {
+        var previous: (center: Double, value: Double)?
+        for (center, value) in zip(centers, values) {
+            guard let value else { continue }
+            if altitude <= center {
+                guard let previous else { return value }
+                return previous.value + (altitude - previous.center) / (center - previous.center) * (value - previous.value)
+            }
+            previous = (center, value)
+        }
+        return previous?.value
+    }
 }

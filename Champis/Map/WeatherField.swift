@@ -65,6 +65,32 @@ nonisolated struct WeatherField: Sendable {
             return (Self.key(forCenter: best), fallback)
         }
 
+        /// `M_eff × Φ` à l'altitude `altitude` (m) : interpolé entre les deux classes de la cellule
+        /// qui l'encadrent, à plat au-delà (`CellInterpolation.betweenClasses`) ; `nil` si aucune
+        /// classe n'a de valeur pour l'espèce et le jour.
+        func factor(species: String, date: String, altitude: Double) -> Double? {
+            guard let byAlt = factors[species]?[date] else { return nil }
+            let centers = info.altClasses.sorted()
+            return CellInterpolation.betweenClasses(
+                altitude: altitude, centers: centers, values: centers.map { byAlt[Self.key(forCenter: $0)]?.value }
+            )
+        }
+
+        /// `M_eff × Φ` pour l'indice `k` lu dans la couche d'altitude. Avec l'encodage de la couche E
+        /// dans la palette, `k` est une tranche de 20 m (les tuiles A sont converties par
+        /// `TileStore`) et la valeur est interpolée entre deux classes ; sinon `k` est un indice de
+        /// classe. Sans indice : la classe de l'altitude médiane de la cellule.
+        func factor(species: String, date: String, index k: Int?, palette: Palette) -> Double? {
+            if let elev = palette.elevEncoding, let k, k != elev.nodata {
+                return factor(
+                    species: species, date: date, altitude: CellInterpolation.elevation(index: k, stepM: elev.stepM)
+                )
+            }
+            guard let alt = altKey(classIndex: palette.elevEncoding == nil ? k : nil, encoding: palette.altEncoding)
+            else { return nil }
+            return factor(species: species, date: date, altKey: alt.key)
+        }
+
         /// `str(int(alt))` côté API : `150.0` → `"150"`.
         static func key(forCenter center: Double) -> String {
             String(Int(center))
@@ -105,6 +131,12 @@ nonisolated struct WeatherField: Sendable {
                 guard let alt = cell.altKey(classIndex: k, encoding: encoding) else { return nil }
                 return cell.factor(species: species, date: date, altKey: alt.key)
             }
+        }
+
+        /// `M_eff × Φ` interpolé entre cellules, chaque cellule à l'altitude du pixel (indice `k` de
+        /// la couche d'altitude, voir `Cell.factor(species:date:index:palette:)`).
+        func factor(species: String, date: String, index k: Int?, palette: Palette) -> Double? {
+            value { $0.factor(species: species, date: date, index: k, palette: palette) }
         }
     }
 

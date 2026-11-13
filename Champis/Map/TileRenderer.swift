@@ -69,12 +69,13 @@ nonisolated final class TileRenderer: Sendable {
         // au premier affichage, autant les lancer ensemble.
         let store = store
         let wantAlt = settings.mode == .score
+        let palette = colorizer.palette
         let (terrain, alt) = try await withThrowingTaskGroup(of: (String?, DecodedPNG?).self) { group in
             for sid in layer.members {
                 group.addTask { (sid, try await store.terrainTile(species: sid, z: z, x: x, y: y)) }
             }
             if wantAlt {
-                group.addTask { (nil, try await store.altitudeTile(z: z, x: x, y: y)) }
+                group.addTask { (nil, try await store.altitudeTile(z: z, x: x, y: y, palette: palette)) }
             }
             var terrain: [String: DecodedPNG] = [:]
             var alt: DecodedPNG?

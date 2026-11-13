@@ -283,6 +283,9 @@ struct PointSheet: View {
     }
 
     private func altitudeText(_ scored: PointInfo.Scored) -> String {
+        if let altitude = scored.altitudeM {
+            return "\(Int(altitude)) m"
+        }
         let classM = Int(model.palette?.altEncoding.classM ?? 300)
         if let k = scored.altClass {
             return "\(k * classM)–\((k + 1) * classM) m"

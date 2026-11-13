@@ -48,6 +48,11 @@
     "class_m": 300,
     "nodata": 255
   },
+  "elev_encoding": {
+    "channel": "luminance",
+    "step_m": 20,
+    "nodata": 255
+  },
   "group_tile_encoding": {
     "channels": "rgba",
     "scale": 254,

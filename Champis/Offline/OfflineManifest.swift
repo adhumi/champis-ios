@@ -3,7 +3,7 @@ import Foundation
 /// Un fichier PMTiles d'un département téléchargé (skill `offline`).
 nonisolated struct OfflineFile: Codable, Hashable, Sendable {
     let name: String
-    /// `T` (une espèce), `G` (un groupe, un canal par espèce) ou `A` (classes d'altitude).
+    /// `T` (une espèce), `G` (un groupe, un canal par espèce) `A` (classes d'altitude) ou `E` (altitude fine, à la place de `A` quand le jeu la publie).
     let kind: String
     let species: String?
     let url: String

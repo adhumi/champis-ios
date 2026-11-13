@@ -30,6 +30,7 @@ S(p, e, J) = T(p, e) × M_eff(c(p), e, J, alt(p)) × Φ(e, J, alt(p))
 9. **Groupe d'affichage** : l'UI montre `group` (cèpes, girolles) ; score du groupe = **max** des espèces du groupe, et la fiche indique quelle espèce porte le score.
 10. **Seuils d'affichage** (ne pas en inventer d'autres) : ≥ 0,75 excellent · ≥ 0,55 bon · ≥ 0,35 moyen · ≥ 0,15 faible · sinon très faible. Ils ne donnent que les **mots** (fiche, coins, notifications, graduations de la légende). La **couleur d'un pixel** est une échelle linéaire (6 nov. 2026) : un seul violet `scale.hex` dont l'alpha est le score, `alpha = floor(255 × (alpha_min + (alpha_max − alpha_min) × S) + 0,5)`, `S` borné à [0, 1] ; l'overlay est dessiné à l'opacité 1. Le `hex` d'un seuil est la couleur de pastille de sa classe (violet au milieu de la classe sur blanc), jamais celle d'un pixel. Tout vient de `shared/palette.json`.
 11. **Météo interpolée entre cellules** (13 nov. 2026) : la valeur d'une cellule est celle de son centre ; pour la carte, la fiche au toucher et les coins, `f = M_eff × Φ` est interpolé en bilinéaire entre les centres des quatre cellules qui encadrent le point (grille Lambert-93 de 5 km), par espèce, jour et classe d'altitude, avant `S = T × f` et le max du groupe. Poids renormalisés sur les coins qui ont une valeur ; la cellule qui contient le point doit en avoir une, sinon pas de météo (transparent). On n'interpole jamais les entrées météo, ni `T`. Les facteurs « pourquoi » et l'indice par département restent par cellule.
+12. **Météo interpolée entre classes d'altitude** (13 nov. 2026) : la température corrigée et le décalage de saison sont calculés au centre des classes de 300 m ; pour éviter la marche le long des courbes 600, 900, 1 200 m, `f = M_eff × Φ` d'une cellule est interpolé linéairement entre ses deux centres de classe qui encadrent l'altitude du pixel, à plat au-delà du premier et du dernier, **avant** l'interpolation entre cellules. L'altitude du pixel vient de la couche `E` (`E-20m-…pmtiles`, gris = indice de la tranche de 20 m, milieu de tranche, `palette.json › elev_encoding`) ; sans elle, le centre de la classe lue dans `A`, et le résultat est celui d'avant. L'API sert toujours `f` par classe de 300 m.
 
 ## Où vit quoi
 
@@ -39,7 +40,7 @@ Depuis le découpage des dépôts (6 nov. 2026), le code de référence est dans
 | --- | --- | --- |
 | trapèze, `T` | champis-api : `pipeline/champis_pipeline/scoring.py` | — (jamais ailleurs) |
 | `M`, `Φ`, `M_eff`, groupes | champis-api : `api/champis_api/scoring.py` (importe le trapèze du pipeline) | `champis-ios/Packages/ChampisScoring` — validé par les vecteurs de test (skill `scoring-parity`) ; le site prend les valeurs de l'API, sans portage |
-| interpolation entre cellules | champis-api : `api/champis_api/interp.py` | `ChampisScoring` (Swift) et `field.js` du site (JavaScript), validés par `shared/vectors/interp.json` |
+| interpolation entre cellules et entre classes d'altitude | champis-api : `api/champis_api/interp.py` | `ChampisScoring` (Swift) et `field.js` du site (JavaScript), validés par `shared/vectors/interp.json` et `alt.json` |
 | seuils, palette | `shared/palette.json` | chargé tel quel par tous les clients |
 
 ## Vocabulaire

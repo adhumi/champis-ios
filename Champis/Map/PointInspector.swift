@@ -31,6 +31,11 @@ nonisolated struct PointInfo: Identifiable, Sendable {
         let altFallback: Bool
         /// `T` du pixel pour chaque espèce de la couche (pour un coin : le backend n'a que la météo).
         var terrains: [String: Double] = [:]
+        /// Indice lu dans la tuile d'altitude, tel que le coloriste l'emploie : classe de 300 m, ou
+        /// tranche de 20 m quand la palette porte l'encodage de la couche E.
+        var altIndex: Int? = nil
+        /// Altitude du pixel (m) lue dans la couche E ; `nil` avec la seule couche A.
+        var altitudeM: Double? = nil
         /// `factor` mêle la météo de cellules voisines (spec › Scoring › Interpolation, 13 nov. 2026).
         var interpolated = false
     }
@@ -83,10 +88,20 @@ nonisolated enum PointInspector {
         let t = TileMath.tile(lon: longitude, lat: latitude, z: zoom)
         let i = t.py * size + t.px
 
-        var altClass: Int?
-        if let alt = try await store.altitudeTile(z: zoom, x: t.x, y: t.y),
+        // Indice tel que le coloriste le lit ; avec la couche E, c'est une tranche de 20 m dont on
+        // tire l'altitude du pixel et sa classe de 300 m (pour la fiche et la ligne météo).
+        let palette = colorizer.palette
+        var altIndex: Int?
+        if let alt = try await store.altitudeTile(z: zoom, x: t.x, y: t.y, palette: palette),
            alt.width == size, alt.height == size, alt.data.count >= size * size * alt.channels {
-            altClass = colorizer.altitudeClass(alt, at: i)
+            altIndex = colorizer.altitudeClass(alt, at: i)
+        }
+        var altClass = altIndex
+        var altitudeM: Double?
+        if let elev = palette.elevEncoding, let k = altIndex {
+            let altitude = CellInterpolation.elevation(index: k, stepM: elev.stepM)
+            altitudeM = altitude
+            altClass = Int((altitude / palette.altEncoding.classM).rounded(.down))
         }
         let useWeather = settings.mode == .score
         // Même météo que la couleur de la carte : interpolée entre les centres des cellules voisines.
@@ -109,10 +124,9 @@ nonisolated enum PointInspector {
             if useWeather {
                 // `factor` vient de `/weather/bbox` ou du champ compact `/weather/field` (sous le zoom 9) ;
                 // la ligne complète n'existe que pour le premier, la fiche charge le reste par `GET /weather`.
-                let encoding = colorizer.palette.altEncoding
                 guard let sample, let date = settings.date,
-                      let alt = sample.home.altKey(classIndex: altClass, encoding: encoding),
-                      let factor = sample.factor(species: sid, date: date, classIndex: altClass, encoding: encoding)
+                      let alt = sample.home.altKey(classIndex: altClass, encoding: palette.altEncoding),
+                      let factor = sample.factor(species: sid, date: date, index: altIndex, palette: palette)
                 else { continue }
                 let cell = sample.home
                 candidate = PointInfo.Scored(
@@ -121,6 +135,8 @@ nonisolated enum PointInspector {
                     cell: cell.info, stale: cell.stale, altClass: altClass, altKey: alt.key, altFallback: alt.fallback
                 )
                 candidate.interpolated = sample.isInterpolated
+                candidate.altIndex = altIndex
+                candidate.altitudeM = altitudeM
             }
             if let current = best, candidate.value <= current.value { continue }
             best = candidate
