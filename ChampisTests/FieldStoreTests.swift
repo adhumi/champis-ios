@@ -78,6 +78,46 @@ struct FieldStoreTests {
         #expect(await again.coins.isEmpty)
     }
 
+    @Test("Fichiers privés : protection complète ; un fichier illisible n'est jamais remplacé par une liste vide")
+    func protectionAndUnreadableFile() async throws {
+        #expect(LocalStore.writingOptions.contains(.completeFileProtection))
+        #expect(LocalStore.writingOptions.contains(.atomic))
+
+        // illisible (ici un dossier à la place du fichier, comme un fichier protégé appareil verrouillé) :
+        // rien n'est chargé, rien n'est écrit
+        let directory = Self.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let blocked = directory.appending(path: "coins.json", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: blocked, withIntermediateDirectories: true)
+        let store = LocalStore(directory: directory)
+        await #expect(throws: (any Error).self) { try await store.load() }
+        let coin = Coin(name: "Col", lat: 47.0, lon: 6.0, target: "cepes", altClass: 750, t: ["boletus_edulis": 0.8])
+        await #expect(throws: (any Error).self) { try await store.setCoins([coin]) }
+        let observation = FieldObservation(species: "boletus_edulis", lat: 47.0, lon: 6.0, date: "2026-11-13", found: false, quantity: nil)
+        await #expect(throws: (any Error).self) { try await store.add(observation) }
+        var isDirectory: ObjCBool = false
+        #expect(FileManager.default.fileExists(atPath: blocked.path(percentEncoded: false), isDirectory: &isDirectory) && isDirectory.boolValue)
+        #expect(!FileManager.default.fileExists(atPath: directory.appending(path: "observations.json").path(percentEncoded: false)))
+        // redevenu lisible : la lecture est retentée d'elle-même
+        try FileManager.default.removeItem(at: blocked)
+        try await store.setCoins([coin])
+        #expect(await store.coins == [coin])
+
+        // lu mais indéchiffrable : l'erreur est dite une fois, puis le magasin repart d'une liste vide
+        let other = Self.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: other) }
+        try FileManager.default.createDirectory(at: other, withIntermediateDirectories: true)
+        try Data("pas du JSON".utf8).write(to: other.appending(path: "coins.json"))
+        let corrupt = LocalStore(directory: other)
+        await #expect(throws: DecodingError.self) { try await corrupt.load() }
+        try await corrupt.load()
+        #expect(await corrupt.coins.isEmpty)
+        try await corrupt.setCoins([coin])
+        let reread = LocalStore(directory: other)
+        try await reread.load()
+        #expect(await reread.coins == [coin])
+    }
+
     @Test("Forme de l'API : clés snake_case, jeton absent quand nil, réponses décodées")
     func wireFormat() throws {
         let encoder = JSONEncoder()
