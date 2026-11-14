@@ -108,6 +108,26 @@ struct DiskTileCacheTests {
         // autre taille
         #expect(throws: TileFileChanged.self) { try version.observe(etag: nil, total: 5000) }
 
+        // validateur faible ou fort : le même contenu
+        let weak = RemoteFileVersion(known: DiskTileCache.Stamp(bytes: 10, etag: "\"v1\""))
+        try weak.observe(etag: "W/\"v1\"", total: 10)
+
+        // ETag qui varie d'une réponse à l'autre : après trois changements, seule la taille compte
+        let flapping = RemoteFileVersion(known: nil)
+        var refused = 0
+        for tag in ["a", "b", "c", "d", "e", "f"] {
+            do {
+                try flapping.observe(etag: tag, total: 10)
+            } catch {
+                refused += 1
+                #expect(flapping.takeChanged())
+            }
+        }
+        #expect(refused == RemoteFileVersion.maxFlips)
+        try flapping.observe(etag: "g", total: 10)
+        try flapping.observe(etag: "h", total: 10)
+        #expect(throws: TileFileChanged.self) { try flapping.observe(etag: "h", total: 11) }
+
         // rien de connu d'avance : la première réponse fait foi ; un serveur muet ne bloque rien
         let unknown = RemoteFileVersion(known: nil)
         try unknown.observe(etag: nil, total: nil)

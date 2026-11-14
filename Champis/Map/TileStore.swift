@@ -48,7 +48,14 @@ nonisolated final class RemoteFileVersion: Sendable {
     private struct State {
         var known: DiskTileCache.Stamp?
         var changed = false
+        /// Changements de version vus pendant la session.
+        var flips = 0
     }
+
+    /// Au-delà de ce nombre de changements dans une session, l'ETag n'est plus comparé, seule la
+    /// taille l'est : un serveur dont l'ETag varierait d'une réponse à l'autre pour le même
+    /// fichier ne doit pas faire relire la carte sans fin.
+    static let maxFlips = 3
 
     private let state: Mutex<State>
 
@@ -65,14 +72,17 @@ nonisolated final class RemoteFileVersion: Sendable {
 
     /// Appelé à chaque réponse Range (`RemoteRangeSource.onResponse`).
     func observe(etag: String?, total: Int64?) throws {
-        let seen = DiskTileCache.Stamp(bytes: total, etag: etag)
         let same = state.withLock { state -> Bool in
+            // un validateur faible (`W/"…"`) désigne le même contenu que le fort
+            let tag = etag.map { $0.hasPrefix("W/") ? String($0.dropFirst(2)) : $0 }
+            let seen = DiskTileCache.Stamp(bytes: total, etag: state.flips < Self.maxFlips ? tag : nil)
             guard let known = state.known else {
                 state.known = seen
                 return true
             }
             guard known.matches(seen) else {
                 state.changed = true
+                state.flips += 1
                 return false
             }
             state.known = known.merged(with: seen)
@@ -285,9 +295,9 @@ actor TileStore {
         let kept = disk?.validate(file: entry.name, against: expected)
         let version = RemoteFileVersion(known: kept?.merged(with: expected) ?? expected)
         versions[entry.name] = version
-        let source = RemoteRangeSource(url: url, session: session) { etag, total in
+        let source = RemoteRangeSource(url: url, session: session, onResponse: { etag, total in
             try version.observe(etag: etag, total: total)
-        }
+        })
         return PMTilesReader(source: source)
     }
 
