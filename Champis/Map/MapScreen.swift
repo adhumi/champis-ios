@@ -37,6 +37,8 @@ struct MapScreen: View {
     var layout: Layout = .compact
     @State private var showLegend = false
     @State private var quickFound: MapSelection?
+    /// Le réglage de l'adresse de l'API, pour y revenir depuis le bandeau de lecture seule.
+    @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
 
     var body: some View {
         NavigationStack {
@@ -61,10 +63,16 @@ struct MapScreen: View {
                     if model.hasNotice {
                         notices
                     }
+                    if let host = model.customAPIHost {
+                        ReadOnlyBanner(host: host) { apiBaseURL = MapScreen.defaultAPIBaseURL }
+                            .padding(12)
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    }
                 }
                 .padding(12)
                 .animation(.default, value: model.field.undoable.isEmpty)
                 .animation(.default, value: model.hasNotice)
+                .animation(.default, value: model.customAPIHost)
             }
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -289,12 +297,39 @@ struct MapScreen: View {
         Binding(get: { layout == .compact ? model.pointInfo : nil }, set: { if $0 == nil { model.clearSelection() } })
     }
 
+    /// Adresse de l'API d'après le réglage : https exigé (`ChampisAPI.isAcceptable`), sinon
+    /// l'adresse officielle. Une autre adresse que l'officielle met l'app en lecture seule.
     static func url(from text: String) -> URL {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !legacyAPIBaseURLs.contains(trimmed), let url = URL(string: trimmed), url.scheme != nil, url.host() != nil {
+        if !legacyAPIBaseURLs.contains(trimmed), let url = URL(string: trimmed), ChampisAPI.isAcceptable(url) {
             return url
         }
         return URL(string: defaultAPIBaseURL)!
+    }
+}
+
+/// Bandeau permanent quand l'adresse de l'API n'est pas l'officielle (décision du 13 nov. 2026) :
+/// l'app lit seulement, sans identifiant ; observations et coins restent sur l'appareil. Sur la
+/// carte et dans les réglages, avec le bouton qui revient à l'adresse officielle.
+struct ReadOnlyBanner: View {
+    let host: String
+    let reset: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label {
+                Text("Lecture seule : l'app lit \(host), pas l'API officielle. Observations et coins restent sur l'appareil, rien n'est envoyé.")
+            } icon: {
+                Image(systemName: "lock.shield")
+                    .foregroundStyle(.orange)
+            }
+            .font(.footnote)
+            Button("Revenir à l'adresse officielle", action: reset)
+                .font(.footnote.weight(.semibold))
+                .buttonStyle(.borderless)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
     }
 }
 

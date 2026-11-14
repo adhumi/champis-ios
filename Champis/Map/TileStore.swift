@@ -1,6 +1,7 @@
 import ChampisPMTiles
 import ChampisScoring
 import Foundation
+import Synchronization
 
 /// Tuile d'un PMTiles par groupe (`G-<groupe>-…`, spec › Points ouverts › Les clients lisent les
 /// PMTiles par groupe, 5 nov. 2026) : un canal par espèce, dans l'ordre de `species` du manifeste.
@@ -33,6 +34,72 @@ nonisolated enum GroupTile {
             }
         }
         return DecodedPNG(width: png.width, height: png.height, channels: 2, data: out)
+    }
+}
+
+/// Le fichier distant a changé pendant la session (jeu republié sous le même nom) : la lecture en
+/// cours échoue, `TileStore` oublie ce qu'il avait lu de l'ancienne version.
+nonisolated struct TileFileChanged: Error, Equatable {}
+
+/// Version d'un fichier PMTiles distant vue par cette session (taille totale et ETag des réponses
+/// Range) : une réponse d'une autre version que celle déjà lue (ou que celle du cache disque) est
+/// refusée, pour ne jamais mélanger deux versions d'un fichier.
+nonisolated final class RemoteFileVersion: Sendable {
+    private nonisolated struct State {
+        var known: DiskTileCache.Stamp?
+        var changed = false
+        /// Changements de version vus pendant la session.
+        var flips = 0
+    }
+
+    /// Au-delà de ce nombre de changements dans une session, l'ETag n'est plus comparé, seule la
+    /// taille l'est : un serveur dont l'ETag varierait d'une réponse à l'autre pour le même
+    /// fichier ne doit pas faire relire la carte sans fin.
+    static let maxFlips = 3
+
+    private let state: Mutex<State>
+
+    /// `known` : ce qu'on sait avant la première réponse (tampon du cache disque, sinon `bytes`
+    /// du manifeste).
+    init(known: DiskTileCache.Stamp?) {
+        state = Mutex(State(known: known))
+    }
+
+    /// Version connue, pour tamponner le cache disque.
+    var stamp: DiskTileCache.Stamp? {
+        state.withLock { $0.known }
+    }
+
+    /// Appelé à chaque réponse Range (`RemoteRangeSource.onResponse`).
+    func observe(etag: String?, total: Int64?) throws {
+        let same = state.withLock { state -> Bool in
+            // un validateur faible (`W/"…"`) désigne le même contenu que le fort
+            let tag = etag.map { $0.hasPrefix("W/") ? String($0.dropFirst(2)) : $0 }
+            let seen = DiskTileCache.Stamp(bytes: total, etag: state.flips < RemoteFileVersion.maxFlips ? tag : nil)
+            guard let known = state.known else {
+                state.known = seen
+                return true
+            }
+            guard known.matches(seen) else {
+                state.changed = true
+                state.flips += 1
+                return false
+            }
+            state.known = known.merged(with: seen)
+            return true
+        }
+        if !same { throw TileFileChanged() }
+    }
+
+    /// Vrai une seule fois après un changement ; la version connue est oubliée, la prochaine
+    /// réponse fait foi.
+    func takeChanged() -> Bool {
+        state.withLock { state in
+            guard state.changed else { return false }
+            state.changed = false
+            state.known = nil
+            return true
+        }
     }
 }
 
@@ -87,6 +154,10 @@ actor TileStore {
     /// Lectures en cours : une tuile demandée deux fois en même temps (plusieurs rendus, fiche au
     /// toucher) ne part qu'une fois sur le réseau.
     private var inflight: [Key: Task<DecodedPNG?, any Error>] = [:]
+    /// Version vue de chaque fichier distant, par nom (cache disque périmé, 13 nov. 2026).
+    private var versions: [String: RemoteFileVersion] = [:]
+    /// Incrémenté quand un fichier distant change : une lecture commencée avant n'est pas gardée.
+    private var generations: [String: Int] = [:]
     private let capacity: Int
     private let session: URLSession
     private let disk: DiskTileCache?
@@ -178,18 +249,19 @@ actor TileStore {
         tileEncoding = palette.tileEncoding
         cache = [:]
         order = []
+        versions = [:]
         let chosen = Self.chooseEntries(manifest.tiles, scoringVersion: scoringVersion)
         if let entry = chosen.alt, let url = api.tileURL(entry) {
-            altReader = PMTilesReader(source: RemoteRangeSource(url: url, session: session))
+            altReader = remoteReader(entry, url: url)
             altName = entry.name
         }
         if let entry = chosen.elev, let url = api.tileURL(entry) {
-            elevReader = PMTilesReader(source: RemoteRangeSource(url: url, session: session))
+            elevReader = remoteReader(entry, url: url)
             elevName = entry.name
         }
         for (sid, entry) in chosen.terrain {
             guard let url = api.tileURL(entry) else { continue }
-            terrainReaders[sid] = PMTilesReader(source: RemoteRangeSource(url: url, session: session))
+            terrainReaders[sid] = remoteReader(entry, url: url)
             terrainNames[sid] = entry.name
         }
         if let encoding = groupEncoding {
@@ -197,7 +269,7 @@ actor TileStore {
                 guard let channels = entry.channels, channels.count <= encoding.channels.count,
                       let url = api.tileURL(entry)
                 else { continue }
-                let file = GroupFile(name: entry.name, reader: PMTilesReader(source: RemoteRangeSource(url: url, session: session)), species: channels)
+                let file = GroupFile(name: entry.name, reader: remoteReader(entry, url: url), species: channels)
                 for sid in channels where groupBySpecies[sid] == nil {
                     groupBySpecies[sid] = file
                 }
@@ -212,6 +284,34 @@ actor TileStore {
             keep.insert(elevName)
         }
         _ = try? disk?.prune(keeping: keep)
+    }
+
+    /// Lecteur d'un fichier distant du manifeste. Son dossier du cache disque n'est gardé que s'il
+    /// vient de la version que le manifeste annonce (`bytes`) ; ensuite chaque réponse Range est
+    /// comparée à la version connue (taille totale, ETag), et une autre version fait échouer la
+    /// lecture (`TileFileChanged`), reprise dans `tile(reader:key:useDisk:)`.
+    private func remoteReader(_ entry: TilesManifest.Entry, url: URL) -> PMTilesReader {
+        let expected = DiskTileCache.Stamp(bytes: entry.bytes.map { Int64($0) }, etag: nil)
+        let kept = disk?.validate(file: entry.name, against: expected)
+        let version = RemoteFileVersion(known: kept?.merged(with: expected) ?? expected)
+        versions[entry.name] = version
+        let source = RemoteRangeSource(url: url, session: session, onResponse: { etag, total in
+            try version.observe(etag: etag, total: total)
+        })
+        return PMTilesReader(source: source)
+    }
+
+    /// Le fichier `name` a changé à la source : ce qui en a été lu (mémoire, disque, répertoires
+    /// du lecteur) est oublié, la prochaine lecture repart de son en-tête.
+    private func forget(name: String, reader: PMTilesReader) {
+        generations[name, default: 0] += 1
+        reader.reset()
+        try? disk?.remove(file: name)
+        let stale = Set(order.filter { $0.name == name })
+        for key in stale {
+            cache[key] = nil
+        }
+        order.removeAll { stale.contains($0) }
     }
 
     /// Octets du cache disque, pour les réglages.
@@ -246,6 +346,7 @@ actor TileStore {
         elevName = ""
         cache = [:]
         order = []
+        versions = [:]
     }
 
     /// Remplace la liste des fichiers embarqués ; chacun est lu par `LocalFileSource`.
@@ -386,23 +487,31 @@ actor TileStore {
         // parallèle au lieu d'attendre chacune leur tour.
         let disk = useDisk ? disk : nil
         let (name, z, x, y) = (key.name, key.z, key.x, key.y)
+        let version = useDisk ? versions[name] : nil
+        let generation = generations[name, default: 0]
         let task = Task.detached(priority: .userInitiated) {
-            try await Self.fetch(reader: reader, disk: disk, name: name, z: z, x: x, y: y)
+            try await Self.fetch(reader: reader, disk: disk, version: version, name: name, z: z, x: x, y: y)
         }
         inflight[key] = task
         do {
             let png = try await task.value
             inflight[key] = nil
-            remember(key, png)
+            // le fichier a changé entre-temps : cette tuile vient peut-être de l'ancienne version
+            if generations[name, default: 0] == generation {
+                remember(key, png)
+            }
             return png
         } catch {
             inflight[key] = nil
+            if version?.takeChanged() == true {
+                forget(name: name, reader: reader)
+            }
             throw error
         }
     }
 
     private nonisolated static func fetch(
-        reader: PMTilesReader, disk: DiskTileCache?, name: String, z: Int, x: Int, y: Int
+        reader: PMTilesReader, disk: DiskTileCache?, version: RemoteFileVersion?, name: String, z: Int, x: Int, y: Int
     ) async throws -> DecodedPNG? {
         let data: Data?
         switch disk?.read(file: name, z: z, x: x, y: y) ?? .miss {
@@ -412,9 +521,12 @@ actor TileStore {
             data = nil
         case .miss:
             data = try await reader.tile(z: z, x: x, y: y)
-            try? disk?.write(file: name, z: z, x: x, y: y, data: data)
+            // tamponnée par la version que le serveur vient d'annoncer : un dossier d'une autre
+            // version est effacé avant d'écrire
+            try? disk?.write(file: name, z: z, x: x, y: y, data: data, stamp: version?.stamp)
         }
-        return try data.map { try PNGDecoder.decode($0) }
+        // une tuile fait 256 × 256 : toute autre dimension est refusée dès l'en-tête du PNG
+        return try data.map { try PNGDecoder.decode($0, side: TileMath.tileSize) }
     }
 
     private func remember(_ key: Key, _ png: DecodedPNG?) {

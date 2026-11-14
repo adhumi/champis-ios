@@ -15,6 +15,10 @@ public actor LocalFileSource: TileSource {
     }
 
     public func read(offset: UInt64, length: Int) async throws -> Data {
+        guard length > 0 else {
+            if length == 0 { return Data() }
+            throw PMTilesError.truncated("fichier : longueur négative")
+        }
         try handle.seek(toOffset: offset)
         let data = try handle.read(upToCount: length) ?? Data()
         guard data.count == length else {
@@ -34,32 +38,92 @@ public struct RemoteRangeSource: TileSource {
     public let url: URL
     public let session: URLSession
     public let headers: [String: String]
+    /// Appelé à chaque réponse 206, avant la lecture du corps, avec l'`ETag` et la taille totale du
+    /// fichier (`Content-Range: bytes a-b/total`) quand le serveur les donne. L'appelant y
+    /// reconnaît un fichier republié sous le même nom ; s'il lève une erreur, la lecture échoue
+    /// avec elle, pour ne pas mélanger deux versions.
+    public let onResponse: (@Sendable (_ etag: String?, _ total: Int64?) throws -> Void)?
 
-    public init(url: URL, session: URLSession = .shared, headers: [String: String] = [:]) {
+    public init(
+        url: URL, session: URLSession = .shared, headers: [String: String] = [:],
+        onResponse: (@Sendable (_ etag: String?, _ total: Int64?) throws -> Void)? = nil
+    ) {
         self.url = url
         self.session = session
         self.headers = headers
+        self.onResponse = onResponse
     }
 
+    /// Taille totale annoncée par `Content-Range: bytes a-b/total` ; `nil` si absente ou inconnue (`*`).
+    static func totalLength(contentRange: String?) -> Int64? {
+        guard let contentRange, let slash = contentRange.lastIndex(of: "/") else { return nil }
+        return Int64(contentRange[contentRange.index(after: slash)...].trimmingCharacters(in: .whitespaces))
+    }
+
+    /// Fin de plage au-delà de laquelle une réponse 200 (serveur qui ignore `Range` et envoie le
+    /// fichier entier) est refusée au lieu d'être chargée en mémoire : un PMTiles France pèse des
+    /// gigaoctets.
+    public static let maxWholeResponseBytes = 1 << 20
+
+    /// Valeur de l'en-tête `Range` pour `length` octets à partir de `offset` ; `nil` si la plage est
+    /// vide ou dépasse 64 bits (décalage aberrant lu dans un fichier malformé).
+    static func rangeHeader(offset: UInt64, length: Int) -> String? {
+        guard length > 0 else { return nil }
+        let (last, overflow) = offset.addingReportingOverflow(UInt64(length) - 1)
+        guard !overflow else { return nil }
+        return "bytes=\(offset)-\(last)"
+    }
+
+    /// Le corps est lu au fil de l'eau : au plus `length` octets pour un 206, et un 200 n'est lu que
+    /// jusqu'à la fin de la plage, si elle tient sous `maxWholeResponseBytes`.
     public func read(offset: UInt64, length: Int) async throws -> Data {
+        if length == 0 { return Data() }
+        guard let range = Self.rangeHeader(offset: offset, length: length) else {
+            throw PMTilesError.truncated("Range : plage invalide (\(length) octets à \(offset))")
+        }
         var request = URLRequest(url: url)
-        request.setValue("bytes=\(offset)-\(offset + UInt64(length) - 1)", forHTTPHeaderField: "Range")
+        request.setValue(range, forHTTPHeaderField: "Range")
         for (k, v) in headers { request.setValue(v, forHTTPHeaderField: k) }
-        let (data, response) = try await session.data(for: request)
+        let (bytes, response) = try await session.bytes(for: request)
         guard let http = response as? HTTPURLResponse else { throw PMTilesError.rangeUnavailable(0) }
         switch http.statusCode {
         case 206:
-            guard data.count >= length else {
+            try onResponse?(
+                http.value(forHTTPHeaderField: "ETag"),
+                Self.totalLength(contentRange: http.value(forHTTPHeaderField: "Content-Range"))
+            )
+            let data = try await Self.collect(bytes, upTo: length)
+            guard data.count == length else {
                 throw PMTilesError.truncated("Range : \(data.count) octets sur \(length)")
             }
-            return data.count == length ? data : data.prefix(length)
+            return data
         case 200:
-            // Serveur sans Range : on a tout reçu, on découpe (coûteux, mais correct)
-            let start = Int(offset)
-            guard data.count >= start + length else { throw PMTilesError.truncated("Range ignoré") }
+            // Serveur sans Range : il envoie le fichier depuis son début. Acceptable quand la plage
+            // tient dans les premiers octets (petit fichier, tests), et on s'arrête à la fin de la
+            // plage ; jamais pour une plage plus loin, qui ferait charger un vrai jeu en entier.
+            guard let start = Int(exactly: offset), start <= Self.maxWholeResponseBytes - length else {
+                throw PMTilesError.rangeUnavailable(200)
+            }
+            let announced = http.expectedContentLength
+            guard announced < 0 || announced >= Int64(start + length) else {
+                throw PMTilesError.truncated("Range ignoré")
+            }
+            let data = try await Self.collect(bytes, upTo: start + length)
+            guard data.count == start + length else { throw PMTilesError.truncated("Range ignoré") }
             return data.subdata(in: start..<(start + length))
         default:
             throw PMTilesError.rangeUnavailable(http.statusCode)
         }
+    }
+
+    /// Au plus `limit` octets du corps ; la lecture s'arrête là, le reste n'est pas reçu.
+    private static func collect(_ bytes: URLSession.AsyncBytes, upTo limit: Int) async throws -> Data {
+        var buffer: [UInt8] = []
+        buffer.reserveCapacity(limit)
+        for try await byte in bytes {
+            buffer.append(byte)
+            if buffer.count >= limit { break }
+        }
+        return Data(buffer)
     }
 }

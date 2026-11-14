@@ -19,6 +19,8 @@ nonisolated final class DownloadManager: NSObject, URLSessionDownloadDelegate, S
     private struct Pending {
         let tag: String
         let destination: URL
+        /// Racine sous laquelle `destination` doit rester.
+        let root: URL
         var finished = false
     }
 
@@ -49,9 +51,11 @@ nonisolated final class DownloadManager: NSObject, URLSessionDownloadDelegate, S
     }
 
     /// Lance le téléchargement ; le fichier sera déplacé à `destination` une fois complet.
-    func download(_ url: URL, to destination: URL, tag: String) {
+    /// `root` : le dossier du hors ligne ; une destination qui n'est pas dessous n'est ni écrite ni
+    /// remplacée (le nom vient du manifeste du serveur, audit du 13 nov. 2026).
+    func download(_ url: URL, to destination: URL, within root: URL, tag: String) {
         let task = session.downloadTask(with: url)
-        state.withLock { $0.tasks[task.taskIdentifier] = Pending(tag: tag, destination: destination) }
+        state.withLock { $0.tasks[task.taskIdentifier] = Pending(tag: tag, destination: destination, root: root) }
         task.resume()
     }
 
@@ -75,6 +79,7 @@ nonisolated final class DownloadManager: NSObject, URLSessionDownloadDelegate, S
         }
         do {
             let manager = FileManager.default
+            _ = try SafePath.checked(pending.destination, in: pending.root)
             try manager.createDirectory(at: pending.destination.deletingLastPathComponent(), withIntermediateDirectories: true)
             if manager.fileExists(atPath: pending.destination.path(percentEncoded: false)) {
                 try manager.removeItem(at: pending.destination)

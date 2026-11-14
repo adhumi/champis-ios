@@ -6,6 +6,11 @@ import UserNotifications
 /// l'appareil puis envoyées par lots à `POST /observations` (idempotent par `id`), coins
 /// synchronisés en liste complète par `PUT /coins`. Pas de rafraîchissement en arrière-plan : les
 /// notifications sont calculées et envoyées par le backend.
+///
+/// Fusion au démarrage (décision du 13 nov. 2026) : `PUT /coins` remplace la liste du serveur,
+/// donc l'app lit d'abord `GET /coins` et `GET /observations` et fusionne avec l'appareil
+/// (`CoinMerge`, `LocalStore.mergeRemote`). Aucun `PUT` ne part tant que cette première lecture
+/// n'a pas réussi : hors ligne, les ajouts restent sur l'appareil et attendent.
 @Observable
 final class FieldModel {
     static let batchSize = 200
@@ -28,27 +33,32 @@ final class FieldModel {
     @ObservationIgnored private var undoTask: Task<Void, Never>?
 
     @ObservationIgnored private let store: LocalStore
-    @ObservationIgnored private let identityStores: [any IdentityStore]
+    @ObservationIgnored private let identity: IdentityProvider
     @ObservationIgnored private(set) var api: ChampisAPI
     /// Désactivé par les tests : la demande système attendrait une réponse.
     @ObservationIgnored var asksNotificationPermission = true
     /// Ce que « Réessayer » relance pour `problem`.
     @ObservationIgnored private var problemRetry: Retry?
+    /// Vrai une fois les coins et les observations du serveur lus et fusionnés avec l'appareil,
+    /// pour cette adresse d'API et depuis ce lancement : avant, aucun `PUT /coins`.
+    @ObservationIgnored private(set) var remoteMerged = false
+    /// Une synchronisation des coins est en cours ; une demande arrivée entre-temps la relance.
+    @ObservationIgnored private var isSyncingCoins = false
+    @ObservationIgnored private var coinSyncRequested = false
 
     /// Ce que « Réessayer » relance (étape B4).
     nonisolated enum Retry: Equatable, Sendable {
         case start
         case sync
-        case pull
         case delete
         case pushCoins
         case coinScores
     }
 
-    init(api: ChampisAPI, store: LocalStore, identityStores: [any IdentityStore]) {
+    init(api: ChampisAPI, store: LocalStore, identity: IdentityProvider) {
         self.api = api
         self.store = store
-        self.identityStores = identityStores
+        self.identity = identity
     }
 
     /// Build de développement : passerelle APNs sandbox côté serveur.
@@ -62,23 +72,39 @@ final class FieldModel {
 
     /// Charge le local, résout l'identifiant, envoie ce qui attend.
     func start(api: ChampisAPI) async {
+        if api.baseURL != self.api.baseURL || api.trustedHost != self.api.trustedHost {
+            // une autre adresse : ce qu'elle sait n'a pas encore été lu
+            remoteMerged = false
+        }
         self.api = api
         do {
             try await store.load()
         } catch {
             fail(Problem("Les observations de l'appareil n'ont pas pu être lues", error: error), retry: .start)
         }
-        if userID == nil {
-            userID = Identity.userID(from: identityStores)
-            if userID == nil {
-                fail(
-                    Problem("L'app n'a pas pu créer son identifiant : observations et coins restent sur l'appareil", detail: "trousseau et UserDefaults indisponibles"),
-                    retry: .start
-                )
-            }
-        }
+        await resolveIdentity()
         await refreshFromStore()
+        // d'abord lire et fusionner ce que le serveur connaît, ensuite envoyer ce qui attend
+        await synchronizeCoins(reportFailure: false)
         await sync()
+    }
+
+    /// Lit l'identifiant de l'app, ou le crée si le trousseau dit qu'il n'en a pas, hors du fil
+    /// principal. Une erreur du trousseau se dit en clair, avec « Réessayer » : aucun identifiant
+    /// de rechange n'est créé, observations et coins restent sur l'appareil en attendant.
+    func resolveIdentity() async {
+        guard userID == nil else { return }
+        do {
+            userID = try await Identity.resolveInBackground(identity)
+        } catch {
+            fail(
+                Problem(
+                    "L'identifiant de l'app n'a pas pu être lu : observations et coins restent sur l'appareil",
+                    detail: "trousseau : \(Problem.technical(error))"
+                ),
+                retry: .start
+            )
+        }
     }
 
     private func refreshFromStore() async {
@@ -152,7 +178,8 @@ final class FieldModel {
     /// Envoie les observations en attente par lots ; réessayé à chaque démarrage et enregistrement.
     /// Ce qui est encore annulable attend la fin de son délai.
     func sync() async {
-        guard let userID, !isSyncing else { return }
+        // adresse d'API non officielle : lecture seule, les observations attendent sur l'appareil
+        guard let userID, api.isOfficial, !isSyncing else { return }
         let held = Set(undoable)
         let pending = await store.pendingObservations.filter { !held.contains($0.id) }
         guard !pending.isEmpty else { return }
@@ -173,44 +200,44 @@ final class FieldModel {
         await refreshFromStore()
     }
 
-    /// Reprend du serveur ce qu'il connaît (changement d'appareil, réinstallation).
-    func pullRemote() async {
-        guard let userID else { return }
-        do {
-            let response = try await api.observations(user: userID)
-            try await store.mergeRemote(response.observations)
-            clear(.pull)
-            await refreshFromStore()
-        } catch {
-            fail(Problem("Vos observations n'ont pas pu être reprises du serveur", error: error), retry: .pull)
-        }
-    }
-
     /// Droit à l'effacement : le serveur d'abord, le local ensuite ; en cas d'échec, rien n'est perdu.
     func deleteAll() async {
         guard let userID else { return }
+        guard api.isOfficial else {
+            // rien n'est effacé de l'appareil sans l'être du serveur
+            fail(Problem(
+                "Rien n'a été effacé : revenez à l'adresse officielle de l'API pour effacer aussi vos données du serveur",
+                detail: Problem.technical(ChampisAPI.Failure.readOnly), retryable: false
+            ))
+            return
+        }
         do {
+            // Les identifiants mis de côté (deux appareils avaient créé le leur avant que iCloud ne
+            // les réunisse) sont effacés du serveur eux aussi, puis oubliés un à un.
+            for old in identity.memory.retired() where old != userID {
+                _ = try await api.deleteObservations(user: old)
+                identity.memory.setRetired(identity.memory.retired().filter { $0 != old })
+            }
             _ = try await api.deleteObservations(user: userID)
             try await store.removeAll()
             coinScores = [:]
             clear(.delete)
             status = "Observations et coins effacés"
         } catch {
-            fail(Problem("Rien n'a été effacé : le serveur n'a pas pu être joint", error: error), retry: .delete)
+            fail(Problem("L'effacement n'a pas abouti : le serveur n'a pas pu être joint", error: error), retry: .delete)
         }
         await refreshFromStore()
     }
 
     // MARK: - Coins
 
-    /// Ajoute un coin et renvoie la liste complète ; la permission de notification est demandée
+    /// Ajoute un coin sur l'appareil puis synchronise ; la permission de notification est demandée
     /// au premier coin, jamais au lancement.
     func addCoin(name: String, latitude: Double, longitude: Double, target: String, altClass: Int, t: [String: Double]) async {
         let first = coins.isEmpty
-        var list = coins
-        list.append(Coin(name: name, lat: latitude, lon: longitude, target: target, altClass: altClass, t: t))
+        let coin = Coin(name: name, lat: latitude, lon: longitude, target: target, altClass: altClass, t: t)
         do {
-            try await store.setCoins(list)
+            try await store.addCoin(coin)
         } catch {
             fail(Problem("Le coin n'a pas pu être enregistré sur l'appareil", error: error, retryable: false))
             return
@@ -222,14 +249,12 @@ final class FieldModel {
         await pushCoins()
     }
 
-    /// Renomme un coin ; la liste complète repart au serveur.
+    /// Renomme un coin sur l'appareil puis synchronise.
     func renameCoin(_ id: UUID, to name: String) async {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let index = coins.firstIndex(where: { $0.id == id }) else { return }
-        var list = coins
-        list[index].name = trimmed
+        guard !trimmed.isEmpty else { return }
         do {
-            try await store.setCoins(list)
+            guard try await store.renameCoin(id, to: trimmed) else { return }
         } catch {
             fail(Problem("Le coin n'a pas pu être renommé", error: error, retryable: false))
             return
@@ -239,9 +264,8 @@ final class FieldModel {
     }
 
     func removeCoin(_ id: UUID) async {
-        let list = coins.filter { $0.id != id }
         do {
-            try await store.setCoins(list)
+            try await store.removeCoin(id)
         } catch {
             fail(Problem("Le coin n'a pas pu être supprimé", error: error, retryable: false))
             return
@@ -251,28 +275,86 @@ final class FieldModel {
         await pushCoins()
     }
 
-    /// `PUT /coins` en liste complète, sans jeton pour l'instant (enregistrement APNs à venir).
+    /// Après un changement de la liste : synchronise, et dit en clair si le serveur ne répond pas.
     private func pushCoins() async {
-        guard let userID else { return }
+        await synchronizeCoins(reportFailure: true)
+    }
+
+    /// Coins : lecture du serveur et fusion si elle n'a pas encore eu lieu, puis `PUT /coins` de la
+    /// liste de l'appareil tant qu'elle diffère de ce que le serveur a (sans jeton pour l'instant,
+    /// enregistrement APNs à venir). Aucun `PUT` avant une première lecture réussie.
+    ///
+    /// `reportFailure` : au démarrage (`false`), un échec ne se dit que si des changements de
+    /// l'appareil attendent ; sans réseau et sans rien à envoyer, l'app ne dit rien.
+    private func synchronizeCoins(reportFailure: Bool) async {
+        guard let userID, api.isOfficial else { return }
+        guard !isSyncingCoins else {
+            coinSyncRequested = true
+            return
+        }
+        isSyncingCoins = true
+        coinSyncRequested = false
+        let api = api
         do {
-            _ = try await api.putCoins(coins, apnsToken: nil, sandbox: Self.isSandboxBuild, user: userID)
+            if !remoteMerged {
+                try await mergeRemote(user: userID, api: api)
+            }
+            var sent = false
+            while true {
+                let list = await store.coins
+                let base = await store.coinsBase(for: userID)
+                if CoinMerge.same(list, base) { break }
+                _ = try await api.putCoins(list, apnsToken: nil, sandbox: Self.isSandboxBuild, user: userID)
+                try await store.setCoinsBase(list, for: userID)
+                sent = true
+            }
             clear(.pushCoins)
-            await refreshCoinScores()
+            await refreshFromStore()
+            if sent {
+                await refreshCoinScores()
+            }
         } catch {
-            fail(Problem("Coins pas encore envoyés au serveur : pas de notification d'ici là", error: error), retry: .pushCoins)
+            await refreshFromStore()
+            let list = await store.coins
+            let base = await store.coinsBase(for: userID)
+            // des changements de l'appareil attendent : à dire même au démarrage
+            if reportFailure || !CoinMerge.same(list, base) {
+                fail(Problem("Coins pas encore envoyés au serveur : pas de notification d'ici là", error: error), retry: .pushCoins)
+            }
+            coinSyncRequested = false
+        }
+        isSyncingCoins = false
+        if coinSyncRequested {
+            await synchronizeCoins(reportFailure: reportFailure)
         }
     }
 
+    /// Première lecture du serveur : `GET /coins` et `GET /observations`, fusionnés avec l'appareil.
+    /// Les scores de la même réponse servent tout de suite.
+    private func mergeRemote(user: UUID, api: ChampisAPI) async throws {
+        let snapshot = try await api.coinsSnapshot(user: user)
+        let remote = try await api.observations(user: user)
+        _ = try await store.mergeCoins(remote: snapshot.list, for: user)
+        try await store.mergeRemote(remote.observations)
+        remoteMerged = true
+        adopt(snapshot.scored)
+        await refreshFromStore()
+    }
+
+    /// Scores du jour de `GET /coins`.
+    private func adopt(_ response: CoinsResponse) {
+        coinsToday = response.today
+        var scores: [UUID: ScoredCoin] = [:]
+        for coin in response.coins {
+            scores[coin.id] = coin
+        }
+        coinScores = scores
+    }
+
     func refreshCoinScores() async {
-        guard let userID, !coins.isEmpty else { return }
+        guard let userID, api.isOfficial, !coins.isEmpty else { return }
         do {
-            let response = try await api.coins(user: userID)
-            coinsToday = response.today
-            var scores: [UUID: ScoredCoin] = [:]
-            for coin in response.coins {
-                scores[coin.id] = coin
-            }
-            coinScores = scores
+            adopt(try await api.coins(user: userID))
             clear(.coinScores)
         } catch {
             fail(Problem("Score des coins indisponible", error: error), retry: .coinScores)
@@ -303,7 +385,6 @@ final class FieldModel {
         switch retry {
         case .start: await start(api: api)
         case .sync: await sync()
-        case .pull: await pullRemote()
         case .delete: await deleteAll()
         case .pushCoins: await pushCoins()
         case .coinScores: await refreshCoinScores()

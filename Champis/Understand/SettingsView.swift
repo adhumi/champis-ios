@@ -9,6 +9,8 @@ import UIKit
 /// Soutenir Champis, Icône de l'app (iOS et iPadOS, étape C, lot C6), À propos. L'adresse de l'API
 /// est un réglage de développement, révélé par cinq tapes sur la version ; l'opacité est fixe ; le
 /// fond satellite est dans le menu de calque ; le hors ligne se propose à la création d'un coin.
+/// Une autre adresse que l'API officielle met l'app en lecture seule : un bandeau le dit en tête
+/// des réglages, avec le retour à l'adresse officielle (décision du 13 nov. 2026).
 struct SettingsView: View {
     /// La page Soutenir du site (`/soutenir` répondait 404 : le site est servi sous `/web/`).
     static let supportURL = URL(string: "https://champis.app/web/soutenir.html")!
@@ -38,6 +40,11 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if let host = model.customAPIHost {
+                    Section {
+                        ReadOnlyBanner(host: host) { apiBaseURL = MapScreen.defaultAPIBaseURL }
+                    }
+                }
                 Section {
                     LabeledContent("Notifications", value: notificationsText)
                     if notifications != .authorized {
@@ -146,6 +153,8 @@ struct SettingsView: View {
                         Button("Masquer ces réglages") { developerSettings = false }
                     } header: {
                         Text("Développement")
+                    } footer: {
+                        Text("https exigé. L'identifiant de l'app, les observations et les coins ne partent que vers \(ChampisAPI.officialHost) : avec une autre adresse, l'app est en lecture seule.")
                     }
                 }
             }

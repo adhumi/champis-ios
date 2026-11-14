@@ -19,6 +19,8 @@ public enum TileID {
         return acc
     }
 
+    /// Pour des identifiants construits par `fromZXY` (tests, outils) : un identifiant quelconque
+    /// lu dans un fichier n'y passe pas, les préconditions arrêteraient l'app.
     public static func toZXY(_ tileID: UInt64) -> (z: Int, x: Int, y: Int) {
         let z = ((3 * tileID + 1).bitLength - 1) / 2
         precondition(z < 32)

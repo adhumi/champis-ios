@@ -236,7 +236,7 @@ struct MapModelTests {
         let directory = FieldStoreTests.temporaryDirectory()
         let model = MapModel(
             apiBaseURL: URL(string: "https://\(host)")!, session: URLSession(configuration: StubURLProtocol.configuration()),
-            fieldDirectory: directory.appending(path: "field"), identityStores: [MemoryIdentityStore()],
+            fieldDirectory: directory.appending(path: "field"), identity: .inMemory(),
             offlineRoot: directory.appending(path: "offline")
         )
         return (model, host, directory)

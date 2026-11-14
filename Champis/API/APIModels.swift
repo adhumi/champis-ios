@@ -62,6 +62,33 @@ nonisolated struct TilesManifest: Codable, Sendable {
     let mode: String?
     let generated: String?
     let tiles: [Entry]
+
+    enum CodingKeys: String, CodingKey {
+        case configured, mode, generated, tiles
+    }
+}
+
+/// Une entrée invalide est ignorée, pas fatale : `name` et `dept` servent de chemins sur
+/// l'appareil (cache des tuiles, départements embarqués) et sont contrôlés ici (`SafePath`,
+/// audit du 13 nov. 2026) ; le reste du manifeste se lit quand même. L'init de décodage vit dans
+/// une extension pour garder l'init membre à membre (tests).
+nonisolated extension TilesManifest {
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        configured = try c.decode(Bool.self, forKey: .configured)
+        mode = try c.decodeIfPresent(String.self, forKey: .mode)
+        generated = try c.decodeIfPresent(String.self, forKey: .generated)
+        tiles = try c.decode([LenientTilesEntry].self, forKey: .tiles).compactMap(\.entry)
+    }
+}
+
+/// Une entrée du manifeste, ou `nil` si elle ne se décode pas.
+nonisolated struct LenientTilesEntry: Decodable {
+    let entry: TilesManifest.Entry?
+
+    init(from decoder: any Decoder) throws {
+        entry = try? TilesManifest.Entry(from: decoder)
+    }
 }
 
 /// `species` est une chaîne pour un `T`, un tableau pour un `G` : décodé selon le type JSON, réécrit
@@ -71,14 +98,23 @@ nonisolated extension TilesManifest.Entry {
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         kind = try c.decode(String.self, forKey: .kind)
-        name = try c.decode(String.self, forKey: .name)
+        // `name` et `dept` deviennent des chemins sur l'appareil : contrôlés ici, une fois pour toutes
+        let fileName = try c.decode(String.self, forKey: .name)
+        guard SafePath.isTileFileName(fileName) else {
+            throw DecodingError.dataCorruptedError(forKey: .name, in: c, debugDescription: "nom de fichier refusé")
+        }
+        name = fileName
         url = try c.decode(String.self, forKey: .url)
         bytes = try c.decodeIfPresent(Int.self, forKey: .bytes)
         hash = try c.decodeIfPresent(String.self, forKey: .hash)
         scoringVersion = try c.decodeIfPresent(String.self, forKey: .scoringVersion)
         deptsHash = try c.decodeIfPresent(String.self, forKey: .deptsHash)
         classM = try c.decodeIfPresent(Int.self, forKey: .classM)
-        dept = try c.decodeIfPresent(String.self, forKey: .dept)
+        let code = try c.decodeIfPresent(String.self, forKey: .dept)
+        if let code, !SafePath.isDepartment(code) {
+            throw DecodingError.dataCorruptedError(forKey: .dept, in: c, debugDescription: "code de département refusé")
+        }
+        dept = code
         group = try c.decodeIfPresent(String.self, forKey: .group)
         part = try c.decodeIfPresent(Int.self, forKey: .part)
         if let list = try? c.decodeIfPresent([String].self, forKey: .species) {

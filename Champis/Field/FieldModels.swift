@@ -128,6 +128,18 @@ nonisolated struct CoinsResponse: Decodable, Sendable {
     let coins: [ScoredCoin]
 }
 
+/// Les coins de `GET /coins` tels que `PUT /coins` les a reçus (`id`, `name`, `lat`, `lon`,
+/// `target`, `alt_class`, `t`) : la liste du serveur, pour la fusion avec celle de l'appareil.
+nonisolated struct CoinsList: Decodable, Sendable {
+    let coins: [Coin]
+}
+
+/// Une réponse de `GET /coins` lue des deux façons : la liste complète et les scores.
+nonisolated struct CoinsSnapshot: Sendable {
+    let list: [Coin]
+    let scored: CoinsResponse
+}
+
 nonisolated struct ObservationsResponse: Decodable, Sendable {
     let count: Int
     let observations: [FieldObservation]

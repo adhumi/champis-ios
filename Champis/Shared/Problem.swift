@@ -59,6 +59,8 @@ nonisolated struct Problem: Equatable, Sendable {
                 return "Adresse de l'API invalide"
             case .http(let status, let detail):
                 return detail.isEmpty ? "HTTP \(status)" : "HTTP \(status) : \(detail)"
+            case .readOnly:
+                return "Adresse d'API non officielle : rien de privé n'est envoyé"
             }
         }
         if let url = error as? URLError {

@@ -108,8 +108,132 @@ struct APIModelsTests {
         #expect(MapScreen.defaultAPIBaseURL == "https://api.champis.app")
         #expect(MapScreen.url(from: "https://champis.app").absoluteString == "https://api.champis.app")
         #expect(MapScreen.url(from: " https://champis.app/ ").absoluteString == "https://api.champis.app")
-        #expect(MapScreen.url(from: "http://localhost:8000").absoluteString == "http://localhost:8000")
         #expect(ChampisAPI.defaultSiteURL.absoluteString == "https://champis.app")
+        #expect(ChampisAPI.officialBaseURL.absoluteString == MapScreen.defaultAPIBaseURL)
+        #expect(ChampisAPI.officialBaseURL.host() == ChampisAPI.officialHost)
+    }
+
+    @Test("Adresse de l'API : https exigé, sinon l'adresse officielle", arguments: [
+        "http://api.example", "http://api.champis.app", "ftp://api.example", "file:///etc/hosts", "api.example",
+        "https://", "https://moi:secret@api.example", "javascript:alert(1)",
+    ])
+    @MainActor
+    func httpsRequired(text: String) {
+        #expect(MapScreen.url(from: text).absoluteString == MapScreen.defaultAPIBaseURL)
+    }
+
+    @Test("Adresse de l'API : l'officielle seule reçoit l'identifiant et les données privées")
+    func officialHostOnly() throws {
+        func api(_ text: String) throws -> ChampisAPI {
+            ChampisAPI(baseURL: try #require(URL(string: text)))
+        }
+        #expect(try api("https://api.champis.app").isOfficial)
+        #expect(try api("https://API.Champis.app/").isOfficial)
+        #expect(try api("https://api.champis.app:443").isOfficial)
+        for other in [
+            "http://api.champis.app", "https://api.champis.app:8443", "https://champis.app", "https://api.champis.app.example",
+            "https://exemple.fr/api.champis.app", "https://x@api.champis.app", "https://staging.example",
+        ] {
+            let custom = try api(other)
+            #expect(!custom.isOfficial, "\(other)")
+        }
+        #expect(ChampisAPI.isAcceptable(try #require(URL(string: "https://staging.example"))))
+        #expect(!ChampisAPI.isAcceptable(try #require(URL(string: "http://staging.example"))))
+        #if DEBUG
+        // développement seulement : l'API locale de champis-api
+        #expect(ChampisAPI.isAcceptable(try #require(URL(string: "http://localhost:8000"))))
+        #expect(ChampisAPI.isAcceptable(try #require(URL(string: "http://127.0.0.1:8000"))))
+        #endif
+        #expect(!ChampisAPI.isAcceptable(try #require(URL(string: "http://192.168.1.10:8000"))))
+    }
+
+    @Test("Adresse non officielle : lecture anonyme, toute requête privée refusée avant de partir")
+    func customAddressIsReadOnly() async throws {
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host) { method, path, _ in
+            method == "GET" && path == "/tiles" ? (200, Fixtures.manifestJSON) : (200, "{}")
+        }
+        let id = UUID()
+        // même client, hôte non reconnu comme officiel
+        let api = ChampisAPI(
+            baseURL: URL(string: "https://\(host)")!, session: URLSession(configuration: StubURLProtocol.configuration()), userID: id
+        )
+        #expect(!api.isOfficial)
+        _ = try await api.tiles()
+        #expect(StubURLProtocol.requests(host: host).map(\.user) == [nil])  // lu sans identifiant
+
+        let coin = Coin(name: "Col", lat: 47.0, lon: 6.0, target: "cepes", altClass: 750, t: ["boletus_edulis": 0.8])
+        let observation = FieldObservation(species: "boletus_edulis", lat: 47.0, lon: 6.0, date: "2026-11-13", found: false, quantity: nil)
+        await #expect(throws: ChampisAPI.Failure.readOnly) { try await api.putCoins([coin], apnsToken: nil, sandbox: false, user: id) }
+        await #expect(throws: ChampisAPI.Failure.readOnly) { try await api.postObservations([observation], user: id) }
+        await #expect(throws: ChampisAPI.Failure.readOnly) { try await api.deleteObservations(user: id) }
+        await #expect(throws: ChampisAPI.Failure.readOnly) { try await api.coins(user: id) }
+        await #expect(throws: ChampisAPI.Failure.readOnly) { try await api.observations(user: id) }
+        await #expect(throws: ChampisAPI.Failure.readOnly) { try await api.send("POST", "species") }
+        #expect(StubURLProtocol.requests(host: host).count == 1)  // rien d'autre n'est parti
+        #expect(Problem.technical(ChampisAPI.Failure.readOnly) == "Adresse d'API non officielle : rien de privé n'est envoyé")
+    }
+
+    @Test("Redirection : l'identifiant ne suit pas vers un autre hôte, ni hors de https")
+    func redirectDropsIdentity() throws {
+        let original = try #require(URL(string: "https://api.champis.app/coins"))
+        func redirected(to text: String) throws -> String? {
+            var request = URLRequest(url: try #require(URL(string: text)))
+            request.setValue("11111111-1111-1111-1111-111111111111", forHTTPHeaderField: ChampisAPI.userHeader)
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            let out = RedirectGuard.redirected(request, from: original)
+            #expect(out.value(forHTTPHeaderField: "Accept") == "application/json")
+            #expect(out.url == request.url)
+            return out.value(forHTTPHeaderField: ChampisAPI.userHeader)
+        }
+        #expect(try redirected(to: "https://api.champis.app/coins/") == "11111111-1111-1111-1111-111111111111")
+        #expect(try redirected(to: "https://API.champis.app/v2/coins") != nil)
+        #expect(try redirected(to: "https://ailleurs.example/coins") == nil)
+        #expect(try redirected(to: "https://champis.app/coins") == nil)
+        #expect(try redirected(to: "http://api.champis.app/coins") == nil)
+        // sans requête d'origine connue : rien ne suit
+        var request = URLRequest(url: original)
+        request.setValue("x", forHTTPHeaderField: ChampisAPI.userHeader)
+        #expect(RedirectGuard.redirected(request, from: nil).value(forHTTPHeaderField: ChampisAPI.userHeader) == nil)
+    }
+
+    @Test("Liens et fichiers venus du serveur : https seulement")
+    func httpsLinksOnly() throws {
+        #expect(ChampisAPI.httpsURL(" https://commons.wikimedia.org/wiki/File:Cep.jpg ")?.host() == "commons.wikimedia.org")
+        for text in ["http://commons.wikimedia.org/wiki/File:Cep.jpg", "tel:+33123456789", "file:///etc/passwd", "champis://x", "javascript:alert(1)", "", "https://", "commons.wikimedia.org"] {
+            #expect(ChampisAPI.httpsURL(text) == nil, "\(text)")
+        }
+
+        // fichier du manifeste : relatif à l'API, ou absolu en https ; jamais un autre schéma
+        func entry(_ url: String) -> TilesManifest.Entry {
+            TilesManifest.Entry(
+                kind: "A", name: "A-300m-da1b2c3.pmtiles", url: url, bytes: 1, species: nil, hash: nil, scoringVersion: nil,
+                deptsHash: "a1b2c3", classM: 300, dept: nil, group: nil, channels: nil, part: nil
+            )
+        }
+        let api = ChampisAPI(baseURL: ChampisAPI.officialBaseURL)
+        #expect(api.tileURL(entry("/tiles/A-300m-da1b2c3.pmtiles"))?.absoluteString == "https://api.champis.app/tiles/A-300m-da1b2c3.pmtiles")
+        #expect(api.tileURL(entry("https://bucket.example/tiles/A.pmtiles?sig=abc"))?.host() == "bucket.example")
+        #expect(api.tileURL(entry("http://bucket.example/tiles/A.pmtiles")) == nil)
+        #expect(api.tileURL(entry("file:///private/var/mobile/x.pmtiles")) == nil)
+        // API locale en http (développement) : ses propres fichiers seulement
+        let local = ChampisAPI(baseURL: try #require(URL(string: "http://localhost:8000")))
+        #expect(local.tileURL(entry("/tiles/A-300m-da1b2c3.pmtiles"))?.absoluteString == "http://localhost:8000/tiles/A-300m-da1b2c3.pmtiles")
+        #expect(local.tileURL(entry("http://bucket.example/tiles/A.pmtiles")) == nil)
+    }
+
+    @Test("Photo d'une fiche : la copie du référentiel servie par le site, jamais Wikimedia")
+    func speciesPhotoFromSite() throws {
+        let api = ChampisAPI(baseURL: ChampisAPI.officialBaseURL)
+        #expect(api.photoURL(species: "boletus_edulis")?.absoluteString == "https://champis.app/shared/photos/boletus_edulis.jpg")
+        // même base que les autres fichiers du site ; une autre adresse d'API ne la change pas
+        let custom = ChampisAPI(baseURL: try #require(URL(string: "https://staging.example")))
+        #expect(custom.photoURL(species: "cantharellus_cibarius")?.host() == "champis.app")
+        let moved = ChampisAPI(baseURL: ChampisAPI.officialBaseURL, siteURL: try #require(URL(string: "https://site.example/")))
+        #expect(moved.photoURL(species: "boletus_aereus")?.absoluteString == "https://site.example/shared/photos/boletus_aereus.jpg")
+        // un identifiant qui n'est pas un simple nom ne fait pas un chemin
+        #expect(api.photoURL(species: "../../web/index") == nil)
+        #expect(api.photoURL(species: "") == nil)
     }
 
     @Test("Limites des départements : lues sur le site, pas sur l'API")
@@ -143,7 +267,7 @@ struct APIModelsTests {
         let id = UUID()
         let api = ChampisAPI(
             baseURL: URL(string: "https://\(apiHost)")!, siteURL: URL(string: "https://\(siteHost)")!,
-            session: session, userID: id
+            session: session, userID: id, trustedHost: apiHost
         )
         _ = try await api.tiles()
         _ = try await api.departementsGeoJSON()

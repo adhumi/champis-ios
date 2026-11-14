@@ -21,26 +21,47 @@ public struct DirectoryEntry: Sendable, Equatable {
 public enum Directory {
     /// Décode un répertoire (déjà décompressé) : nombre d'entrées, puis identifiants en deltas,
     /// longueurs de série, longueurs, décalages (0 = contigu à l'entrée précédente, sinon valeur + 1).
+    ///
+    /// Rien n'est alloué d'après le seul nombre annoncé : une entrée occupe au moins quatre octets
+    /// (un par entier variable), le tampon borne donc le nombre d'entrées. Un identifiant, une
+    /// longueur ou un décalage qui déborde lève `corruptDirectory`.
     public static func deserialize(_ data: Data) throws -> [DirectoryEntry] {
         var r = ByteReader([UInt8](data))
-        let n = Int(try r.readVarint())
+        let announced = try r.readVarint()
+        guard let n = Int(exactly: announced), n <= r.remaining / 4 else {
+            throw PMTilesError.corruptDirectory("\(announced) entrées annoncées pour \(r.remaining) octets")
+        }
         var ids = [UInt64](repeating: 0, count: n)
         var last: UInt64 = 0
         for i in 0..<n {
-            last += try r.readVarint()
+            let (next, overflow) = last.addingReportingOverflow(try r.readVarint())
+            guard !overflow else { throw PMTilesError.corruptDirectory("identifiant de tuile hors de 64 bits") }
+            last = next
             ids[i] = last
         }
         var runs = [UInt32](repeating: 0, count: n)
-        for i in 0..<n { runs[i] = UInt32(try r.readVarint()) }
+        for i in 0..<n {
+            guard let run = UInt32(exactly: try r.readVarint()) else {
+                throw PMTilesError.corruptDirectory("longueur de série hors de 32 bits")
+            }
+            runs[i] = run
+        }
         var lengths = [UInt32](repeating: 0, count: n)
-        for i in 0..<n { lengths[i] = UInt32(try r.readVarint()) }
+        for i in 0..<n {
+            guard let length = UInt32(exactly: try r.readVarint()) else {
+                throw PMTilesError.corruptDirectory("longueur hors de 32 bits")
+            }
+            lengths[i] = length
+        }
         var entries: [DirectoryEntry] = []
         entries.reserveCapacity(n)
         for i in 0..<n {
             let tmp = try r.readVarint()
             let offset: UInt64
             if i > 0, tmp == 0 {
-                offset = entries[i - 1].offset + UInt64(entries[i - 1].length)
+                let (next, overflow) = entries[i - 1].offset.addingReportingOverflow(UInt64(entries[i - 1].length))
+                guard !overflow else { throw PMTilesError.corruptDirectory("décalage hors de 64 bits") }
+                offset = next
             } else {
                 guard tmp >= 1 else { throw PMTilesError.corruptDirectory("décalage 0 en tête") }
                 offset = tmp - 1
@@ -67,7 +88,8 @@ public enum Directory {
         }
         if n >= 0 {
             if entries[n].runLength == 0 { return entries[n] }
-            if tileID - entries[n].tileID < UInt64(entries[n].runLength) { return entries[n] }
+            // `>=` : des entrées non triées (répertoire construit à la main) ne font pas déborder
+            if tileID >= entries[n].tileID, tileID - entries[n].tileID < UInt64(entries[n].runLength) { return entries[n] }
         }
         return nil
     }

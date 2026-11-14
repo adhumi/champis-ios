@@ -199,14 +199,23 @@ final class OfflineModel {
         progress[choice.code] = Progress(filesTotal: files.count, bytesExpected: department.bytes)
         written[choice.code] = [:]
         for file in files {
-            guard let url = URL(string: file.url) else { continue }
-            let destination = await store.fileURL(code: choice.code, name: file.name)
-            downloads.download(url, to: destination, tag: Self.tag(code: choice.code, name: file.name))
+            // `begin` a déjà refusé un nom qui ne serait pas sûr : rien à télécharger sinon
+            guard let url = URL(string: file.url),
+                  let destination = try? await store.fileURL(code: choice.code, name: file.name)
+            else { continue }
+            downloads.download(url, to: destination, within: store.root, tag: Self.tag(code: choice.code, name: file.name))
         }
         await refresh()
     }
 
     static func tag(code: String, name: String) -> String { code + "|" + name }
+
+    /// Détail de l'écart entre la taille reçue et celle du manifeste ; `nil` si elles concordent
+    /// ou si le manifeste n'annonçait pas de taille (`expected` à 0).
+    nonisolated static func sizeMismatch(name: String, received: Int64, expected: Int64) -> String? {
+        guard expected > 0, received != expected else { return nil }
+        return "\(name) : \(received) octets reçus, \(expected) annoncés par le manifeste"
+    }
 
     private func handle(_ event: DownloadManager.Event) async {
         let parts = event.tag.split(separator: "|", maxSplits: 1).map(String.init)
@@ -223,6 +232,21 @@ final class OfflineModel {
             await refresh()
         case .finished(let url):
             let size = (try? FileManager.default.attributesOfItem(atPath: url.path(percentEncoded: false))[.size] as? Int64) ?? 0
+            // Un jeu republié garde son nom : le fichier reçu doit faire la taille que le manifeste
+            // annonçait (`bytes`), sinon il vient d'une autre version ou d'une réponse tronquée,
+            // et le département reste incomplet (13 nov. 2026).
+            let expected = await store.department(code)?.files.first { $0.name == name }?.bytes ?? 0
+            if let mismatch = Self.sizeMismatch(name: name, received: size, expected: expected) {
+                try? FileManager.default.removeItem(at: url)
+                try? await store.markError(code: code, mismatch)
+                progress[code] = nil
+                fail(
+                    Problem("Département \(code) incomplet : un fichier reçu n'a pas la taille annoncée", detail: mismatch),
+                    retry: .resume(code: code)
+                )
+                await refresh()
+                return
+            }
             try? await store.markDone(code: code, name: name, bytes: size)
             progress[code]?.filesDone += 1
             if let department = await store.department(code), department.filesDone {
@@ -243,10 +267,14 @@ final class OfflineModel {
         }
         do {
             guard let first = department.files.first(where: { $0.done }) else { return }
-            let fileURL = await store.fileURL(code: department.code, name: first.name)
+            let fileURL = try await store.fileURL(code: department.code, name: first.name)
             let header = try await PMTilesReader(source: try LocalFileSource(url: fileURL)).readHeader()
             let b = header.bounds
-            let bbox = BBox(minLon: b.minLon, minLat: b.minLat, maxLon: b.maxLon, maxLat: b.maxLat)
+            // l'emprise vient de l'en-tête d'un fichier téléchargé : bornée à la France (marge
+            // comprise) avant d'être découpée, pour que le nombre de requêtes reste celui d'un département
+            guard let bbox = Self.weatherBounds(minLon: b.minLon, minLat: b.minLat, maxLon: b.maxLon, maxLat: b.maxLat) else {
+                throw Failure.boundsOutsideFrance
+            }
             var responses: [WeatherBBoxResponse] = []
             for part in bbox.split(maxSpan: Self.weatherSpan) {
                 responses.append(try await api.weather(bbox: part, species: department.species))
@@ -263,6 +291,17 @@ final class OfflineModel {
             fail(Problem("Météo du département \(department.code) non récupérée", error: error), retry: .resume(code: department.code))
             await refresh()
         }
+    }
+
+    /// Emprise d'un fichier pour la météo embarquée : celle de son en-tête, bornée à la France
+    /// métropolitaine et la Corse (`BBox.france`) ; `nil` si elle n'y touche pas.
+    nonisolated static func weatherBounds(minLon: Double, minLat: Double, maxLon: Double, maxLat: Double) -> BBox? {
+        BBox(minLon: minLon, minLat: minLat, maxLon: maxLon, maxLat: maxLat).clamped(to: .france)
+    }
+
+    nonisolated enum Failure: Error, Equatable, Sendable {
+        /// L'en-tête du fichier téléchargé annonce une emprise hors de France.
+        case boundsOutsideFrance
     }
 
     /// Rafraîchit la météo seule (petit), sans toucher aux tuiles.
@@ -297,9 +336,10 @@ final class OfflineModel {
         )
         written[code] = [:]
         for file in missing {
-            guard let url = URL(string: file.url) else { continue }
-            let destination = await store.fileURL(code: code, name: file.name)
-            downloads.download(url, to: destination, tag: Self.tag(code: code, name: file.name))
+            guard let url = URL(string: file.url),
+                  let destination = try? await store.fileURL(code: code, name: file.name)
+            else { continue }
+            downloads.download(url, to: destination, within: store.root, tag: Self.tag(code: code, name: file.name))
         }
         await refresh()
     }

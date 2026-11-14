@@ -67,7 +67,7 @@ Réponses du questionnaire « Confidentialité de l'app », alignées sur `Priva
 
 Non collectés : coordonnées, contacts, santé, finances, historique de navigation ou de recherche, achats (jusqu'au lot C6), données d'usage ou de diagnostic, identifiant publicitaire. Aucun SDK tiers. La position n'est lue que quand l'utilisateur le demande ; aucun trajet.
 
-API à raison déclarée (`NSPrivacyAccessedAPITypes`) : `UserDefaults` (`CA92.1`, préférences et identifiant de repli de l'app) ; métadonnées de fichiers (`C617.1`, taille des fichiers téléchargés pour le hors ligne, dans le conteneur de l'app).
+API à raison déclarée (`NSPrivacyAccessedAPITypes`) : `UserDefaults` (`CA92.1`, préférences et dernier identifiant connu de l'app) ; métadonnées de fichiers (`C617.1`, taille des fichiers téléchargés pour le hors ligne, dans le conteneur de l'app).
 
 ## Notes pour la revue
 
