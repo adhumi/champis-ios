@@ -101,15 +101,244 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     }
 }
 
+/// Coins et observations d'un serveur champis-api factice, avec la règle du vrai : `PUT /coins`
+/// remplace la liste, `GET /coins` la rend avec un score, `DELETE /observations` efface tout.
+final class FakeFieldServer: @unchecked Sendable {
+    private let lock = NSLock()
+    private var coins: [[String: Any]] = []
+    private var observations: [[String: Any]] = []
+    /// Code HTTP à répondre à tout (panne du serveur), ou `nil`.
+    private var failure: Int?
+
+    init(coins: [Coin] = []) {
+        self.coins = coins.map(Self.object)
+    }
+
+    static func object(_ coin: Coin) -> [String: Any] {
+        [
+            "id": coin.id.uuidString.lowercased(), "name": coin.name, "lat": coin.lat, "lon": coin.lon,
+            "target": coin.target, "alt_class": coin.altClass, "t": coin.t,
+        ]
+    }
+
+    /// Ce qu'un autre appareil a fait de la liste entre-temps.
+    func set(coins: [Coin]) {
+        lock.lock()
+        defer { lock.unlock() }
+        self.coins = coins.map(Self.object)
+    }
+
+    func fail(_ status: Int?) {
+        lock.lock()
+        defer { lock.unlock() }
+        failure = status
+    }
+
+    var coinNames: [String] {
+        lock.lock()
+        defer { lock.unlock() }
+        return coins.compactMap { $0["name"] as? String }.sorted()
+    }
+
+    var coinIDs: Set<String> {
+        lock.lock()
+        defer { lock.unlock() }
+        return Set(coins.compactMap { $0["id"] as? String })
+    }
+
+    func handle(_ method: String, _ path: String, _ body: Data?) -> (Int, String) {
+        lock.lock()
+        defer { lock.unlock() }
+        if let failure {
+            return (failure, #"{"detail": "indisponible"}"#)
+        }
+        switch (method, path) {
+        case ("PUT", "/coins"):
+            coins = StubURLProtocol.json(body)["coins"] as? [[String: Any]] ?? []
+            return (200, #"{"coins": \#(coins.count), "notifications": false}"#)
+        case ("GET", "/coins"):
+            let summary: [String] = ["pleine saison"]
+            let scored = coins.map { coin -> [String: Any] in
+                var out = coin
+                out["score"] = 0.7
+                out["leading"] = "boletus_edulis"
+                out["best_day"] = NSNull()
+                out["best"] = NSNull()
+                out["summary"] = summary
+                let days: [[String: Any]] = [
+                    ["date": "2026-10-31", "value": 0.7, "leading": "boletus_edulis"],
+                    ["date": "2026-11-01", "value": NSNull(), "leading": NSNull()],
+                ]
+                out["days"] = days
+                return out
+            }
+            return (200, Self.text(["today": "2026-10-31", "coins": scored]))
+        case ("GET", "/observations"):
+            return (200, Self.text(["count": observations.count, "observations": observations]))
+        case ("POST", "/observations"):
+            let sent = StubURLProtocol.json(body)["observations"] as? [[String: Any]] ?? []
+            observations += sent
+            return (201, #"{"inserted": \#(sent.count), "duplicates": 0}"#)
+        case ("DELETE", "/observations"):
+            let deleted = observations.count
+            observations = []
+            coins = []
+            return (200, #"{"deleted": \#(deleted)}"#)
+        default:
+            return (404, #"{"detail": "inconnu"}"#)
+        }
+    }
+
+    static func text(_ object: [String: Any]) -> String {
+        let data = (try? JSONSerialization.data(withJSONObject: object)) ?? Data("{}".utf8)
+        return String(decoding: data, as: UTF8.self)
+    }
+}
+
 @MainActor
 struct FieldModelTests {
-    static func model(host: String, directory: URL, trusted: Bool = true) -> FieldModel {
+    static func model(host: String, directory: URL, trusted: Bool = true, identity: IdentityProvider = .inMemory()) -> FieldModel {
         let model = FieldModel(
             api: StubURLProtocol.api(host: host, trusted: trusted), store: LocalStore(directory: directory),
-            identity: .inMemory()
+            identity: identity
         )
         model.asksNotificationPermission = false
         return model
+    }
+
+    /// Un serveur factice branché sur un hôte de test.
+    static func server(coins: [Coin] = []) -> (FakeFieldServer, host: String) {
+        let server = FakeFieldServer(coins: coins)
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host) { method, path, body in server.handle(method, path, body) }
+        return (server, host)
+    }
+
+    static func coin(_ name: String) -> Coin {
+        Coin(name: name, lat: 47.0, lon: 6.0, target: "cepes", altClass: 750, t: ["boletus_edulis": 0.8])
+    }
+
+    static func methods(_ host: String) -> [String] {
+        StubURLProtocol.requests(host: host).map { "\($0.method) \($0.path)" }
+    }
+
+    // MARK: Fusion des coins au démarrage (13 nov. 2026)
+
+    @Test("Démarrage : les coins du serveur sont lus et fusionnés avant tout PUT ; rien n'est perdu entre deux appareils")
+    func mergeBeforeAnyPut() async throws {
+        let directory = FieldStoreTests.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        // l'autre appareil a créé « Hêtraie » ; celui-ci a créé « Col » hors ligne, jamais envoyé
+        let theirs = Self.coin("Hêtraie")
+        let mine = Self.coin("Col")
+        let (server, host) = Self.server(coins: [theirs])
+        try await LocalStore(directory: directory).setCoins([mine])
+
+        let model = Self.model(host: host, directory: directory)
+        await model.start(api: model.api)
+        #expect(model.remoteMerged)
+        #expect(Set(model.coins.map(\.id)) == [mine.id, theirs.id])
+        #expect(model.problem == nil, "\(model.problem?.detail ?? "")")
+        // lecture d'abord, PUT ensuite, avec les deux coins
+        let methods = Self.methods(host)
+        let firstPut = try #require(methods.firstIndex(of: "PUT /coins"))
+        let readCoins = try #require(methods.firstIndex(of: "GET /coins"))
+        let readObservations = try #require(methods.firstIndex(of: "GET /observations"))
+        #expect(readCoins < firstPut && readObservations < firstPut)
+        #expect(server.coinNames == ["Col", "Hêtraie"])
+        #expect(model.coinScores[theirs.id]?.score == 0.7)
+        #expect(model.coinScores[mine.id]?.score == 0.7)
+
+        // au lancement suivant, rien n'a changé : lecture seule, aucun PUT
+        let puts = methods.filter { $0 == "PUT /coins" }.count
+        let again = Self.model(host: host, directory: directory, identity: IdentityProvider(store: MemoryIdentityStore(model.userID), memory: VolatileIdentityMemory()))
+        await again.start(api: again.api)
+        #expect(Set(again.coins.map(\.id)) == [mine.id, theirs.id])
+        #expect(Self.methods(host).filter { $0 == "PUT /coins" }.count == puts)
+    }
+
+    @Test("Aucun PUT tant que la première lecture du serveur n'a pas réussi ; les ajouts attendent sur l'appareil")
+    func noPutBeforeFirstRead() async throws {
+        let directory = FieldStoreTests.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let theirs = Self.coin("Hêtraie")
+        let (server, host) = Self.server(coins: [theirs])
+        server.fail(503)
+
+        let model = Self.model(host: host, directory: directory)
+        await model.start(api: model.api)
+        #expect(!model.remoteMerged)
+        #expect(model.problem == nil)  // rien à envoyer : l'app ne dit rien
+
+        await model.addCoin(name: "Col", latitude: 47.0, longitude: 6.0, target: "cepes", altClass: 750, t: ["boletus_edulis": 0.8])
+        #expect(model.coins.map(\.name) == ["Col"])
+        #expect(!Self.methods(host).contains("PUT /coins"))
+        #expect(server.coinNames == ["Hêtraie"])  // la liste du serveur n'a pas été remplacée
+        let problem = try #require(model.problem)
+        #expect(problem.text == "Coins pas encore envoyés au serveur : pas de notification d'ici là : le serveur est momentanément indisponible")
+        #expect(problem.retryable)
+
+        // le serveur revient : « Réessayer » lit, fusionne, puis envoie
+        server.fail(nil)
+        await model.retry()
+        #expect(model.remoteMerged)
+        #expect(model.problem == nil)
+        #expect(model.coins.map(\.name).sorted() == ["Col", "Hêtraie"])
+        #expect(server.coinNames == ["Col", "Hêtraie"])
+    }
+
+    @Test("Un coin supprimé hors ligne n'est pas ressuscité par la fusion")
+    func offlineDeletionIsNotResurrected() async throws {
+        let directory = FieldStoreTests.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let (server, host) = Self.server()
+        let identity = IdentityProvider.inMemory()
+        let model = Self.model(host: host, directory: directory, identity: identity)
+        await model.start(api: model.api)
+        await model.addCoin(name: "Col", latitude: 47.0, longitude: 6.0, target: "cepes", altClass: 750, t: ["boletus_edulis": 0.8])
+        await model.addCoin(name: "Hêtraie", latitude: 47.1, longitude: 6.1, target: "cepes", altClass: 450, t: ["boletus_edulis": 0.6])
+        #expect(server.coinNames == ["Col", "Hêtraie"])
+        let col = try #require(model.coins.first { $0.name == "Col" })
+
+        // hors ligne : la suppression reste sur l'appareil
+        server.fail(503)
+        await model.removeCoin(col.id)
+        #expect(model.coins.map(\.name) == ["Hêtraie"])
+        server.fail(nil)
+        #expect(server.coinNames == ["Col", "Hêtraie"])
+
+        // lancement suivant, en ligne : le serveur a encore « Col », la fusion ne le reprend pas
+        let next = Self.model(host: host, directory: directory, identity: identity)
+        await next.start(api: next.api)
+        #expect(next.coins.map(\.name) == ["Hêtraie"])
+        #expect(server.coinNames == ["Hêtraie"])  // et la suppression est arrivée au serveur
+    }
+
+    @Test("Supprimé ou renommé sur un autre appareil : l'appareil suit, sans rien renvoyer")
+    func changesFromAnotherDevice() async throws {
+        let directory = FieldStoreTests.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let (server, host) = Self.server()
+        let identity = IdentityProvider.inMemory()
+        let model = Self.model(host: host, directory: directory, identity: identity)
+        await model.start(api: model.api)
+        await model.addCoin(name: "Col", latitude: 47.0, longitude: 6.0, target: "cepes", altClass: 750, t: ["boletus_edulis": 0.8])
+        await model.addCoin(name: "Hêtraie", latitude: 47.1, longitude: 6.1, target: "cepes", altClass: 450, t: ["boletus_edulis": 0.6])
+        let col = try #require(model.coins.first { $0.name == "Col" })
+        var renamed = try #require(model.coins.first { $0.name == "Hêtraie" })
+        renamed.name = "Hêtraie du col"
+
+        // l'autre appareil supprime « Col », renomme « Hêtraie » et ajoute « Sapinière »
+        let added = Self.coin("Sapinière")
+        server.set(coins: [renamed, added])
+        let puts = Self.methods(host).filter { $0 == "PUT /coins" }.count
+
+        let next = Self.model(host: host, directory: directory, identity: identity)
+        await next.start(api: next.api)
+        #expect(next.coins.map(\.name).sorted() == ["Hêtraie du col", "Sapinière"])
+        #expect(!next.coins.contains { $0.id == col.id })
+        #expect(Self.methods(host).filter { $0 == "PUT /coins" }.count == puts)  // rien à renvoyer
+        #expect(server.coinNames == ["Hêtraie du col", "Sapinière"])
     }
 
     @Test("Observation : enregistrée localement, envoyée avec l'identifiant, en attente si le serveur tombe")
@@ -245,29 +474,7 @@ struct FieldModelTests {
     func coinsAndDelete() async throws {
         let directory = FieldStoreTests.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
-        let host = StubURLProtocol.host()
-        StubURLProtocol.set(host: host) { method, path, _ in
-            switch (method, path) {
-            case ("PUT", "/coins"):
-                return (200, #"{"coins": 1, "notifications": false}"#)
-            case ("GET", "/coins"):
-                let last = StubURLProtocol.requests(host: host).last { $0.method == "PUT" }
-                let coins = StubURLProtocol.json(last?.body)["coins"] as? [[String: Any]] ?? []
-                let id = coins.first?["id"] as? String ?? UUID().uuidString
-                return (200, """
-                {"today": "2026-10-31", "coins": [{"id": "\(id)", "name": "Col", "lat": 47.0, "lon": 6.0, "target": "cepes",
-                  "alt_class": 750, "t": {"boletus_edulis": 0.8}, "score": 0.7, "leading": "boletus_edulis",
-                  "best_day": null, "best": null,
-                  "summary": ["grosse pluie il y a 8 jours : en plein dans le délai de pousse", "pleine saison"],
-                  "days": [{"date": "2026-10-31", "value": 0.7, "leading": "boletus_edulis"},
-                           {"date": "2026-11-01", "value": null, "leading": null}]}]}
-                """)
-            case ("DELETE", "/observations"):
-                return (200, #"{"deleted": 1}"#)
-            default:
-                return (404, #"{"detail": "inconnu"}"#)
-            }
-        }
+        let (_, host) = Self.server()
         let model = Self.model(host: host, directory: directory)
         await model.start(api: model.api)
 
@@ -285,7 +492,7 @@ struct FieldModelTests {
         #expect(model.coinScores[coin.id]?.score == 0.7, "\(model.problem?.detail ?? "")")
         #expect(model.coinsToday == "2026-10-31")
         // phrases du jour du coin (étape B2)
-        #expect(model.coinScores[coin.id]?.summary == ["grosse pluie il y a 8 jours : en plein dans le délai de pousse", "pleine saison"])
+        #expect(model.coinScores[coin.id]?.summary == ["pleine saison"])
         #expect(model.coinScores[coin.id]?.days.count == 2)
         #expect(model.coinScores[coin.id]?.days.last?.value == nil)
 

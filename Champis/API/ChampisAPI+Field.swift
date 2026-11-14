@@ -23,11 +23,21 @@ nonisolated extension ChampisAPI {
         return try JSONDecoder().decode(DeleteResponse.self, from: data)
     }
 
-    /// Liste complète : le serveur remplace, il ne fusionne pas.
+    /// Liste complète : le serveur remplace, il ne fusionne pas. À n'appeler qu'après avoir lu et
+    /// fusionné la liste du serveur (`coinsSnapshot`, `CoinMerge`).
     func putCoins(_ coins: [Coin], apnsToken: String?, sandbox: Bool, user: UUID) async throws -> PutCoinsResponse {
         let body = try JSONEncoder().encode(CoinsBody(apnsToken: apnsToken, sandbox: sandbox, coins: coins))
         let data = try await send("PUT", "coins", body: body, user: user)
         return try JSONDecoder().decode(PutCoinsResponse.self, from: data)
+    }
+
+    /// `GET /coins` pour la fusion : la liste complète du serveur, et les scores de la même réponse.
+    func coinsSnapshot(user: UUID) async throws -> CoinsSnapshot {
+        let data = try await send("GET", "coins", user: user)
+        return CoinsSnapshot(
+            list: try JSONDecoder().decode(CoinsList.self, from: data).coins,
+            scored: try JSONDecoder().decode(CoinsResponse.self, from: data)
+        )
     }
 
     /// Mes coins avec leur score du jour et le meilleur jour à venir, calculés par le backend.

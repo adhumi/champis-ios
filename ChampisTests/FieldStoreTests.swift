@@ -168,6 +168,150 @@ struct FieldStoreTests {
     }
 }
 
+/// Fusion des coins de l'appareil et du serveur (décision du 13 nov. 2026) : fonction pure, à trois
+/// listes (appareil, serveur, base du dernier échange réussi).
+struct CoinMergeTests {
+    static func coin(_ name: String, id: UUID = UUID()) -> Coin {
+        Coin(id: id, name: name, lat: 47.0, lon: 6.0, target: "cepes", altClass: 750, t: ["boletus_edulis": 0.8])
+    }
+
+    static func renamed(_ coin: Coin, _ name: String) -> Coin {
+        var copy = coin
+        copy.name = name
+        return copy
+    }
+
+    @Test("Union par id : chaque appareil garde les coins de l'autre")
+    func union() {
+        let mine = Self.coin("Col")
+        let theirs = Self.coin("Hêtraie")
+        // jamais rien échangé (base vide) : tout est gardé, et il faut envoyer
+        let first = CoinMerge.merge(local: [mine], remote: [theirs], base: [])
+        #expect(first.coins == [mine, theirs])
+        #expect(first.needsPush)
+        // les deux listes vides, ou identiques : rien à envoyer
+        #expect(CoinMerge.merge(local: [], remote: [], base: []) == CoinMerge.Result(coins: [], needsPush: false))
+        let settled = CoinMerge.merge(local: [mine, theirs], remote: [theirs, mine], base: [mine, theirs])
+        #expect(settled.coins == [mine, theirs])
+        #expect(!settled.needsPush)
+        // appareil neuf (réinstallation) : il reprend tout du serveur, sans rien renvoyer
+        let fresh = CoinMerge.merge(local: [], remote: [mine, theirs], base: [])
+        #expect(fresh.coins == [mine, theirs] && !fresh.needsPush)
+    }
+
+    @Test("Même id des deux côtés : la version de l'appareil si elle a changé ici, sinon celle du serveur")
+    func sameID() {
+        let base = Self.coin("Col")
+        let here = Self.renamed(base, "Col du Nord")
+        let there = Self.renamed(base, "Col (crête)")
+        // renommé ici seulement
+        let localEdit = CoinMerge.merge(local: [here], remote: [base], base: [base])
+        #expect(localEdit.coins == [here] && localEdit.needsPush)
+        // renommé ailleurs seulement : l'appareil suit, rien à renvoyer
+        let remoteEdit = CoinMerge.merge(local: [base], remote: [there], base: [base])
+        #expect(remoteEdit.coins == [there] && !remoteEdit.needsPush)
+        // renommé des deux côtés : pas d'horodatage, la version de l'appareil
+        let both = CoinMerge.merge(local: [here], remote: [there], base: [base])
+        #expect(both.coins == [here] && both.needsPush)
+        // sans base (fichier d'avant la fusion) : la version de l'appareil
+        let noBase = CoinMerge.merge(local: [here], remote: [there], base: [])
+        #expect(noBase.coins == [here] && noBase.needsPush)
+    }
+
+    @Test("Suppressions : la base sert de pierre tombale, dans les deux sens")
+    func deletions() {
+        let kept = Self.coin("Hêtraie")
+        let gone = Self.coin("Col")
+        // supprimé ici (hors ligne) : le serveur l'a encore, la fusion ne le ressuscite pas
+        let deletedHere = CoinMerge.merge(local: [kept], remote: [kept, gone], base: [kept, gone])
+        #expect(deletedHere.coins == [kept] && deletedHere.needsPush)
+        // supprimé sur un autre appareil : il part d'ici aussi, rien à renvoyer
+        let deletedThere = CoinMerge.merge(local: [kept, gone], remote: [kept], base: [kept, gone])
+        #expect(deletedThere.coins == [kept] && !deletedThere.needsPush)
+        // supprimé ailleurs mais renommé ici entre-temps : la modification de l'appareil n'est pas perdue
+        let edited = Self.renamed(gone, "Col du Nord")
+        let conflict = CoinMerge.merge(local: [kept, edited], remote: [kept], base: [kept, gone])
+        #expect(conflict.coins == [kept, edited] && conflict.needsPush)
+        // supprimé des deux côtés
+        let both = CoinMerge.merge(local: [kept], remote: [kept], base: [kept, gone])
+        #expect(both.coins == [kept] && !both.needsPush)
+        // créé hors ligne ici pendant qu'un autre en créait un : les deux restent
+        let offline = Self.coin("Sapinière")
+        let other = Self.coin("Chênaie")
+        let created = CoinMerge.merge(local: [kept, offline], remote: [kept, other], base: [kept])
+        #expect(created.coins == [kept, offline, other] && created.needsPush)
+    }
+
+    @Test("Comparaison sans ordre ; un id en double ne compte qu'une fois")
+    func sameAndDuplicates() {
+        let a = Self.coin("A")
+        let b = Self.coin("B")
+        #expect(CoinMerge.same([a, b], [b, a]))
+        #expect(!CoinMerge.same([a], [a, b]))
+        #expect(!CoinMerge.same([a], [Self.renamed(a, "A'")]))
+        let doubled = CoinMerge.merge(local: [a, a], remote: [b, b], base: [])
+        #expect(doubled.coins == [a, b])
+    }
+
+    @Test("Magasin : fusion écrite d'un tenant, base gardée par identifiant, relue du disque")
+    func storeMerge() async throws {
+        let directory = FieldStoreTests.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let user = UUID()
+        let mine = Self.coin("Col")
+        let theirs = Self.coin("Hêtraie")
+        let store = LocalStore(directory: directory)
+        try await store.addCoin(mine)
+        #expect(await store.coinsBase(for: user).isEmpty)
+
+        let merged = try await store.mergeCoins(remote: [theirs], for: user)
+        #expect(merged.coins == [mine, theirs] && merged.needsPush)
+        #expect(await store.coins == [mine, theirs])
+        #expect(await store.coinsBase(for: user) == [theirs])  // ce que le serveur a, pas encore « Col »
+        try await store.setCoinsBase([mine, theirs], for: user)  // après le PUT
+
+        // suppression et renommage sur l'appareil : la base ne bouge pas
+        try await store.removeCoin(theirs.id)
+        #expect(try await store.renameCoin(mine.id, to: "Col du Nord"))
+        #expect(try await store.renameCoin(UUID(), to: "inconnu") == false)
+        let again = LocalStore(directory: directory)
+        try await again.load()
+        #expect(await again.coins.map(\.name) == ["Col du Nord"])
+        #expect(await again.coinsBase(for: user) == [mine, theirs])
+        // le serveur a encore les deux : « Hêtraie » supprimé ici n'est pas repris
+        let next = try await again.mergeCoins(remote: [mine, theirs], for: user)
+        #expect(next.coins.map(\.name) == ["Col du Nord"] && next.needsPush)
+
+        // un fichier d'avant la fusion (sans base) se relit
+        let legacy = try JSONDecoder().decode(LocalStore.CoinsFile.self, from: Data(#"{"version": 1, "coins": []}"#.utf8))
+        #expect(legacy.synced == nil && legacy.syncedFor == nil)
+    }
+
+    @Test("Identifiant de l'app changé : la base de l'ancien ne vaut plus, les coins repartent sous de nouveaux id")
+    func identityChanged() async throws {
+        let directory = FieldStoreTests.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let before = UUID()
+        let after = UUID()
+        let mine = Self.coin("Col")
+        let theirs = Self.coin("Hêtraie")
+        let store = LocalStore(directory: directory)
+        try await store.addCoin(mine)
+        _ = try await store.mergeCoins(remote: [], for: before)
+        try await store.setCoinsBase([mine], for: before)
+        #expect(await store.coinsBase(for: after).isEmpty)
+
+        // sous le nouvel identifiant, le serveur n'a que le coin de l'autre appareil : « Col » n'est
+        // pas pris pour une suppression faite ailleurs, il est gardé sous un nouvel id
+        let merged = try await store.mergeCoins(remote: [theirs], for: after)
+        #expect(merged.coins.map(\.name) == ["Col", "Hêtraie"] && merged.needsPush)
+        #expect(merged.coins[0].id != mine.id)
+        #expect(merged.coins[0].lat == mine.lat && merged.coins[0].t == mine.t && merged.coins[0].altClass == mine.altClass)
+        #expect(await store.coinsBase(for: after) == [theirs])
+        #expect(await store.coinsBase(for: before).isEmpty)
+    }
+}
+
 /// Trousseau factice : absent, présent, en erreur, ou qui reçoit un identifiant d'un autre appareil
 /// pendant qu'on écrit le nôtre.
 nonisolated final class ScriptedIdentityStore: IdentityStore, @unchecked Sendable {

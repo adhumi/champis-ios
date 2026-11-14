@@ -23,6 +23,12 @@ actor LocalStore {
     nonisolated struct CoinsFile: Codable, Sendable {
         var version = 1
         var coins: [Coin] = []
+        /// Base de la fusion (`CoinMerge`) : les coins que le serveur avait au dernier échange
+        /// réussi (lecture de `GET /coins` ou `PUT /coins`). Absent d'un fichier d'avant la fusion.
+        var synced: [Coin]? = nil
+        /// Identifiant de l'app pour lequel `synced` vaut : la base d'un autre identifiant ne dit
+        /// rien du serveur de celui-ci.
+        var syncedFor: UUID? = nil
     }
 
     let directory: URL
@@ -107,13 +113,14 @@ actor LocalStore {
         try write(observationsFile, to: observationsURL)
     }
 
-    /// Ce que le serveur connaît remplace ce qui a déjà été envoyé ; les locales en attente restent.
+    /// Fusion par `id` avec ce que le serveur connaît : ses observations, plus celles de l'appareil
+    /// qui attendent encore l'envoi (pour un même `id`, la version de l'appareil). Une observation
+    /// déjà envoyée que le serveur n'a plus a été effacée ailleurs (« tout supprimer ») : elle part.
     func mergeRemote(_ remote: [FieldObservation]) throws {
         try load()
         let pending = Set(observationsFile.pending)
-        let remoteIDs = Set(remote.map(\.id))
-        let keep = observationsFile.observations.filter { pending.contains($0.id) && !remoteIDs.contains($0.id) }
-        observationsFile.observations = remote + keep
+        let keep = observationsFile.observations.filter { pending.contains($0.id) }
+        observationsFile.observations = remote.filter { !pending.contains($0.id) } + keep
         try write(observationsFile, to: observationsURL)
     }
 
@@ -121,10 +128,84 @@ actor LocalStore {
 
     var coins: [Coin] { coinsFile.coins }
 
+    /// Remplace la liste de l'appareil ; la base de la fusion ne change pas.
     func setCoins(_ coins: [Coin]) throws {
         try load()
-        coinsFile.coins = coins
-        try write(coinsFile, to: coinsURL)
+        var next = coinsFile
+        next.coins = coins
+        try commit(next)
+    }
+
+    /// Ajoute un coin à la liste de l'appareil (ou le remplace, même `id`).
+    func addCoin(_ coin: Coin) throws {
+        try load()
+        var next = coinsFile
+        next.coins.removeAll { $0.id == coin.id }
+        next.coins.append(coin)
+        try commit(next)
+    }
+
+    /// Renomme un coin ; faux s'il n'est pas sur l'appareil.
+    func renameCoin(_ id: UUID, to name: String) throws -> Bool {
+        try load()
+        guard let index = coinsFile.coins.firstIndex(where: { $0.id == id }) else { return false }
+        var next = coinsFile
+        next.coins[index].name = name
+        try commit(next)
+        return true
+    }
+
+    /// Retire un coin de l'appareil. La base le garde : elle est la pierre tombale qui empêche la
+    /// fusion de le reprendre du serveur tant que la suppression n'y est pas arrivée.
+    func removeCoin(_ id: UUID) throws {
+        try load()
+        var next = coinsFile
+        next.coins.removeAll { $0.id == id }
+        try commit(next)
+    }
+
+    /// Base de la fusion pour cet identifiant ; vide si rien n'a encore été échangé avec lui.
+    func coinsBase(for user: UUID) -> [Coin] {
+        coinsFile.syncedFor == user ? (coinsFile.synced ?? []) : []
+    }
+
+    /// Le serveur a maintenant cette liste (après un `PUT` réussi).
+    func setCoinsBase(_ base: [Coin], for user: UUID) throws {
+        try load()
+        var next = coinsFile
+        next.synced = base
+        next.syncedFor = user
+        try commit(next)
+    }
+
+    /// Fusionne la liste du serveur avec celle de l'appareil (`CoinMerge`) et l'écrit, d'un seul
+    /// tenant : aucun ajout fait entre-temps n'est perdu. La base devient la liste du serveur.
+    ///
+    /// Si la base vaut pour un autre identifiant (l'identifiant de l'app a changé, conflit
+    /// iCloud), les coins de l'appareil repartent sous de nouveaux `id` : ceux d'avant existent
+    /// encore côté serveur sous l'ancien identifiant, et un `id` de coin y est unique.
+    func mergeCoins(remote: [Coin], for user: UUID) throws -> CoinMerge.Result {
+        try load()
+        var local = coinsFile.coins
+        if let previous = coinsFile.syncedFor, previous != user {
+            local = local.map {
+                Coin(name: $0.name, lat: $0.lat, lon: $0.lon, target: $0.target, altClass: $0.altClass, t: $0.t)
+            }
+        }
+        let result = CoinMerge.merge(local: local, remote: remote, base: coinsBase(for: user))
+        var next = coinsFile
+        next.coins = result.coins
+        next.synced = remote
+        next.syncedFor = user
+        try commit(next)
+        return result
+    }
+
+    /// Écrit le fichier des coins, puis seulement garde l'état : un échec d'écriture ne laisse pas
+    /// la mémoire en avance sur le disque.
+    private func commit(_ next: CoinsFile) throws {
+        try write(next, to: coinsURL)
+        coinsFile = next
     }
 
     /// Droit à l'effacement : tout, après `DELETE /observations`.
