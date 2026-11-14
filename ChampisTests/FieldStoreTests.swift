@@ -166,27 +166,233 @@ struct FieldStoreTests {
         #expect(try Fixtures.decode(DeleteResponse.self, #"{"deleted": 5}"#).deleted == 5)
         #expect(FieldModel.isoDay(Date(timeIntervalSince1970: 0), calendar: Calendar(identifier: .gregorian).withUTC()) == "1970-01-01")
     }
+}
 
-    @Test("Identité : créée une fois, relue ensuite, repli sur le magasin suivant")
-    func identity() throws {
-        let memory = MemoryIdentityStore()
-        let first = Identity.userID(from: [memory])
-        #expect(first != nil)
-        #expect(Identity.userID(from: [memory]) == first)
-        #expect(try memory.load() == first)
+/// Trousseau factice : absent, présent, en erreur, ou qui reçoit un identifiant d'un autre appareil
+/// pendant qu'on écrit le nôtre.
+nonisolated final class ScriptedIdentityStore: IdentityStore, @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored: UUID?
+    private var loadError: IdentityError?
+    private var saveError: IdentityError?
+    /// Identifiant qu'un autre appareil écrit juste avant notre ajout (doublon).
+    private var racing: UUID?
+    private var saves: [UUID] = []
 
-        let failing = FailingIdentityStore()
-        let fallback = MemoryIdentityStore()
-        let id = Identity.userID(from: [failing, fallback])
-        #expect(id != nil)
-        #expect(try fallback.load() == id)
-        #expect(Identity.userID(from: [failing]) == nil)
+    init(_ id: UUID? = nil) {
+        stored = id
+    }
+
+    func set(stored: UUID?? = nil, loadError: IdentityError?? = nil, saveError: IdentityError?? = nil, racing: UUID?? = nil) {
+        lock.lock()
+        defer { lock.unlock() }
+        if let stored { self.stored = stored }
+        if let loadError { self.loadError = loadError }
+        if let saveError { self.saveError = saveError }
+        if let racing { self.racing = racing }
+    }
+
+    var saved: [UUID] {
+        lock.lock()
+        defer { lock.unlock() }
+        return saves
+    }
+
+    var current: UUID? {
+        lock.lock()
+        defer { lock.unlock() }
+        return stored
+    }
+
+    func load() throws -> UUID? {
+        lock.lock()
+        defer { lock.unlock() }
+        if let loadError { throw loadError }
+        return stored
+    }
+
+    func save(_ id: UUID) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        if let saveError { throw saveError }
+        if let racing {
+            stored = racing
+            self.racing = nil
+        }
+        guard stored == nil else { throw IdentityError.duplicate }
+        stored = id
+        saves.append(id)
     }
 }
 
-nonisolated struct FailingIdentityStore: IdentityStore {
-    func load() throws -> UUID? { throw IdentityError.keychain(-1) }
-    func save(_ id: UUID) throws { throw IdentityError.keychain(-1) }
+struct IdentityTests {
+    /// `errSecInteractionNotAllowed` : trousseau verrouillé avant le premier déverrouillage.
+    static let locked = IdentityError.keychain(-25308)
+
+    @Test("Absent du trousseau : créé une fois, relu ensuite, retenu comme dernier connu")
+    func createdOnce() throws {
+        let store = ScriptedIdentityStore()
+        let memory = VolatileIdentityMemory()
+        let provider = IdentityProvider(store: store, memory: memory)
+        let first = try Identity.resolve(provider)
+        #expect(store.current == first)
+        #expect(store.saved == [first])
+        #expect(try Identity.resolve(provider) == first)
+        #expect(store.saved == [first])  // pas de seconde écriture
+        #expect(memory.lastKnown() == first)
+        #expect(memory.retired().isEmpty)
+    }
+
+    @Test("Erreur du trousseau : remontée, jamais de nouvel identifiant")
+    func keychainErrorIsNotAbsence() throws {
+        let store = ScriptedIdentityStore()
+        store.set(loadError: Self.locked)
+        let memory = VolatileIdentityMemory()
+        let provider = IdentityProvider(store: store, memory: memory)
+        #expect(throws: Self.locked) { try Identity.resolve(provider) }
+        #expect(store.saved.isEmpty)
+        #expect(memory.lastKnown() == nil)
+
+        // l'écriture échoue (trousseau refusé) : remontée aussi, rien n'est retenu
+        store.set(loadError: .some(nil), saveError: IdentityError.keychain(-34018))
+        #expect(throws: IdentityError.keychain(-34018)) { try Identity.resolve(provider) }
+        #expect(memory.lastKnown() == nil)
+
+        // le trousseau répond de nouveau : l'identifiant est créé
+        store.set(saveError: .some(nil))
+        let id = try Identity.resolve(provider)
+        #expect(store.current == id && memory.lastKnown() == id)
+    }
+
+    @Test("Erreur du trousseau avec un identifiant déjà connu : il sert, rien n'est créé ni écrit")
+    func knownIdentitySurvivesKeychainError() throws {
+        let known = UUID()
+        let store = ScriptedIdentityStore(known)
+        let memory = VolatileIdentityMemory()
+        let provider = IdentityProvider(store: store, memory: memory)
+        #expect(try Identity.resolve(provider) == known)
+        store.set(loadError: Self.locked)
+        #expect(try Identity.resolve(provider) == known)
+        #expect(store.saved.isEmpty)
+        #expect(memory.retired().isEmpty)
+    }
+
+    @Test("Trousseau vidé : le dernier identifiant connu y est remis, pas un nouveau")
+    func lastKnownIsRestored() throws {
+        let known = UUID()
+        let store = ScriptedIdentityStore()
+        let memory = VolatileIdentityMemory(lastKnown: known)
+        #expect(try Identity.resolve(IdentityProvider(store: store, memory: memory)) == known)
+        #expect(store.current == known)
+        #expect(memory.retired().isEmpty)
+    }
+
+    @Test("Doublon à l'écriture : l'identifiant du trousseau fait foi, il n'est pas écrasé")
+    func duplicateIsNeverOverwritten() throws {
+        let other = UUID()
+        let store = ScriptedIdentityStore()
+        store.set(racing: other)
+        let memory = VolatileIdentityMemory()
+        let id = try Identity.resolve(IdentityProvider(store: store, memory: memory))
+        #expect(id == other)
+        #expect(store.current == other)
+        #expect(store.saved.isEmpty)
+        #expect(memory.lastKnown() == other)
+        // le magasin de mémoire refuse lui aussi d'écraser
+        let plain = MemoryIdentityStore(other)
+        #expect(throws: IdentityError.duplicate) { try plain.save(UUID()) }
+        #expect(try plain.load() == other)
+    }
+
+    @Test("Conflit iCloud : l'identifiant lu change, l'ancien est mis de côté pour l'effacement")
+    func conflictKeepsTheOldAside() throws {
+        let mine = UUID()
+        let theirs = UUID()
+        let store = ScriptedIdentityStore(mine)
+        let memory = VolatileIdentityMemory()
+        let provider = IdentityProvider(store: store, memory: memory)
+        #expect(try Identity.resolve(provider) == mine)
+        // iCloud réunit les deux appareils : celui de l'autre l'emporte
+        store.set(stored: theirs)
+        #expect(try Identity.resolve(provider) == theirs)
+        #expect(memory.lastKnown() == theirs)
+        #expect(memory.retired() == [mine])
+        // relu sans changement : rien de plus de côté
+        #expect(try Identity.resolve(provider) == theirs)
+        #expect(memory.retired() == [mine])
+        // il revient : il n'est plus de côté, l'autre l'est
+        store.set(stored: mine)
+        #expect(try Identity.resolve(provider) == mine)
+        #expect(memory.retired() == [theirs])
+    }
+}
+
+@MainActor
+struct IdentityFieldTests {
+    @Test("Trousseau en erreur : dit en clair, rien n'est envoyé ; « Réessayer » reprend")
+    func visibleStateAndRetry() async throws {
+        let directory = FieldStoreTests.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host) { method, path, _ in
+            (method, path) == ("POST", "/observations") ? (201, #"{"inserted": 1, "duplicates": 0}"#) : (404, #"{"detail": "inconnu"}"#)
+        }
+        let store = ScriptedIdentityStore()
+        store.set(loadError: IdentityTests.locked)
+        let model = FieldModel(
+            api: StubURLProtocol.api(host: host), store: LocalStore(directory: directory),
+            identity: IdentityProvider(store: store, memory: VolatileIdentityMemory())
+        )
+        model.asksNotificationPermission = false
+        await model.start(api: model.api)
+        #expect(model.userID == nil)
+        let problem = try #require(model.problem)
+        #expect(problem.text == "L'identifiant de l'app n'a pas pu être lu : observations et coins restent sur l'appareil")
+        #expect(problem.retryable)
+
+        // l'observation est gardée sur l'appareil, rien ne part sans identifiant
+        await model.record(species: "boletus_edulis", latitude: 47.0, longitude: 6.0, accuracyM: nil, date: "2026-11-13", found: true, quantity: 1)
+        #expect(model.observations.count == 1 && model.pendingCount == 1)
+        #expect(StubURLProtocol.requests(host: host).isEmpty)
+        #expect(store.saved.isEmpty)
+
+        // le trousseau répond : « Réessayer » lit l'identifiant et envoie ce qui attendait
+        let id = UUID()
+        store.set(stored: id, loadError: .some(nil))
+        await model.retry()
+        #expect(model.userID == id)
+        #expect(model.problem == nil)
+        #expect(model.pendingCount == 0)
+        #expect(StubURLProtocol.requests(host: host).first { $0.method == "POST" }?.user == id.uuidString.lowercased())
+    }
+
+    @Test("Tout supprimer : l'identifiant mis de côté est effacé du serveur lui aussi, puis oublié")
+    func deleteAllErasesRetiredIdentities() async throws {
+        let directory = FieldStoreTests.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host) { method, path, _ in
+            (method, path) == ("DELETE", "/observations") ? (200, #"{"deleted": 1}"#) : (404, #"{"detail": "inconnu"}"#)
+        }
+        let old = UUID()
+        let current = UUID()
+        let memory = VolatileIdentityMemory(lastKnown: old)
+        let model = FieldModel(
+            api: StubURLProtocol.api(host: host), store: LocalStore(directory: directory),
+            identity: IdentityProvider(store: ScriptedIdentityStore(current), memory: memory)
+        )
+        model.asksNotificationPermission = false
+        await model.start(api: model.api)
+        #expect(model.userID == current)
+        #expect(memory.retired() == [old])
+
+        await model.deleteAll()
+        let deletes = StubURLProtocol.requests(host: host).filter { $0.method == "DELETE" }
+        #expect(deletes.map(\.user) == [old.uuidString.lowercased(), current.uuidString.lowercased()])
+        #expect(memory.retired().isEmpty)
+        #expect(model.status == "Observations et coins effacés")
+        #expect(model.userID == current)  // l'identifiant de l'app reste le sien
+    }
 }
 
 extension Calendar {

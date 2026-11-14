@@ -101,7 +101,7 @@ struct FieldModelTests {
     static func model(host: String, directory: URL) -> FieldModel {
         let model = FieldModel(
             api: StubURLProtocol.api(host: host), store: LocalStore(directory: directory),
-            identityStores: [MemoryIdentityStore()]
+            identity: .inMemory()
         )
         model.asksNotificationPermission = false
         return model

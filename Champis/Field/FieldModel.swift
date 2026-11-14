@@ -28,7 +28,7 @@ final class FieldModel {
     @ObservationIgnored private var undoTask: Task<Void, Never>?
 
     @ObservationIgnored private let store: LocalStore
-    @ObservationIgnored private let identityStores: [any IdentityStore]
+    @ObservationIgnored private let identity: IdentityProvider
     @ObservationIgnored private(set) var api: ChampisAPI
     /// Désactivé par les tests : la demande système attendrait une réponse.
     @ObservationIgnored var asksNotificationPermission = true
@@ -45,10 +45,10 @@ final class FieldModel {
         case coinScores
     }
 
-    init(api: ChampisAPI, store: LocalStore, identityStores: [any IdentityStore]) {
+    init(api: ChampisAPI, store: LocalStore, identity: IdentityProvider) {
         self.api = api
         self.store = store
-        self.identityStores = identityStores
+        self.identity = identity
     }
 
     /// Build de développement : passerelle APNs sandbox côté serveur.
@@ -68,17 +68,27 @@ final class FieldModel {
         } catch {
             fail(Problem("Les observations de l'appareil n'ont pas pu être lues", error: error), retry: .start)
         }
-        if userID == nil {
-            userID = Identity.userID(from: identityStores)
-            if userID == nil {
-                fail(
-                    Problem("L'app n'a pas pu créer son identifiant : observations et coins restent sur l'appareil", detail: "trousseau et UserDefaults indisponibles"),
-                    retry: .start
-                )
-            }
-        }
+        await resolveIdentity()
         await refreshFromStore()
         await sync()
+    }
+
+    /// Lit l'identifiant de l'app, ou le crée si le trousseau dit qu'il n'en a pas, hors du fil
+    /// principal. Une erreur du trousseau se dit en clair, avec « Réessayer » : aucun identifiant
+    /// de rechange n'est créé, observations et coins restent sur l'appareil en attendant.
+    func resolveIdentity() async {
+        guard userID == nil else { return }
+        do {
+            userID = try await Identity.resolveInBackground(identity)
+        } catch {
+            fail(
+                Problem(
+                    "L'identifiant de l'app n'a pas pu être lu : observations et coins restent sur l'appareil",
+                    detail: "trousseau : \(Problem.technical(error))"
+                ),
+                retry: .start
+            )
+        }
     }
 
     private func refreshFromStore() async {
@@ -190,13 +200,19 @@ final class FieldModel {
     func deleteAll() async {
         guard let userID else { return }
         do {
+            // Les identifiants mis de côté (deux appareils avaient créé le leur avant que iCloud ne
+            // les réunisse) sont effacés du serveur eux aussi, puis oubliés un à un.
+            for old in identity.memory.retired() where old != userID {
+                _ = try await api.deleteObservations(user: old)
+                identity.memory.setRetired(identity.memory.retired().filter { $0 != old })
+            }
             _ = try await api.deleteObservations(user: userID)
             try await store.removeAll()
             coinScores = [:]
             clear(.delete)
             status = "Observations et coins effacés"
         } catch {
-            fail(Problem("Rien n'a été effacé : le serveur n'a pas pu être joint", error: error), retry: .delete)
+            fail(Problem("L'effacement n'a pas abouti : le serveur n'a pas pu être joint", error: error), retry: .delete)
         }
         await refreshFromStore()
     }
