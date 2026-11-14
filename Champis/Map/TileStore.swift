@@ -414,7 +414,8 @@ actor TileStore {
             data = try await reader.tile(z: z, x: x, y: y)
             try? disk?.write(file: name, z: z, x: x, y: y, data: data)
         }
-        return try data.map { try PNGDecoder.decode($0) }
+        // une tuile fait 256 × 256 : toute autre dimension est refusée dès l'en-tête du PNG
+        return try data.map { try PNGDecoder.decode($0, side: TileMath.tileSize) }
     }
 
     private func remember(_ key: Key, _ png: DecodedPNG?) {
