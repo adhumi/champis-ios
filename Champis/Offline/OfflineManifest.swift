@@ -51,11 +51,35 @@ nonisolated struct OfflineLocalFile: Hashable, Sendable {
 }
 
 nonisolated extension BBox {
+    /// France métropolitaine et Corse, marge comprise : les bornes que l'API accepte pour un point
+    /// (`lat` de 41,0 à 51,5, `lon` de −5,5 à 10,0).
+    static let france = BBox(minLon: -5.5, minLat: 41.0, maxLon: 10.0, maxLat: 51.5)
+
+    /// Partie de cette emprise contenue dans `other` ; `nil` si elles ne se recoupent pas ou si une
+    /// borne n'est pas un nombre fini.
+    func clamped(to other: BBox) -> BBox? {
+        guard [minLon, minLat, maxLon, maxLat].allSatisfy(\.isFinite) else { return nil }
+        let clamped = BBox(
+            minLon: max(minLon, other.minLon), minLat: max(minLat, other.minLat),
+            maxLon: min(maxLon, other.maxLon), maxLat: min(maxLat, other.maxLat)
+        )
+        guard clamped.minLon <= clamped.maxLon, clamped.minLat <= clamped.maxLat else { return nil }
+        return clamped
+    }
+
     /// Découpe en sous-emprises d'au plus `maxSpan` degrés de côté : `GET /weather/bbox` refuse plus
-    /// de 40 cellules de 5 km, un département en compte des centaines.
+    /// de 40 cellules de 5 km, un département en compte des centaines. Une emprise retournée, non
+    /// finie ou plus grande que la France ne se découpe pas (liste vide) : le nombre de
+    /// sous-emprises, donc de requêtes, reste borné quoi que dise l'en-tête d'un fichier.
     func split(maxSpan: Double) -> [BBox] {
+        guard maxSpan > 0, maxSpan.isFinite, [minLon, minLat, maxLon, maxLat].allSatisfy(\.isFinite),
+              maxLon >= minLon, maxLat >= minLat,
+              maxLon - minLon <= BBox.france.maxLon - BBox.france.minLon,
+              maxLat - minLat <= BBox.france.maxLat - BBox.france.minLat
+        else { return [] }
         let columns = max(1, Int(((maxLon - minLon) / maxSpan).rounded(.up)))
         let rows = max(1, Int(((maxLat - minLat) / maxSpan).rounded(.up)))
+        guard columns <= BBox.maxSplitSide, rows <= BBox.maxSplitSide else { return [] }
         let width = (maxLon - minLon) / Double(columns)
         let height = (maxLat - minLat) / Double(rows)
         var out: [BBox] = []
@@ -70,4 +94,7 @@ nonisolated extension BBox {
         }
         return out
     }
+
+    /// Nombre maximal de colonnes ou de lignes d'un découpage (un pas minuscule sur une grande emprise).
+    static let maxSplitSide = 200
 }

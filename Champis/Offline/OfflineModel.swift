@@ -270,7 +270,11 @@ final class OfflineModel {
             let fileURL = try await store.fileURL(code: department.code, name: first.name)
             let header = try await PMTilesReader(source: try LocalFileSource(url: fileURL)).readHeader()
             let b = header.bounds
-            let bbox = BBox(minLon: b.minLon, minLat: b.minLat, maxLon: b.maxLon, maxLat: b.maxLat)
+            // l'emprise vient de l'en-tête d'un fichier téléchargé : bornée à la France (marge
+            // comprise) avant d'être découpée, pour que le nombre de requêtes reste celui d'un département
+            guard let bbox = Self.weatherBounds(minLon: b.minLon, minLat: b.minLat, maxLon: b.maxLon, maxLat: b.maxLat) else {
+                throw Failure.boundsOutsideFrance
+            }
             var responses: [WeatherBBoxResponse] = []
             for part in bbox.split(maxSpan: Self.weatherSpan) {
                 responses.append(try await api.weather(bbox: part, species: department.species))
@@ -287,6 +291,17 @@ final class OfflineModel {
             fail(Problem("Météo du département \(department.code) non récupérée", error: error), retry: .resume(code: department.code))
             await refresh()
         }
+    }
+
+    /// Emprise d'un fichier pour la météo embarquée : celle de son en-tête, bornée à la France
+    /// métropolitaine et la Corse (`BBox.france`) ; `nil` si elle n'y touche pas.
+    nonisolated static func weatherBounds(minLon: Double, minLat: Double, maxLon: Double, maxLat: Double) -> BBox? {
+        BBox(minLon: minLon, minLat: minLat, maxLon: maxLon, maxLat: maxLat).clamped(to: .france)
+    }
+
+    nonisolated enum Failure: Error, Equatable, Sendable {
+        /// L'en-tête du fichier téléchargé annonce une emprise hors de France.
+        case boundsOutsideFrance
     }
 
     /// Rafraîchit la météo seule (petit), sans toucher aux tuiles.

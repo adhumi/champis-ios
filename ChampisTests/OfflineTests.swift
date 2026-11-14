@@ -196,6 +196,43 @@ struct OfflineModelTests {
             .replacingOccurrences(of: "\"bytes\": 300,", with: "\"bytes\": \(bytes),")
     }
 
+    /// Écrit l'emprise dans l'en-tête d'un PMTiles (degrés × 10⁷, entiers 32 bits petit-boutistes, octet 102).
+    static func withBounds(_ pmtiles: Data, minLon: Double, minLat: Double, maxLon: Double, maxLat: Double) -> Data {
+        var data = pmtiles
+        for (index, degrees) in [minLon, minLat, maxLon, maxLat].enumerated() {
+            let value = UInt32(bitPattern: Int32((degrees * 1e7).rounded()))
+            for byte in 0..<4 {
+                data[102 + index * 4 + byte] = UInt8((value >> (8 * UInt32(byte))) & 0xFF)
+            }
+        }
+        return data
+    }
+
+    @Test("Météo embarquée : l'emprise de l'en-tête est bornée à la France avant d'être découpée")
+    func weatherBounds() {
+        // un département : inchangé
+        let doubs = OfflineModel.weatherBounds(minLon: 5.7, minLat: 46.5, maxLon: 7.1, maxLat: 47.6)
+        #expect(doubs == BBox(minLon: 5.7, minLat: 46.5, maxLon: 7.1, maxLat: 47.6))
+        // en-tête aberrant (le monde entier, ou les bornes d'un entier 32 bits) : la France, pas plus
+        let world = OfflineModel.weatherBounds(minLon: -180, minLat: -85, maxLon: 180, maxLat: 85)
+        #expect(world == BBox.france)
+        #expect(OfflineModel.weatherBounds(minLon: -214.7, minLat: -214.7, maxLon: 214.7, maxLat: 214.7) == BBox.france)
+        let parts = BBox.france.split(maxSpan: OfflineModel.weatherSpan)
+        #expect(parts.count == 52 * 35)
+        // hors de France, retournée ou non finie : rien
+        #expect(OfflineModel.weatherBounds(minLon: 0, minLat: 0, maxLon: 0, maxLat: 0) == nil)
+        #expect(OfflineModel.weatherBounds(minLon: 20, minLat: 45, maxLon: 25, maxLat: 48) == nil)
+        #expect(OfflineModel.weatherBounds(minLon: 7, minLat: 47, maxLon: 5, maxLat: 46) == nil)
+        #expect(OfflineModel.weatherBounds(minLon: .nan, minLat: 46, maxLon: 7, maxLat: 47) == nil)
+        #expect(OfflineModel.weatherBounds(minLon: -.infinity, minLat: 46, maxLon: .infinity, maxLat: 47) == nil)
+        // le découpage lui-même ne boucle pas sur une emprise aberrante
+        #expect(BBox(minLon: -180, minLat: -85, maxLon: 180, maxLat: 85).split(maxSpan: 0.3).isEmpty)
+        #expect(BBox(minLon: 5, minLat: 46, maxLon: .infinity, maxLat: 47).split(maxSpan: 0.3).isEmpty)
+        #expect(BBox(minLon: 5, minLat: 46, maxLon: 7, maxLat: 47).split(maxSpan: 0).isEmpty)
+        #expect(BBox(minLon: 5, minLat: 46, maxLon: 7, maxLat: 47).split(maxSpan: 1e-9).isEmpty)
+        #expect(BBox(minLon: 7, minLat: 46, maxLon: 5, maxLat: 47).split(maxSpan: 0.3).isEmpty)
+    }
+
     @Test("Fichier reçu d'une autre taille que celle du manifeste : département incomplet, en clair")
     func sizeMismatch() async throws {
         #expect(OfflineModel.sizeMismatch(name: "A.pmtiles", received: 10, expected: 10) == nil)
@@ -236,7 +273,11 @@ struct OfflineModelTests {
         let root = OfflineStoreTests.temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
         let t = TileMath.tile(lon: PointInspectorTests.longitude, lat: PointInspectorTests.latitude, z: 15)
-        let pmtiles = PointInspectorTests.pmtiles(tiles: [(t.x, t.y, try PointInspectorTests.tile([(0, 254)]))])
+        // l'emprise de l'en-tête sert à demander la météo : celle d'un département (5,5–7,2 E, 46,5–47,8 N)
+        let pmtiles = Self.withBounds(
+            PointInspectorTests.pmtiles(tiles: [(t.x, t.y, try PointInspectorTests.tile([(0, 254)]))]),
+            minLon: 5.5, minLat: 46.5, maxLon: 7.2, maxLat: 47.8
+        )
 
         let host = StubURLProtocol.host()
         StubURLProtocol.set(host: host, binary: { _, path in path.hasPrefix("/tiles/") ? pmtiles : nil }) { _, path, _ in
