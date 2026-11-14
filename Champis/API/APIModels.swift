@@ -73,21 +73,21 @@ nonisolated struct TilesManifest: Codable, Sendable {
 /// audit du 13 nov. 2026) ; le reste du manifeste se lit quand même. L'init de décodage vit dans
 /// une extension pour garder l'init membre à membre (tests).
 nonisolated extension TilesManifest {
-    /// Une entrée, ou `nil` si elle ne se décode pas.
-    private nonisolated struct Lenient: Decodable {
-        let entry: Entry?
-
-        init(from decoder: any Decoder) throws {
-            entry = try? Entry(from: decoder)
-        }
-    }
-
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         configured = try c.decode(Bool.self, forKey: .configured)
         mode = try c.decodeIfPresent(String.self, forKey: .mode)
         generated = try c.decodeIfPresent(String.self, forKey: .generated)
-        tiles = try c.decode([Lenient].self, forKey: .tiles).compactMap(\.entry)
+        tiles = try c.decode([LenientTilesEntry].self, forKey: .tiles).compactMap(\.entry)
+    }
+}
+
+/// Une entrée du manifeste, ou `nil` si elle ne se décode pas.
+nonisolated struct LenientTilesEntry: Decodable {
+    let entry: TilesManifest.Entry?
+
+    init(from decoder: any Decoder) throws {
+        entry = try? TilesManifest.Entry(from: decoder)
     }
 }
 

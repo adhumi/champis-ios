@@ -190,7 +190,7 @@ struct CoinMergeTests {
         #expect(first.coins == [mine, theirs])
         #expect(first.needsPush)
         // les deux listes vides, ou identiques : rien à envoyer
-        #expect(CoinMerge.merge(local: [], remote: [], base: []) == CoinMerge.Result(coins: [], needsPush: false))
+        #expect(CoinMerge.merge(local: [], remote: [], base: []) == CoinMerge.Outcome(coins: [], needsPush: false))
         let settled = CoinMerge.merge(local: [mine, theirs], remote: [theirs, mine], base: [mine, theirs])
         #expect(settled.coins == [mine, theirs])
         #expect(!settled.needsPush)

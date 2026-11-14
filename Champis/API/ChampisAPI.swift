@@ -253,9 +253,9 @@ nonisolated struct ChampisAPI: Sendable {
 nonisolated final class RedirectGuard: NSObject, URLSessionTaskDelegate, Sendable {
     func urlSession(
         _ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
-        newRequest request: URLRequest
-    ) async -> URLRequest? {
-        Self.redirected(request, from: task.originalRequest?.url)
+        newRequest request: URLRequest, completionHandler: @escaping @Sendable (URLRequest?) -> Void
+    ) {
+        completionHandler(Self.redirected(request, from: task.originalRequest?.url))
     }
 
     /// La requête redirigée, sans l'identifiant si elle ne va plus au même hôte en https.

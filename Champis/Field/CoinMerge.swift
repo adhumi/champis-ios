@@ -18,14 +18,14 @@ import Foundation
 /// - des deux côtés : la version de l'appareil si elle a changé depuis la base (ou sans base),
 ///   sinon celle du serveur (renommé sur un autre appareil).
 nonisolated enum CoinMerge {
-    nonisolated struct Result: Equatable, Sendable {
+    nonisolated struct Outcome: Equatable, Sendable {
         /// La liste fusionnée : les coins de l'appareil dans leur ordre, puis ceux venus du serveur.
         let coins: [Coin]
         /// Vrai si la liste fusionnée diffère de celle du serveur : un `PUT` est à faire.
         let needsPush: Bool
     }
 
-    static func merge(local: [Coin], remote: [Coin], base: [Coin]) -> Result {
+    static func merge(local: [Coin], remote: [Coin], base: [Coin]) -> Outcome {
         let baseByID = index(base)
         let remoteByID = index(remote)
         var merged: [Coin] = []
@@ -43,7 +43,7 @@ nonisolated enum CoinMerge {
                 merged.append(coin)
             }
         }
-        return Result(coins: merged, needsPush: !same(merged, remote))
+        return Outcome(coins: merged, needsPush: !same(merged, remote))
     }
 
     /// Mêmes coins (identifiants et contenu), quel que soit l'ordre.

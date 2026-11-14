@@ -184,7 +184,7 @@ actor LocalStore {
     /// Si la base vaut pour un autre identifiant (l'identifiant de l'app a changé, conflit
     /// iCloud), les coins de l'appareil repartent sous de nouveaux `id` : ceux d'avant existent
     /// encore côté serveur sous l'ancien identifiant, et un `id` de coin y est unique.
-    func mergeCoins(remote: [Coin], for user: UUID) throws -> CoinMerge.Result {
+    func mergeCoins(remote: [Coin], for user: UUID) throws -> CoinMerge.Outcome {
         try load()
         var local = coinsFile.coins
         if let previous = coinsFile.syncedFor, previous != user {
