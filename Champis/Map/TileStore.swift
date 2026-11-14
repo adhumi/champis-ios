@@ -45,7 +45,7 @@ nonisolated struct TileFileChanged: Error, Equatable {}
 /// Range) : une réponse d'une autre version que celle déjà lue (ou que celle du cache disque) est
 /// refusée, pour ne jamais mélanger deux versions d'un fichier.
 nonisolated final class RemoteFileVersion: Sendable {
-    private struct State {
+    private nonisolated struct State {
         var known: DiskTileCache.Stamp?
         var changed = false
         /// Changements de version vus pendant la session.
@@ -75,7 +75,7 @@ nonisolated final class RemoteFileVersion: Sendable {
         let same = state.withLock { state -> Bool in
             // un validateur faible (`W/"…"`) désigne le même contenu que le fort
             let tag = etag.map { $0.hasPrefix("W/") ? String($0.dropFirst(2)) : $0 }
-            let seen = DiskTileCache.Stamp(bytes: total, etag: state.flips < Self.maxFlips ? tag : nil)
+            let seen = DiskTileCache.Stamp(bytes: total, etag: state.flips < RemoteFileVersion.maxFlips ? tag : nil)
             guard let known = state.known else {
                 state.known = seen
                 return true

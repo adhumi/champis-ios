@@ -74,7 +74,7 @@ nonisolated struct TilesManifest: Codable, Sendable {
 /// une extension pour garder l'init membre à membre (tests).
 nonisolated extension TilesManifest {
     /// Une entrée, ou `nil` si elle ne se décode pas.
-    private struct Lenient: Decodable {
+    private nonisolated struct Lenient: Decodable {
         let entry: Entry?
 
         init(from decoder: any Decoder) throws {

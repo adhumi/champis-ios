@@ -136,7 +136,7 @@ nonisolated struct DefaultsIdentityMemory: IdentityMemory {
 
 /// Tests et aperçus.
 nonisolated final class VolatileIdentityMemory: IdentityMemory {
-    private struct State {
+    private nonisolated struct State {
         var last: UUID?
         var retired: [UUID] = []
     }

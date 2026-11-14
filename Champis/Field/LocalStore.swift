@@ -221,7 +221,7 @@ actor LocalStore {
 
     /// Résultat d'une lecture : la valeur, rien (fichier absent), ou l'erreur de décodage d'un
     /// fichier lu mais indéchiffrable.
-    private struct Loaded<T> {
+    private nonisolated struct Loaded<T> {
         var value: T?
         var corrupt: (any Error)?
     }
