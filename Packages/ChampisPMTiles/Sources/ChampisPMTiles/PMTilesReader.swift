@@ -21,6 +21,8 @@ public final class PMTilesReader: Sendable {
         /// Répertoires feuilles en cours de lecture : les tuiles voisines demandées en même temps
         /// (premier affichage) partagent une seule requête au lieu d'en lancer une chacune.
         var pendingLeaves: [UInt64: Task<[DirectoryEntry], any Error>] = [:]
+        /// Incrémenté par `reset` : une lecture commencée avant ne remplit plus le cache.
+        var generation = 0
     }
 
     private let cache = Mutex(Cache())
@@ -30,22 +32,35 @@ public final class PMTilesReader: Sendable {
         self.maxCachedLeaves = maxCachedLeaves
     }
 
+    /// Oublie l'en-tête et les répertoires lus : le fichier a changé à la source (jeu republié sous
+    /// le même nom), la prochaine lecture repart de l'en-tête. Sans cela, l'ancien répertoire
+    /// désignerait des plages du nouveau fichier.
+    public func reset() {
+        cache.withLock {
+            let next = $0.generation + 1
+            $0 = Cache()
+            $0.generation = next
+        }
+    }
+
     public func readHeader() async throws -> PMTilesHeader {
         if let h = cache.withLock({ $0.header }) { return h }
+        let generation = cache.withLock { $0.generation }
         let h = try PMTilesHeader(try await source.read(offset: 0, length: PMTilesHeader.size))
-        cache.withLock { $0.header = h }
+        cache.withLock { if $0.generation == generation { $0.header = h } }
         return h
     }
 
     public func rootDirectory() async throws -> [DirectoryEntry] {
         if let root = cache.withLock({ $0.root }) { return root }
+        let generation = cache.withLock { $0.generation }
         let h = try await readHeader()
         let length = try PMTilesReader.length(h.rootLength, limit: ChampisPMTiles.maxDirectoryBytes, "répertoire racine")
         let raw = try await source.read(offset: h.rootOffset, length: length)
         let entries = try Directory.deserialize(
             try Inflate.decompress(raw, h.internalCompression, limit: ChampisPMTiles.maxDirectoryBytes)
         )
-        cache.withLock { $0.root = entries }
+        cache.withLock { if $0.generation == generation { $0.root = entries } }
         return entries
     }
 
@@ -78,6 +93,7 @@ public final class PMTilesReader: Sendable {
     private func leaf(at offset: UInt64, length: UInt32, header h: PMTilesHeader) async throws -> [DirectoryEntry] {
         if let cached = cache.withLock({ $0.leaves[offset] }) { return cached }
         let source = source
+        let generation = cache.withLock { $0.generation }
         let task: Task<[DirectoryEntry], any Error> = cache.withLock { c in
             if let running = c.pendingLeaves[offset] { return running }
             let started = Task {
@@ -95,6 +111,7 @@ public final class PMTilesReader: Sendable {
             let entries = try await task.value
             let limit = maxCachedLeaves
             cache.withLock {
+                guard $0.generation == generation else { return }
                 $0.pendingLeaves[offset] = nil
                 if $0.leaves[offset] == nil {
                     if $0.leaves.count >= limit { $0.leaves.removeAll(keepingCapacity: true) }
@@ -103,7 +120,7 @@ public final class PMTilesReader: Sendable {
             }
             return entries
         } catch {
-            cache.withLock { $0.pendingLeaves[offset] = nil }
+            cache.withLock { if $0.generation == generation { $0.pendingLeaves[offset] = nil } }
             throw error
         }
     }

@@ -38,11 +38,26 @@ public struct RemoteRangeSource: TileSource {
     public let url: URL
     public let session: URLSession
     public let headers: [String: String]
+    /// Appelé à chaque réponse 206, avant la lecture du corps, avec l'`ETag` et la taille totale du
+    /// fichier (`Content-Range: bytes a-b/total`) quand le serveur les donne. L'appelant y
+    /// reconnaît un fichier republié sous le même nom ; s'il lève une erreur, la lecture échoue
+    /// avec elle, pour ne pas mélanger deux versions.
+    public let onResponse: (@Sendable (_ etag: String?, _ total: Int64?) throws -> Void)?
 
-    public init(url: URL, session: URLSession = .shared, headers: [String: String] = [:]) {
+    public init(
+        url: URL, session: URLSession = .shared, headers: [String: String] = [:],
+        onResponse: (@Sendable (_ etag: String?, _ total: Int64?) throws -> Void)? = nil
+    ) {
         self.url = url
         self.session = session
         self.headers = headers
+        self.onResponse = onResponse
+    }
+
+    /// Taille totale annoncée par `Content-Range: bytes a-b/total` ; `nil` si absente ou inconnue (`*`).
+    static func totalLength(contentRange: String?) -> Int64? {
+        guard let contentRange, let slash = contentRange.lastIndex(of: "/") else { return nil }
+        return Int64(contentRange[contentRange.index(after: slash)...].trimmingCharacters(in: .whitespaces))
     }
 
     /// Fin de plage au-delà de laquelle une réponse 200 (serveur qui ignore `Range` et envoie le
@@ -73,6 +88,10 @@ public struct RemoteRangeSource: TileSource {
         guard let http = response as? HTTPURLResponse else { throw PMTilesError.rangeUnavailable(0) }
         switch http.statusCode {
         case 206:
+            try onResponse?(
+                http.value(forHTTPHeaderField: "ETag"),
+                Self.totalLength(contentRange: http.value(forHTTPHeaderField: "Content-Range"))
+            )
             let data = try await Self.collect(bytes, upTo: length)
             guard data.count == length else {
                 throw PMTilesError.truncated("Range : \(data.count) octets sur \(length)")

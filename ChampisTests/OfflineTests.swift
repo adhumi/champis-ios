@@ -188,6 +188,49 @@ struct OfflineStoreTests {
 
 @MainActor
 struct OfflineModelTests {
+    /// `manifestPerDeptJSON` dont les fichiers du département 25 retenus pour le cèpe de Bordeaux
+    /// (son `T`, 1000 octets, et la couche `A`, 300 octets) annoncent `bytes`.
+    static func manifest(bytes: Int) -> String {
+        Fixtures.manifestPerDeptJSON
+            .replacingOccurrences(of: "\"bytes\": 1000,", with: "\"bytes\": \(bytes),")
+            .replacingOccurrences(of: "\"bytes\": 300,", with: "\"bytes\": \(bytes),")
+    }
+
+    @Test("Fichier reçu d'une autre taille que celle du manifeste : département incomplet, en clair")
+    func sizeMismatch() async throws {
+        #expect(OfflineModel.sizeMismatch(name: "A.pmtiles", received: 10, expected: 10) == nil)
+        #expect(OfflineModel.sizeMismatch(name: "A.pmtiles", received: 10, expected: 0) == nil)  // taille non annoncée
+        #expect(OfflineModel.sizeMismatch(name: "A.pmtiles", received: 9, expected: 10) == "A.pmtiles : 9 octets reçus, 10 annoncés par le manifeste")
+
+        let root = OfflineStoreTests.temporaryRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let pmtiles = PointInspectorTests.pmtiles(tiles: [(1, 1, try PointInspectorTests.tile([(0, 254)]))])
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host, binary: { _, path in path.hasPrefix("/tiles/") ? pmtiles : nil }) { _, path, _ in
+            path == "/weather/bbox" ? (200, Fixtures.weatherJSON) : (404, #"{"detail": "inconnu"}"#)
+        }
+        let api = StubURLProtocol.api(host: host)
+        let store = OfflineStore(root: root)
+        let model = OfflineModel(api: api, store: store, downloads: DownloadManager(configuration: StubURLProtocol.configuration()))
+        await model.start(api: api)
+
+        // le manifeste annonce un octet de plus que ce que le serveur envoie (jeu republié entre-temps)
+        let manifest = try Fixtures.decode(TilesManifest.self, Self.manifest(bytes: pmtiles.count + 1))
+        let choice = try #require(OfflineModel.downloadable(from: manifest, names: [:]).first { $0.code == "25" })
+        await model.download(choice, species: ["boletus_edulis"], manifest: manifest, scoringVersion: "1.0.0")
+        for _ in 0..<100 where model.problem == nil {
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        let problem = try #require(model.problem)
+        #expect(problem.text == "Département 25 incomplet : un fichier reçu n'a pas la taille annoncée")
+        #expect(problem.detail?.contains("annoncés par le manifeste") == true)
+        let department = try #require(model.departments.first)
+        #expect(!department.complete && !department.filesDone)
+        #expect(department.weatherToday == nil)
+        #expect(await store.localFiles().isEmpty)
+        #expect(StubURLProtocol.requests(host: host).filter { $0.path == "/weather/bbox" }.isEmpty)
+    }
+
     @Test("Téléchargement d'un département : fichiers, météo par sous-emprises, puis disponible")
     func download() async throws {
         let root = OfflineStoreTests.temporaryRoot()
@@ -207,7 +250,8 @@ struct OfflineModelTests {
         model.onLocalFilesChanged = { files in published.append(files) }
         await model.start(api: api)
 
-        let manifest = try Fixtures.decode(TilesManifest.self, Fixtures.manifestPerDeptJSON)
+        // le manifeste annonce la taille réelle des fichiers servis (contrôlée après téléchargement)
+        let manifest = try Fixtures.decode(TilesManifest.self, Self.manifest(bytes: pmtiles.count))
         let choice = try #require(OfflineModel.downloadable(from: manifest, names: [:]).first { $0.code == "25" })
         await model.download(choice, species: ["boletus_edulis"], manifest: manifest, scoringVersion: "1.0.0")
         #expect(model.departments.count == 1)
