@@ -162,7 +162,8 @@ final class FieldModel {
     /// Envoie les observations en attente par lots ; réessayé à chaque démarrage et enregistrement.
     /// Ce qui est encore annulable attend la fin de son délai.
     func sync() async {
-        guard let userID, !isSyncing else { return }
+        // adresse d'API non officielle : lecture seule, les observations attendent sur l'appareil
+        guard let userID, api.isOfficial, !isSyncing else { return }
         let held = Set(undoable)
         let pending = await store.pendingObservations.filter { !held.contains($0.id) }
         guard !pending.isEmpty else { return }
@@ -185,7 +186,7 @@ final class FieldModel {
 
     /// Reprend du serveur ce qu'il connaît (changement d'appareil, réinstallation).
     func pullRemote() async {
-        guard let userID else { return }
+        guard let userID, api.isOfficial else { return }
         do {
             let response = try await api.observations(user: userID)
             try await store.mergeRemote(response.observations)
@@ -199,6 +200,14 @@ final class FieldModel {
     /// Droit à l'effacement : le serveur d'abord, le local ensuite ; en cas d'échec, rien n'est perdu.
     func deleteAll() async {
         guard let userID else { return }
+        guard api.isOfficial else {
+            // rien n'est effacé de l'appareil sans l'être du serveur
+            fail(Problem(
+                "Rien n'a été effacé : revenez à l'adresse officielle de l'API pour effacer aussi vos données du serveur",
+                detail: Problem.technical(ChampisAPI.Failure.readOnly), retryable: false
+            ))
+            return
+        }
         do {
             // Les identifiants mis de côté (deux appareils avaient créé le leur avant que iCloud ne
             // les réunisse) sont effacés du serveur eux aussi, puis oubliés un à un.
@@ -269,7 +278,7 @@ final class FieldModel {
 
     /// `PUT /coins` en liste complète, sans jeton pour l'instant (enregistrement APNs à venir).
     private func pushCoins() async {
-        guard let userID else { return }
+        guard let userID, api.isOfficial else { return }
         do {
             _ = try await api.putCoins(coins, apnsToken: nil, sandbox: Self.isSandboxBuild, user: userID)
             clear(.pushCoins)
@@ -280,7 +289,7 @@ final class FieldModel {
     }
 
     func refreshCoinScores() async {
-        guard let userID, !coins.isEmpty else { return }
+        guard let userID, api.isOfficial, !coins.isEmpty else { return }
         do {
             let response = try await api.coins(user: userID)
             coinsToday = response.today

@@ -147,7 +147,8 @@ struct SpeciesView: View {
                 .frame(maxWidth: .infinity, minHeight: 180, maxHeight: 240)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .accessibilityLabel("Photo de \(species.names?.fr ?? species.id)")
-                if let page = URL(string: photo.page) {
+                // lien venu des données du serveur : https seulement
+                if let page = ChampisAPI.httpsURL(photo.page) {
                     Link("\(photo.author) · \(photo.license) · Wikimedia Commons", destination: page)
                         .font(.caption)
                         .foregroundStyle(.secondary)

@@ -25,8 +25,13 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         return configuration
     }
 
-    static func api(host: String) -> ChampisAPI {
-        ChampisAPI(baseURL: URL(string: "https://\(host)")!, session: URLSession(configuration: configuration()))
+    /// Client du serveur factice. `trusted` : l'hôte du test tient lieu d'API officielle (il reçoit
+    /// l'identifiant et les données privées) ; faux, c'est une adresse réglée à la main.
+    static func api(host: String, trusted: Bool = true) -> ChampisAPI {
+        ChampisAPI(
+            baseURL: URL(string: "https://\(host)")!, session: URLSession(configuration: configuration()),
+            trustedHost: trusted ? host : ChampisAPI.officialHost
+        )
     }
 
     static func set(host: String, binary: Binary? = nil, handler: Handler?) {
@@ -98,9 +103,9 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
 
 @MainActor
 struct FieldModelTests {
-    static func model(host: String, directory: URL) -> FieldModel {
+    static func model(host: String, directory: URL, trusted: Bool = true) -> FieldModel {
         let model = FieldModel(
-            api: StubURLProtocol.api(host: host), store: LocalStore(directory: directory),
+            api: StubURLProtocol.api(host: host, trusted: trusted), store: LocalStore(directory: directory),
             identity: .inMemory()
         )
         model.asksNotificationPermission = false
@@ -149,6 +154,48 @@ struct FieldModelTests {
         await model.retry()
         #expect(model.pendingCount == 0)
         #expect(model.problem == nil)
+    }
+
+    @Test("Adresse d'API non officielle : lecture seule, rien de privé ne part, rien n'est effacé de l'appareil")
+    func readOnlyWithCustomAddress() async throws {
+        let directory = FieldStoreTests.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let host = StubURLProtocol.host()
+        StubURLProtocol.set(host: host) { _, _, _ in (200, "{}") }
+        let model = Self.model(host: host, directory: directory, trusted: false)
+        await model.start(api: model.api)
+        #expect(model.userID != nil)
+
+        await model.record(species: "boletus_edulis", latitude: 47.0, longitude: 6.0, accuracyM: nil, date: "2026-11-13", found: true, quantity: 1)
+        await model.addCoin(name: "Col", latitude: 47.0, longitude: 6.0, target: "cepes", altClass: 750, t: ["boletus_edulis": 0.8])
+        await model.refreshCoinScores()
+        // gardés sur l'appareil, en attente ; aucune requête, donc ni identifiant ni donnée privée
+        #expect(model.observations.count == 1 && model.pendingCount == 1)
+        #expect(model.coins.count == 1)
+        #expect(StubURLProtocol.requests(host: host).isEmpty)
+
+        // « tout supprimer » n'efface pas l'appareil sans effacer le serveur
+        await model.deleteAll()
+        #expect(StubURLProtocol.requests(host: host).isEmpty)
+        #expect(model.observations.count == 1 && model.coins.count == 1)
+        let problem = try #require(model.problem)
+        #expect(problem.text.hasPrefix("Rien n'a été effacé"))
+        #expect(!problem.retryable)
+
+        // retour à l'adresse officielle : ce qui attendait part
+        StubURLProtocol.set(host: host) { method, path, _ in
+            switch (method, path) {
+            case ("POST", "/observations"): (201, #"{"inserted": 1, "duplicates": 0}"#)
+            case ("PUT", "/coins"): (200, #"{"coins": 1, "notifications": false}"#)
+            case ("GET", "/coins"): (200, #"{"today": "2026-11-13", "coins": []}"#)
+            case ("GET", "/observations"): (200, #"{"count": 0, "observations": []}"#)
+            default: (404, #"{"detail": "inconnu"}"#)
+            }
+        }
+        await model.start(api: StubURLProtocol.api(host: host))
+        #expect(model.pendingCount == 0)
+        let user = try #require(model.userID)
+        #expect(StubURLProtocol.requests(host: host).contains { $0.method == "POST" && $0.user == user.uuidString.lowercased() })
     }
 
     @Test("Rien trouvé en une tape : une négative par espèce, retenue pendant le délai, annulable, puis envoyée")

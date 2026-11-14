@@ -120,6 +120,10 @@ final class MapModel {
     private(set) var problem: Problem?
     /// Météo de l'emprise indisponible, en clair ; la reprise redemande la météo.
     private(set) var weatherProblem: Problem?
+    /// Hôte de l'API quand ce n'est pas l'officielle (réglage de développement) : l'app est alors en
+    /// lecture seule, sans identifiant, et le dit en permanence sur la carte et dans les réglages
+    /// (décision du 13 nov. 2026). `nil` avec l'API officielle.
+    private(set) var customAPIHost: String?
     /// Zoom Web Mercator de la vue ; `nil` tant que la carte n'a pas donné sa première région.
     private(set) var zoom: Double?
     /// Incrémenté à chaque réglage poussé au rendu : la vue carte redessine les tuiles.
@@ -176,6 +180,8 @@ final class MapModel {
     @ObservationIgnored private let store: TileStore
     @ObservationIgnored private let session: URLSession
     @ObservationIgnored private(set) var api: ChampisAPI
+    /// Hôte qui reçoit l'identifiant et les données privées (`ChampisAPI.trustedHost`).
+    @ObservationIgnored private let trustedHost: String
     @ObservationIgnored private var visibleBBox: BBox?
     /// Couverture de la dernière réponse complète de `/weather/bbox` (les 11 jours).
     @ObservationIgnored private var weatherCoverage: WeatherCoverage?
@@ -196,14 +202,16 @@ final class MapModel {
 
     init(
         apiBaseURL: URL, session: URLSession = .shared, diskCache: DiskTileCache? = nil, fieldDirectory: URL? = nil,
-        identity: IdentityProvider? = nil, offlineRoot: URL? = nil, downloads: DownloadManager? = nil
+        identity: IdentityProvider? = nil, offlineRoot: URL? = nil, downloads: DownloadManager? = nil,
+        trustedHost: String = ChampisAPI.officialHost
     ) {
         // L'identifiant pseudonyme part avec toutes les requêtes à l'API (spec › Backoffice › Usage,
         // 8 nov. 2026) : le serveur en tire une empreinte par jour pour compter les appareils actifs.
         // Il n'est pas lu ici : le trousseau est une lecture synchrone, faite hors du fil principal
         // au démarrage (`start`, `FieldModel.resolveIdentity`).
-        let api = ChampisAPI(baseURL: apiBaseURL, session: session, userID: nil)
+        let api = ChampisAPI(baseURL: apiBaseURL, session: session, userID: nil, trustedHost: trustedHost)
         self.session = session
+        self.trustedHost = trustedHost
         self.api = api
         let tileStore = TileStore(disk: diskCache)
         store = tileStore
@@ -220,6 +228,12 @@ final class MapModel {
             await tileStore.setLocalFiles(files)
         }
         offline = offlineModel
+        customAPIHost = Self.customHost(of: api)
+    }
+
+    /// Hôte à nommer dans le bandeau de lecture seule ; `nil` pour l'API officielle.
+    nonisolated static func customHost(of api: ChampisAPI) -> String? {
+        api.isOfficial ? nil : (api.baseURL.host() ?? api.baseURL.absoluteString)
     }
 
     var palette: Palette? { catalog?.palette }
@@ -299,11 +313,12 @@ final class MapModel {
     /// Démarre (ou redémarre, si l'adresse de l'API a changé) : espèces, palette, manifeste des tuiles.
     func start(apiBaseURL: URL) async {
         await field.resolveIdentity()
-        if api.userID != field.userID, apiBaseURL == api.baseURL {
-            api = ChampisAPI(baseURL: apiBaseURL, session: session, userID: field.userID)
+        let moved = apiBaseURL != api.baseURL
+        if moved || api.userID != field.userID {
+            api = ChampisAPI(baseURL: apiBaseURL, session: session, userID: field.userID, trustedHost: trustedHost)
         }
-        if apiBaseURL != api.baseURL {
-            api = ChampisAPI(baseURL: apiBaseURL, session: session, userID: field.userID)
+        customAPIHost = Self.customHost(of: api)
+        if moved {
             weather = WeatherField()
             weatherCoverage = nil
             fieldCoverage = [:]
