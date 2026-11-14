@@ -26,16 +26,28 @@ actor OfflineStore {
     private var catalogURL: URL { root.appending(path: "species.json") }
     private var tilesManifestURL: URL { root.appending(path: "tiles.json") }
 
+    /// Emplacement du dossier d'un département, sans contrôle : pour l'affichage et les tests.
+    /// Toute écriture ou suppression passe par `safeDirectory`.
     func directory(for code: String) -> URL {
         root.appending(path: code, directoryHint: .isDirectory)
     }
 
-    func fileURL(code: String, name: String) -> URL {
-        directory(for: code).appending(path: name)
+    /// Dossier d'un département pour y écrire ou le supprimer : le code doit en être un
+    /// (`SafePath.isDepartment`) et le dossier rester sous la racine (audit du 13 nov. 2026 : le
+    /// code vient du manifeste du serveur).
+    private func safeDirectory(for code: String) throws -> URL {
+        guard SafePath.isDepartment(code) else { throw SafePath.Refused(name: code) }
+        return try SafePath.checked(directory(for: code), in: root)
     }
 
-    private func weatherURL(code: String) -> URL {
-        directory(for: code).appending(path: "weather.json")
+    /// Fichier PMTiles d'un département ; `SafePath.Refused` si le code ou le nom ne sont pas sûrs.
+    func fileURL(code: String, name: String) throws -> URL {
+        guard SafePath.isTileFileName(name) else { throw SafePath.Refused(name: name) }
+        return try SafePath.checked(try safeDirectory(for: code).appending(path: name), in: root)
+    }
+
+    private func weatherURL(code: String) throws -> URL {
+        try safeDirectory(for: code).appending(path: "weather.json")
     }
 
     func load() throws {
@@ -56,7 +68,10 @@ actor OfflineStore {
 
     /// Enregistre l'intention : le département existe dans le manifeste, incomplet.
     func begin(_ department: OfflineDepartment) throws {
-        try FileManager.default.createDirectory(at: directory(for: department.code), withIntermediateDirectories: true)
+        for file in department.files {
+            _ = try fileURL(code: department.code, name: file.name)
+        }
+        try FileManager.default.createDirectory(at: safeDirectory(for: department.code), withIntermediateDirectories: true)
         manifest.departments[department.code] = department
         try save()
     }
@@ -83,7 +98,7 @@ actor OfflineStore {
     func saveWeather(code: String, responses: [WeatherBBoxResponse], fetchedAt: String) throws {
         guard var department = manifest.departments[code] else { return }
         let encoder = JSONEncoder()
-        try encoder.encode(responses).write(to: weatherURL(code: code), options: .atomic)
+        try encoder.encode(responses).write(to: try weatherURL(code: code), options: .atomic)
         department.weatherToday = responses.first?.today
         department.weatherFetchedAt = fetchedAt
         department.error = nil
@@ -92,7 +107,7 @@ actor OfflineStore {
     }
 
     func weather(code: String) throws -> [WeatherBBoxResponse] {
-        try Self.read([WeatherBBoxResponse].self, at: weatherURL(code: code)) ?? []
+        try Self.read([WeatherBBoxResponse].self, at: try weatherURL(code: code)) ?? []
     }
 
     /// Toute la météo embarquée des départements complets, pour servir la carte sans réseau.
@@ -102,17 +117,19 @@ actor OfflineStore {
 
     func remove(code: String) throws {
         manifest.departments[code] = nil
-        try? FileManager.default.removeItem(at: directory(for: code))
+        // un code qui ne désigne pas un dossier sous la racine n'efface rien sur le disque
+        if let directory = try? safeDirectory(for: code) {
+            try? FileManager.default.removeItem(at: directory)
+        }
         try save()
     }
 
     /// Fichiers des départements complets, à lire avant la source distante.
     func localFiles() -> [OfflineLocalFile] {
         departments.filter(\.complete).flatMap { department in
-            department.files.map {
-                OfflineLocalFile(
-                    kind: $0.kind, species: $0.species, url: fileURL(code: department.code, name: $0.name), channels: $0.channels
-                )
+            department.files.compactMap { file -> OfflineLocalFile? in
+                guard let url = try? fileURL(code: department.code, name: file.name) else { return nil }
+                return OfflineLocalFile(kind: file.kind, species: file.species, url: url, channels: file.channels)
             }
         }
     }

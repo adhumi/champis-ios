@@ -40,18 +40,25 @@ nonisolated struct DiskTileCache: Sendable {
         root.appending(path: file, directoryHint: .isDirectory)
     }
 
-    private func url(file: String, z: Int, x: Int, y: Int) -> URL {
-        directory(for: file).appending(path: "\(z)", directoryHint: .isDirectory).appending(path: "\(x)_\(y).png")
+    /// Dossier d'un fichier PMTiles pour y lire, écrire ou l'effacer : `file` vient du manifeste du
+    /// serveur, il doit être un simple nom (`SafePath.isComponent`) et rester sous la racine.
+    private func safeDirectory(for file: String) throws -> URL {
+        guard SafePath.isComponent(file) else { throw SafePath.Refused(name: file) }
+        return try SafePath.checked(directory(for: file), in: root)
+    }
+
+    private func url(file: String, z: Int, x: Int, y: Int) throws -> URL {
+        try safeDirectory(for: file).appending(path: "\(z)", directoryHint: .isDirectory).appending(path: "\(x)_\(y).png")
     }
 
     func read(file: String, z: Int, x: Int, y: Int) -> Hit {
-        guard let data = try? Data(contentsOf: url(file: file, z: z, x: x, y: y)) else { return .miss }
+        guard let target = try? url(file: file, z: z, x: x, y: y), let data = try? Data(contentsOf: target) else { return .miss }
         return data.isEmpty ? .absent : .tile(data)
     }
 
     /// Écrit la tuile (ou son absence, `nil`) de façon atomique.
     func write(file: String, z: Int, x: Int, y: Int, data: Data?) throws {
-        let target = url(file: file, z: z, x: x, y: y)
+        let target = try url(file: file, z: z, x: x, y: y)
         try FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
         try (data ?? Data()).write(to: target, options: .atomic)
     }
@@ -67,7 +74,7 @@ nonisolated struct DiskTileCache: Sendable {
     func prune(keeping files: Set<String>) throws -> [String] {
         var removed: [String] = []
         for name in self.files() where !files.contains(name) {
-            try FileManager.default.removeItem(at: directory(for: name))
+            try FileManager.default.removeItem(at: try SafePath.checked(directory(for: name), in: root))
             removed.append(name)
         }
         return removed
@@ -88,7 +95,7 @@ nonisolated struct DiskTileCache: Sendable {
 
     func removeAll() throws {
         for name in files() {
-            try FileManager.default.removeItem(at: directory(for: name))
+            try FileManager.default.removeItem(at: try SafePath.checked(directory(for: name), in: root))
         }
     }
 }

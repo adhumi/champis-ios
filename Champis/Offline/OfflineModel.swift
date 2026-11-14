@@ -199,9 +199,11 @@ final class OfflineModel {
         progress[choice.code] = Progress(filesTotal: files.count, bytesExpected: department.bytes)
         written[choice.code] = [:]
         for file in files {
-            guard let url = URL(string: file.url) else { continue }
-            let destination = await store.fileURL(code: choice.code, name: file.name)
-            downloads.download(url, to: destination, tag: Self.tag(code: choice.code, name: file.name))
+            // `begin` a déjà refusé un nom qui ne serait pas sûr : rien à télécharger sinon
+            guard let url = URL(string: file.url),
+                  let destination = try? await store.fileURL(code: choice.code, name: file.name)
+            else { continue }
+            downloads.download(url, to: destination, within: store.root, tag: Self.tag(code: choice.code, name: file.name))
         }
         await refresh()
     }
@@ -243,7 +245,7 @@ final class OfflineModel {
         }
         do {
             guard let first = department.files.first(where: { $0.done }) else { return }
-            let fileURL = await store.fileURL(code: department.code, name: first.name)
+            let fileURL = try await store.fileURL(code: department.code, name: first.name)
             let header = try await PMTilesReader(source: try LocalFileSource(url: fileURL)).readHeader()
             let b = header.bounds
             let bbox = BBox(minLon: b.minLon, minLat: b.minLat, maxLon: b.maxLon, maxLat: b.maxLat)
@@ -297,9 +299,10 @@ final class OfflineModel {
         )
         written[code] = [:]
         for file in missing {
-            guard let url = URL(string: file.url) else { continue }
-            let destination = await store.fileURL(code: code, name: file.name)
-            downloads.download(url, to: destination, tag: Self.tag(code: code, name: file.name))
+            guard let url = URL(string: file.url),
+                  let destination = try? await store.fileURL(code: code, name: file.name)
+            else { continue }
+            downloads.download(url, to: destination, within: store.root, tag: Self.tag(code: code, name: file.name))
         }
         await refresh()
     }
