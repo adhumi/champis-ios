@@ -20,7 +20,7 @@ nonisolated struct BBox: Hashable, Sendable {
 
 /// Client de champis-api (`/species`, `/tiles`, `/weather`, `/weather/bbox`, `/weather/field`,
 /// `/departements`, sur `api.champis.app`) et du site pour ses fichiers (`/web/departements.geojson`,
-/// sur `champis.app`). Sans état ; les réponses sont décodées hors du MainActor.
+/// `/shared/photos/<espèce>.jpg`, sur `champis.app`). Sans état ; les réponses sont décodées hors du MainActor.
 ///
 /// L'identifiant pseudonyme de l'app (`userID`, skill `field-feedback`) part en en-tête
 /// `X-Champis-User` de **toutes** les requêtes à l'API (spec › Backoffice › Usage, tranché le
@@ -76,7 +76,8 @@ nonisolated struct ChampisAPI: Sendable {
     }
 
     /// Le site, qui garde les fichiers qui ne sont pas à l'API depuis le découpage des dépôts
-    /// (spec › Produit › Étape C, lot C7, 6 nov. 2026) : les limites des départements.
+    /// (spec › Produit › Étape C, lot C7, 6 nov. 2026) : les limites des départements, et le
+    /// référentiel sous `/shared/` (photos des fiches).
     static let defaultSiteURL = URL(string: "https://champis.app")!
 
     let baseURL: URL
@@ -157,6 +158,16 @@ nonisolated struct ChampisAPI: Sendable {
     /// l'API ne sert plus le site depuis le découpage des dépôts.
     func departementsGeoJSON() async throws -> Data {
         try await send("GET", "web/departements.geojson", on: siteURL)
+    }
+
+    /// Photo de la fiche d'une espèce : la copie du référentiel (`shared/photos/<id>.jpg`) servie
+    /// par le site, comme les autres fichiers du référentiel. Plus aucune requête vers Wikimedia
+    /// Commons, qui recevait l'adresse du lecteur à l'ouverture d'une fiche (décision du
+    /// 13 nov. 2026) ; le crédit reste affiché sous l'image. `nil` si l'identifiant n'est pas un
+    /// simple nom.
+    func photoURL(species id: String) -> URL? {
+        guard SafePath.isComponent(id) else { return nil }
+        return siteURL.appending(path: "shared/photos/\(id).jpg")
     }
 
     /// URL absolue d'un fichier du manifeste (relative à l'API en mode proxy) ; https exigé, sauf

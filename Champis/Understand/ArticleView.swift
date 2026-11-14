@@ -34,7 +34,7 @@ struct ArticleView: View {
             Section(group) {
                 ForEach(groups[group] ?? [], id: \.id) { species in
                     NavigationLink {
-                        SpeciesView(species: species)
+                        SpeciesView(species: species, photoURL: model.api.photoURL(species: species.id))
                     } label: {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(species.names?.fr ?? species.id)
@@ -84,8 +84,13 @@ struct MarkdownView: View {
 
 /// Fiche d'une espèce (lot 4) : photo libre créditée, où et quand en mots, les confusions
 /// dangereuses, la consigne du pharmacien. Aucune aide à l'identification, aucun chiffre.
+/// La photo est la copie du référentiel servie par le site (`ChampisAPI.photoURL`), jamais
+/// l'adresse Wikimedia de `about.photo.url` : ouvrir une fiche n'envoie rien à un tiers
+/// (13 nov. 2026). Le crédit et son lien vers la page Commons viennent toujours de `about.photo`.
 struct SpeciesView: View {
     let species: Species
+    /// Adresse de la photo sur le site ; `nil` : « Photo à venir ».
+    let photoURL: URL?
 
     var body: some View {
         List {
@@ -132,7 +137,7 @@ struct SpeciesView: View {
 
     @ViewBuilder
     private func photo(_ photo: Species.About.Photo?) -> some View {
-        if let photo, let url = URL(string: photo.url) {
+        if let photo, let url = photoURL {
             VStack(alignment: .leading, spacing: 6) {
                 AsyncImage(url: url) { phase in
                     switch phase {

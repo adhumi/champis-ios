@@ -222,6 +222,20 @@ struct APIModelsTests {
         #expect(local.tileURL(entry("http://bucket.example/tiles/A.pmtiles")) == nil)
     }
 
+    @Test("Photo d'une fiche : la copie du référentiel servie par le site, jamais Wikimedia")
+    func speciesPhotoFromSite() throws {
+        let api = ChampisAPI(baseURL: ChampisAPI.officialBaseURL)
+        #expect(api.photoURL(species: "boletus_edulis")?.absoluteString == "https://champis.app/shared/photos/boletus_edulis.jpg")
+        // même base que les autres fichiers du site ; une autre adresse d'API ne la change pas
+        let custom = ChampisAPI(baseURL: try #require(URL(string: "https://staging.example")))
+        #expect(custom.photoURL(species: "cantharellus_cibarius")?.host() == "champis.app")
+        let moved = ChampisAPI(baseURL: ChampisAPI.officialBaseURL, siteURL: try #require(URL(string: "https://site.example/")))
+        #expect(moved.photoURL(species: "boletus_aereus")?.absoluteString == "https://site.example/shared/photos/boletus_aereus.jpg")
+        // un identifiant qui n'est pas un simple nom ne fait pas un chemin
+        #expect(api.photoURL(species: "../../web/index") == nil)
+        #expect(api.photoURL(species: "") == nil)
+    }
+
     @Test("Limites des départements : lues sur le site, pas sur l'API")
     func departementsFromSite() async throws {
         let apiHost = StubURLProtocol.host()
