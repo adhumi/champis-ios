@@ -1,127 +1,108 @@
 # Champis — app Apple
 
-App SwiftUI de [Champis](https://github.com/adhumi/champis) pour iOS, iPadOS et macOS 26 : carte des spots à la parcelle, score du jour, hors ligne en forêt, retour terrain et « mes coins ». Phase 4 du plan de réalisation (spec « Spec — Champis »).
+Champis estime où et quand cueillir des champignons en France, à l'échelle de la parcelle forestière : [champis.app](https://champis.app). Ce dépôt est l'app SwiftUI pour iOS, iPadOS et macOS 26 : carte à 25 m, score du jour, hors ligne en forêt, retour terrain et « mes coins ».
+
+Il fait partie de quatre dépôts :
+
+| Dépôt | Contenu |
+| --- | --- |
+| `adhumi/champis` | le référentiel (espèces, palette, vecteurs de parité, textes du Guide), copié ici par les scripts `scripts/sync-*` |
+| `adhumi/champis-api` | pipeline terrain et API météo, sur `api.champis.app` |
+| `adhumi/champis-web` | le site `champis.app` |
+| `adhumi/champis-ios` (ce dépôt) | l'app iOS, iPadOS et macOS |
 
 ## Prérequis
 
-- Xcode 26.3 ou plus récent. Le projet est un `project.pbxproj` créé par Xcode (dossiers synchronisés) : le `.xcproj` JSON généré hors d'Xcode le 30 oct. 2026 ne s'ouvrait pas et a été remplacé.
-- Cibles : iOS, iPadOS et macOS 26, mode de langage Swift 6. L'équipe de signature est renseignée dans le projet.
+- Un Mac avec Xcode 26.3 ou plus récent.
+- Cibles : iOS, iPadOS et macOS 26, mode de langage Swift 6.
+- Aucune dépendance à télécharger : les deux paquets Swift sont locaux (`Packages/`), sans dépendance distante.
+- Pour les scripts de synchronisation seulement : un clone du référentiel `adhumi/champis` à côté de ce dépôt (`../champis`), et [uv](https://docs.astral.sh/uv/) pour `scripts/sync-icons.py`.
 
-## Structure
-
-```
-Champis.xcodeproj/          projet (project.pbxproj), schéma partagé Champis
-Champis/                    cible app : SwiftUI, MVVM @Observable, Assets, entitlements
-Champis/API/                client champis-api (/species, /tiles, /weather/bbox, /weather/field) et ses modèles
-Champis/Map/                carte : MapModel, overlay MKTileOverlay, TileStore, colorisation, écran
-Champis/Field/              retour terrain et mes coins : modèles, identité (trousseau), LocalStore JSON, « Trouvé ici », liste
-Champis/Offline/            hors ligne par département : manifeste offline.json, OfflineStore, DownloadManager (URLSession de fond), écran
-Champis/Support/            icônes de l'app : une par aquarelle d'espèce, sélecteur des réglages (iOS, iPadOS)
-ChampisTests/               tests de l'app (Swift Testing)
-Packages/ChampisScoring/    paquet local : portage du scoring, vecteurs de parité en ressources de test
-Packages/ChampisPMTiles/    paquet local : lecteur PMTiles (fichier ou Range HTTP) et décodeur PNG de données
-scripts/sync-vectors.sh     copie shared/vectors/ du monorepo dans le paquet, note VECTORS_VERSION
-scripts/sync-icons.py       icônes et aperçus tirés de shared/illustrations/ du référentiel, note ICONS_VERSION
-```
-
-Les dossiers `Champis/` et `ChampisTests/` sont des dossiers synchronisés : ajouter un fichier sur disque suffit, le projet ne change pas.
-
-## Scoring et parité
-
-Le scoring de référence est en Python dans le monorepo. `ChampisScoring` le porte en Swift (trapèze, Φ, M, M_eff, groupes, palette ; dates civiles sans fuseau, même ordre d'opérations) et le valide contre les mêmes vecteurs (`shared/vectors/`), avec les fichiers espèces et la palette du même commit en ressources de test, copiés ici par :
+## Installer et lancer en local
 
 ```sh
-scripts/sync-vectors.sh ../champis      # puis relancer les tests
+git clone https://github.com/adhumi/champis-ios
+open champis-ios/Champis.xcodeproj
 ```
 
-`Packages/ChampisScoring/VECTORS_VERSION` note la génération synchronisée (`scoring_version`, `species_hash`). L'app refuse une `scoring_version` renvoyée par `/species` qu'elle ne connaît pas. Règles d'écriture : skill `scoring-parity` du monorepo.
+Dans Xcode : schéma `Champis`, un simulateur iOS 26, puis ⌘R. Le simulateur suffit pour lancer l'app et la parcourir.
 
-## Tuiles
+L'app compilée appelle par défaut l'API officielle, `https://api.champis.app`, et le site `https://champis.app` pour les photos des fiches et les limites des départements. Les observations et les coins que vous y saisissez sont donc réellement enregistrés, sous un identifiant propre à votre build ; « Supprimer mes observations et mes coins », dans les réglages, les efface.
 
-`ChampisPMTiles` lit les PMTiles v3 publiés par le pipeline, en local (fichier téléchargé) ou à distance par requêtes `Range`, et décode les PNG de données octet par octet (jamais via `UIImage`, dont la gestion des couleurs décale les gris). Ses tests rejouent un fichier produit par la bibliothèque `pmtiles` du pipeline et des PNG de chaque filtre (`Tests/ChampisPMTilesTests/Resources`).
+Pour une autre API : cinq tapes sur la version, dans Réglages › À propos, révèlent l'adresse de l'API. Une adresse `https` quelconque est acceptée ; en build de développement (`DEBUG`), `http://localhost:8000` aussi, pour l'API lancée par `make serve` dans `adhumi/champis-api`. Avec une adresse qui n'est pas l'API officielle, l'app est en lecture seule : ni identifiant, ni observation, ni coin n'y sont envoyés, et un bandeau le dit.
 
-Un fichier malformé lève une erreur du paquet, il n'arrête jamais l'app (audit du 13 nov. 2026) : tailles et décalages lus dans le fichier convertis sans débordement, nombre d'entrées d'un répertoire borné par son tampon, plafonds (répertoire 16 Mio, tuile 1 Mio dans le fichier et 4 Mio décompressée), décompression bornée par l'appelant, PNG refusé dès l'IHDR s'il ne fait pas 256 × 256 (`PNGDecoder.decode(_:side:)`), réponse 200 d'un serveur sans `Range` lue seulement pour une plage du premier Mio. `MalformedTests` rejoue la fixture altérée (octets mutés, en-têtes aberrants, fichier et répertoire tronqués).
+### Compiler sans le compte de l'auteur
 
-## Navigation
+L'équipe de signature (`DEVELOPMENT_TEAM`) et les identifiants de bundle (`fr.adhumi.champis`, et `fr.adhumi.champis.tests` pour les tests) sont écrits en dur dans `Champis.xcodeproj/project.pbxproj`, avec une signature automatique. Ce sont ceux de l'auteur ; un tiers ne peut pas signer avec.
 
-Refonte UX, lot 1 (décision du 1er nov. 2026 ; analyse et wireframes dans le doc « Champis — Analyse UX/UI et proposition de refonte ») : trois onglets, une question chacun. **Mes coins** (quand ?) : liste classée par score du jour, libellé de la palette et espèce porteuse, tendance en mots (« mieux dimanche », « stable toute la semaine », « en baisse », `CoinTrend`), fiche d'un coin avec ses onze jours (`GET /coins` › `days`), Voir sur la carte, Renommer, Supprimer, chiffres derrière Détails ; l'état vide porte la promesse de confidentialité. **Carte** (où ?) : l'écran existant. **Comprendre** (pourquoi ?) : textes légal et confidentialité, résumé du modèle, en attendant les articles du lot 4. L'app s'ouvre toujours sur la carte ; une notification « mes coins » (`coin_id` dans la charge utile) bascule sur Mes coins et ouvre la fiche (`AppRouter`, `AppDelegate`). Les réglages s'ouvrent depuis Mes coins et Guide (plus depuis la carte depuis le 9 nov. 2026). Un seul `MapModel`, créé par `ContentView`, est partagé par les trois onglets.
+- **Simulateur.** Un build pour le simulateur ne demande pas de profil de signature : en principe, rien à changer. Si Xcode réclame tout de même une équipe, faites le changement ci-dessous.
+- **Appareil.** Dans Xcode, cible `Champis` puis `ChampisTests`, onglet Signing & Capabilities : choisissez votre équipe et remplacez l'identifiant de bundle par un identifiant à vous. Ne proposez pas ce changement dans une pull request.
+- **Identifiant et trousseau iCloud.** L'app garde son identifiant dans le trousseau, comme élément synchronisé par iCloud. Une app signée par votre équipe a son propre trousseau : son identifiant est distinct de celui de l'app de l'auteur, et sa synchronisation entre vos appareils passe par votre compte développeur et votre compte iCloud. Le projet ne contient aucun fichier d'entitlements.
+- **Notifications « mes coins ».** Elles sont envoyées par le serveur, par APNs, à l'identifiant de bundle de l'auteur. L'app ne transmet pas encore de jeton d'appareil, et le projet ne déclare pas la capacité Push Notifications. Un build à votre identifiant de bundle ne recevra donc pas de notification de `api.champis.app` ; pour en envoyer il faudrait votre propre compte développeur, votre clé APNs et votre propre API.
 
-Lot 2 (1er nov. 2026) : la fiche d'un point parle en clair (`PointSheet` : libellé de la palette et jour, espèce porteuse, phrase de terrain depuis le libellé de T, phrases de `GET /weather` › `summary`, onze pastilles du point, chiffres derrière Détails) ; le curseur de jour devient un bandeau de onze pastilles datées (`DayStrip`), colorées par l'indice du département sous le centre de la carte (`MapModel.centerDeptCode`, `dayDots`, `GET /departements` chargé à tout zoom) ; le mode Terrain devient l'option « Afficher le potentiel toute saison » du menu de calque ; un bouton « i » ouvre la légende (`LegendSheet`). Étape A (6 nov. 2026, spec › Produit) : le bandeau des jours quitte la carte, qui montre toujours aujourd'hui (une ligne « Aujourd'hui · … » le dit) ; `GET /departements` n'est plus chargé ; les onze pastilles de la fiche d'un point sont en lecture seule (`CoinDaysView(interactive: false)`), datées « sam. » / « 7 » ; les réglages s'ouvrent aussi depuis la carte.
+Le reste de l'app (carte, fiches, hors ligne, Guide, observations, coins) fonctionne sans rien de tout cela.
 
-## Carte
+## Tester
 
-`MapScreen` affiche un `MKMapView` (via `UIViewRepresentable` / `NSViewRepresentable` : la `Map` SwiftUI n'accepte pas d'`MKTileOverlay`) sous un overlay de tuiles colorisées. `TileStore` (acteur) lit les PMTiles du manifeste `GET /tiles` par requêtes Range et décode les PNG ; `TileColorizer` (fonction pure, testée) calcule par pixel `T` ou `S = T × M_eff × Φ` avec la météo de `GET /weather/bbox` (cellule la plus proche par bloc de 16 px, classe d'altitude lue dans la couche A, repli sur la médiane de la cellule) et la palette de `GET /species` ; `TileRenderer` encode et met en cache les PNG rendus. Changer de jour ne recharge aucune tuile. Pixel sans météo, ou à plus de 7,5 km de toute cellule : transparent. Sous le zoom 9 (vue France à l'ouverture), l'emprise dépasse le plafond de `/weather/bbox` : la carte demande le champ compact `GET /weather/field` du seul jour affiché (`M_eff × Φ` par cellule, sans plafond, ≈ 20 000 cellules), fusionné dans le même `WeatherField` et retrouvé par un index spatial (`CellIndex`) ; changer de jour redemande le champ de ce jour (décision du 4 nov. 2026). Toucher la carte ouvre la fiche du point (`PointInspector` lit `T` et la classe d'altitude au zoom 15, `PointSheet` montre l'espèce qui porte le score, `M_eff`, `Φ`, la cellule et les facteurs météo de `GET /weather`). La couche de tuiles reste visible à tout zoom : plus de vue France par département (décision du 4 nov. 2026) ; `GET /departements` ne sert qu'au bandeau des onze jours (pastille = indice du département sous le centre, trouvé dans le GeoJSON du site, `https://champis.app/web/departements.geojson`, décodé par `MKGeoJSONDecoder`). Les tuiles lues sont gardées sur disque (`DiskTileCache`, Application Support, exclu de la sauvegarde, purgé au changement de manifeste) : ce qui a été vu reste lisible sans réseau, premier étage du hors ligne ; la position GPS « pendant l'utilisation » s'affiche sur la carte à la demande. Un jeu republié garde son nom : chaque dossier du cache porte le tampon de sa version (taille totale et ETag du fichier, `version.json`), et un dossier qui ne correspond plus à ce que le manifeste (`bytes`) ou le serveur annonce est effacé, jamais complété (13 nov. 2026). Le nom d'un fichier et le code d'un département du manifeste sont contrôlés avant de servir de chemin (`SafePath`). L'adresse de l'API se règle dans l'app (`https://api.champis.app` par défaut depuis le découpage des dépôts ; l'ancienne valeur `https://champis.app`, si elle est gardée, est lue comme la nouvelle), bornée depuis le 13 nov. 2026 : https exigé, et l'identifiant, les observations et les coins ne partent que vers `api.champis.app` ; avec une autre adresse, l'app est en lecture seule anonyme et un bandeau le dit sur la carte et dans les réglages (`MapModel.customAPIHost`, `ReadOnlyBanner`) ; l'avertissement sur le cadre légal de la cueillette s'affiche au premier lancement et reste accessible dans les réglages.
+Dans Xcode, schéma `Champis` puis ⌘U : exécute `ChampisTests`, `ChampisScoringTests` et `ChampisPMTilesTests`. Les tests sont écrits avec Swift Testing et tournent sans réseau.
 
-Depuis le 5 nov. 2026 (spec › Points ouverts › Les clients lisent les PMTiles par groupe), dès que le manifeste publie un PMTiles par groupe d'affichage (`kind: "G"`, PNG RGBA dont chaque canal est le `T` d'une espèce dans l'ordre de `species`, encodage `group_tile_encoding` de la palette), `TileStore` lit le `T` de chaque espèce du groupe dans ses canaux (`GroupTile.channel`) : une lecture et un décodage par tuile partagés entre les espèces, deux requêtes Range par tuile (G + A) au lieu de cinq, aussi pour une espèce seule ; sans `G` (ou sans `group_tile_encoding`), repli sur les `T`, et la bascule se fait sans mise à jour de l'app.
-
-## Hors ligne par département
-
-Le pipeline publie un jeu de PMTiles par département (décision du 31 oct. 2026) : le manifeste `GET /tiles` marque ces entrées d'un champ `dept`. Depuis les réglages, « Départements embarqués » liste ce qui est sur l'appareil et permet d'en ajouter : choix du département et des espèces, poids estimé, puis téléchargement des fichiers entiers par `URLSession` de fond (`DownloadManager`), météo des 11 jours récupérée sur l'emprise du fichier par sous-emprises de 0,3° (des réponses de quelques dizaines de cellules, reprises une à une), le tout noté dans `offline.json` (`OfflineStore`). Par département, l'app embarque le `G` de chaque groupe touché par les espèces choisies et le `T` des seules espèces sans `G` (plus la couche `A`) ; un département téléchargé en `T` avant les `G` reste lisible. Un département n'est disponible qu'une fois tuiles, couche A et météo écrits ; un fichier reçu qui n'a pas la taille annoncée par le manifeste (`bytes`) est retiré et le département reste incomplet ; l'emprise lue dans l'en-tête est bornée à la France avant d'être découpée (13 nov. 2026) ; on peut rafraîchir la météo seule ou supprimer. Le lecteur de tuiles lit ces fichiers avant la source distante ; sans réseau, la météo embarquée sert la carte avec sa date affichée, et les réponses `/species` et `/tiles` du dernier démarrage permettent de lancer l'app. Rien n'est inventé : un pixel hors des départements embarqués reste transparent.
-
-## Retour terrain et mes coins
-
-Observations (trouvé / rien trouvé, espèce, position, date, quantité, sans photo) et coins (favoris nommés) sont saisis dans l'app seulement et restent privés. Identité : un UUID généré au premier lancement dans le trousseau synchronisé iCloud (`KeychainIdentityStore`), envoyé en en-tête `X-Champis-User`, à l'API officielle seulement. Il n'est créé que si le trousseau dit qu'il n'en a pas ; une erreur du trousseau se dit en clair avec « Réessayer », sans identifiant de rechange ; un identifiant présent n'est jamais écrasé ; `UserDefaults` retient le dernier identifiant connu et ceux qu'un conflit iCloud a remplacés, pour les effacer aussi du serveur (`Identity.resolve`, 13 nov. 2026). Stockage local : fichiers JSON dans Application Support (`LocalStore`, écriture atomique, protection complète : illisibles appareil verrouillé) ; les observations partent par lots idempotents vers `POST /observations` dès que le réseau répond, les coins par `PUT /coins` en liste complète. Comme ce `PUT` remplace la liste du serveur, l'app lit d'abord `GET /coins` et `GET /observations` au démarrage et fusionne avec l'appareil (`CoinMerge` : union par `id` à trois listes, la liste du dernier échange réussi servant de base et de pierre tombale) ; aucun `PUT` ne part avant cette première lecture, hors ligne les changements attendent (13 nov. 2026). Les scores des coins viennent de `GET /coins` (calculés par le backend) ; la notification est calculée et envoyée par le backend, l'app ne fait aucun travail en arrière-plan. Le jeton APNs n'est pas encore envoyé : cela demande la capacité Push Notifications sur l'App ID, à venir avec les clés. « Supprimer mes observations et mes coins » dans les réglages exerce le droit à l'effacement (`DELETE /observations`, puis purge locale).
-
-## Deux tapes en forêt, iPad et Mac (refonte UX, lot 3)
-
-- Appui long sur la carte (`MapContainer`, `UILongPressGestureRecognizer` / `NSPressGestureRecognizer`) → `MapModel.longPress` → menu « Trouvé ici · Rien trouvé ici · Ajouter à mes coins » (`MapScreen`).
-- « Rien trouvé ici » : `FieldModel.recordNotFound` enregistre une négative par espèce du calque, affiche « Noté : rien trouvé » avec Annuler pendant cinq secondes (`undoable`, `undoNotFound`, `LocalStore.remove`), puis envoie. « Trouvé ici » : `QuickFoundSheet`, trois boutons de quantité. Depuis le 9 nov. 2026, c'est la seule façon de noter (avec la fiche du point touché) : plus de menu Retour terrain ni de formulaire complet.
-- Nouveau coin dans un département non embarqué dont le serveur publie un jeu : `MapModel.addCoin` propose une fois « Embarquer … ? » (`suggestOffline`, refus mémorisé dans `UserDefaults`).
-- iPad en largeur régulière et Mac : `SplitContentView` (barre latérale Mes coins · Carte · Comprendre, carte en détail, fiches dans l'inspecteur) ; `MapScreen(layout: .split)` ne présente pas de feuille. La carte reste sur aujourd'hui (étape A) : plus de raccourci de jour.
-
-## Carte allégée (9 nov. 2026)
-
-- Barre : à gauche le sélecteur d'espèce, à droite la légende, rien d'autre. Plus de menu Retour terrain (la feuille), plus de réglages (ils restent dans Mes coins et Guide).
-- Sélecteur d'espèce, aux mêmes règles que celui du site (`LayerCatalog`, testé) : le bouton montre la vignette naturaliste (`SpeciesThumbnail`, l'aperçu `IconPreview-<espèce>` déjà embarqué pour les icônes ; pour un groupe, l'espèce au nom français le plus court) et le nom. Le menu donne les groupes (genres en sous-titre, « Boletus spp. »), un séparateur, puis les espèces (nom latin en sous-titre). L'option « potentiel toute saison » est retirée : la carte montre toujours le score du jour (`MapMode.terrain` reste pour le rendu et ses tests).
-- Fond de carte (plan ou satellite) : bouton rond en verre sous « Centrer sur ma position », même taille (glyphe dans un cadre fixe).
-- Plus de bouton « Noter » : on note depuis la fiche du point touché ou le menu de l'appui long.
-- Sous la carte, rien par défaut : ni le jour ni le nombre de cellules et l'heure du précalcul. Un message seulement quand il change la lecture de la carte (`MapModel.weatherNotice`, `hasNotice`) : météo hors ligne et sa date, emprise trop grande, au moins un quart de l'emprise sans météo (zones transparentes, à ne pas lire comme un mauvais score) ou pas à jour ; et les erreurs, avec « Réessayer ».
-- L'avertissement sur le cadre légal de la cueillette, qui accompagne la carte, est dans la légende.
-
-## Fiches, Noter, erreurs en clair, forêts publiques (étape B, 6 nov. 2026)
-
-- Fiche d'un point et d'un coin : sous les onze pastilles, « Tendance : mieux samedi 7 », « stable toute la semaine » ou « en baisse » (`CoinTrend`, seuil « bon » de la palette). Fiche d'un coin : ses phrases du jour (`GET /coins` › `summary`, pour l'espèce qui porte le score, à la classe du coin) et « Itinéraire » vers Plans (`CoinDetailView.directionsURL`).
-- « Noter » à ma position (bouton flottant, `NoteSheet`) : retiré le 9 nov. 2026, on note depuis le point touché ou pressé sur la carte.
-- Erreurs : `Problem` (phrase en clair, cause en mots pour le réseau et le serveur, détail technique à part) et `ProblemView` (« Réessayer », « Détails »). `MapModel.problem` (chargement, point, cache) et `weatherProblem`, `FieldModel.problem` et `OfflineModel.problem` portent chacun leur reprise (`Retry`) ; un département incomplet se reprend là où il s'est arrêté (`OfflineModel.resume`).
-- Statut de la forêt dans la fiche d'un point : `PublicForest` interroge le WFS `ONF.FORETS_PUBLIQUES:ONF_FORETS_PUBLIQUES` de la Géoplateforme IGN (`data.geopf.fr`, sans clé) sur un carré de quelques mètres ; « forêt domaniale », « forêt publique » ou « sans doute privée, accord du propriétaire nécessaire ». En ligne seulement : sans réponse, la ligne n'apparaît pas. Mêmes phrases que le site.
-
-## Préparer la publication (étape C, 6 nov. 2026)
-
-- Accueil : l'accroche « La météo des champignons, forêt par forêt. » et la promesse en tête (`OnboardingView.tagline`, `.promise`), les mêmes que le site et l'App Store.
-- Réglages › À propos : « Confidentialité » et « Mentions légales » (articles du Guide synchronisés depuis `shared/texts/`), « Écrire à Champis » (`mailto:hello@champis.app`), « Soutenir Champis » vers `https://champis.app/web/soutenir.html` (l'ancienne adresse `/soutenir` répondait 404).
-- `Champis/PrivacyInfo.xcprivacy` : aucun suivi ; position précise, identifiant pseudonyme et contenu saisi liés à l'utilisateur ; raisons d'API `UserDefaults` (`CA92.1`) et métadonnées de fichiers (`C617.1`). Testé dans `PrivacyManifestTests`.
-- `docs/app-store.md` : les champs de la fiche App Store, les captures à produire, les étiquettes de confidentialité (alignées sur le manifeste et sur l'article Confidentialité) et les notes pour la revue.
-- Texte d'autorisation de localisation : afficher la position et centrer la carte (« noter une observation là où vous êtes » retiré avec « Noter », 9 nov. 2026).
-
-## Comprendre, première ouverture, réglages (refonte UX, lot 4)
-
-- `Champis/Resources/Texts/` : copie de `shared/texts/` du monorepo (`index.json` + Markdown) par `scripts/sync-texts.sh`, seule façon de les mettre à jour ; `Texts` les lit, `MarkdownBlocks` (fonction pure, testée) les découpe, `ArticleView` les affiche. Lisibles hors ligne, les mêmes mots que le site.
-- « Les espèces » : le texte embarqué puis les fiches du bloc `about` de `GET /species` (`SpeciesView` : photo créditée, chargée sur le site, `https://champis.app/shared/photos/<espèce>.jpg`, la copie du référentiel, et non plus chez Wikimedia Commons depuis le 13 nov. 2026, ou « Photo à venir » ; où, quand, confusions dangereuses, consigne du pharmacien, sources). Aucune aide à l'identification, aucun chiffre.
-- Première ouverture : `OnboardingView`, trois cartes (les couleurs de la palette, cueillir sans nuire, rien n'est collecté) et « Commencer » ; remplace la fenêtre légale, qui reste dans À propos et dans l'article.
-- Réglages (`SettingsView`) réduits : Notifications (état du système), Départements embarqués, Mes données, Soutenir Champis, Icône de l'app, À propos (version, modèle, cadre légal, licences des données). Cinq tapes sur la version révèlent l'adresse de l'API et le cache des tuiles ; l'opacité est fixe ; le fond satellite a son bouton sur la carte.
-
-## Icônes de l'app (étape C, lot C6, 8 nov. 2026)
-
-Une icône alternative par aquarelle d'espèce du référentiel (`shared/illustrations/<espèce>.jpg`) : papier ramené au blanc, sujet recadré au centre (86 % du côté), aquarelle reposée sur un fond crème commun. Le jeu `Icon-<espèce>.appiconset` (1024 px, iOS et iPadOS) et l'aperçu `IconPreview-<espèce>.imageset` sont écrits par :
-
-```sh
-uv run scripts/sync-icons.py ../champis
-```
-
-Le script vérifie que `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES` du projet (iphoneos et iphonesimulator, Debug et Release) nomme exactement les icônes écrites ; une espèce de plus demande d'y ajouter son nom. Xcode en tire `CFBundleAlternateIcons` dans l'Info.plist, où `AppIconChoice.alternates(in:)` lit la liste : aucune espèce n'est nommée dans le code. Réglages › Icône de l'app (`AppIconPicker`) : grille à la manière de l'écran d'accueil sur le fond des listes, anneau et coche sur l'icône en service, noms français tirés du catalogue `/species`. Ouvert à tous pour l'instant ; les icônes récompenseront le soutien quand il existera. macOS n'a pas d'icônes alternatives : la ligne n'y est pas proposée.
-
-## Tests
-
-Schéma `Champis` → ⌘U : exécute `ChampisTests`, `ChampisScoringTests` et `ChampisPMTilesTests`. En ligne de commande, pour le paquet seul :
+En ligne de commande, pour le paquet du scoring seul :
 
 ```sh
 cd Packages/ChampisScoring && swift test
 ```
 
-## Icône
+La CI est Xcode Cloud, sur le schéma partagé `Champis`. Il n'y a pas de workflow GitHub.
 
-`Champis/AppIcon.icon` est un document Icon Composer (Xcode 26+) : fond dégradé ciel, deux calques de forêt stylisée (bande claire avec sapins, bande sombre au premier plan), puis un groupe Liquid Glass avec deux calques séparés, `pied` et `chapeau`, teintés cèpe de Bordeaux. Les couleurs et les réglages de verre (reflet, translucidité, ombre) se modifient dans Icon Composer ; les formes sont les SVG de `Assets/`, canevas 1024 points. `Assets.xcassets/AppIcon.appiconset` garde un PNG 1024 plat en repli pour les emplacements qui n'utilisent pas le document.
+## Structure du dépôt
 
-## Licence
+```
+Champis.xcodeproj/          projet (project.pbxproj créé par Xcode), schéma partagé Champis
+Champis/                    cible app : SwiftUI, MVVM @Observable, Assets, PrivacyInfo.xcprivacy
+Champis/API/                client de l'API (/species, /tiles, /weather…, observations, coins) et ses modèles
+Champis/Map/                carte : MapModel, overlay MKTileOverlay, TileStore, colorisation, fiche d'un point
+Champis/Field/              retour terrain et mes coins : modèles, identité (trousseau), LocalStore JSON, fusion des coins
+Champis/Offline/            hors ligne par département : manifeste offline.json, OfflineStore, DownloadManager, écran
+Champis/Understand/         Guide (articles, fiches d'espèces), première ouverture, réglages
+Champis/Navigation/         onglets, barre latérale iPad et Mac, routage d'une notification
+Champis/Support/            icônes de l'app : une par aquarelle d'espèce, sélecteur des réglages (iOS, iPadOS)
+Champis/Shared/             erreurs en clair (Problem), contrôle des chemins (SafePath)
+Champis/Resources/Texts/    copie des articles du Guide du référentiel
+ChampisTests/               tests de l'app (Swift Testing)
+Packages/ChampisScoring/    paquet local : portage du scoring, vecteurs de parité en ressources de test
+Packages/ChampisPMTiles/    paquet local : lecteur PMTiles (fichier ou Range HTTP) et décodeur PNG de données
+scripts/sync-vectors.sh     copie shared/vectors/, les espèces et la palette du référentiel dans le paquet, note VECTORS_VERSION
+scripts/sync-texts.sh       copie shared/texts/ du référentiel dans Champis/Resources/Texts/, note TEXTS_VERSION
+scripts/sync-icons.py       icônes et aperçus tirés de shared/illustrations/ du référentiel, note ICONS_VERSION
+scripts/sync-skills.sh      copie les skills partagés du référentiel dans .claude/skills/
+docs/                       conception.md (conception et décisions datées), app-store.md (fiche App Store, confidentialité)
+```
 
-Code sous licence MIT (`LICENSE`). Les copies du référentiel (textes, espèces, palette, vecteurs), les icônes tirées des aquarelles et les skills de tiers gardent leur licence : voir `NOTICE.md`.
+`Champis/` et `ChampisTests/` sont des dossiers synchronisés : ajouter un fichier sur disque suffit, le projet ne change pas.
+
+Ce que fait chaque partie (scoring et parité, tuiles, carte, hors ligne, retour terrain, Guide, icônes) et les décisions datées qui l'expliquent : [`docs/conception.md`](docs/conception.md).
+
+## Déployer
+
+L'app se construit et se teste dans Xcode Cloud (`Champis.xcodeproj/xcshareddata/xcodecloud/manifest.json`), avec le compte développeur de l'auteur. La fiche App Store, les captures à produire et les étiquettes de confidentialité sont préparées dans [`docs/app-store.md`](docs/app-store.md) ; elles doivent rester alignées sur `Champis/PrivacyInfo.xcprivacy`.
+
+Le dépôt ne contient aucun secret : ni clé, ni profil de signature.
+
+Après un changement du référentiel, les copies se mettent à jour par les scripts, jamais à la main :
+
+```sh
+scripts/sync-vectors.sh ../champis      # vecteurs, espèces et palette des tests de parité
+scripts/sync-texts.sh ../champis        # articles du Guide
+uv run scripts/sync-icons.py ../champis # icônes alternatives et aperçus
+```
+
+## Contribuer, signaler une faille
+
+- Contribuer : [`CONTRIBUTING.md`](CONTRIBUTING.md). Projet personnel : les pull requests sont bienvenues, relues quand l'auteur le peut.
+- Signaler une faille : [`SECURITY.md`](SECURITY.md), par courriel à hello@champis.app, pas par une issue.
+
+## Licences
+
+- Code de ce dépôt : MIT ([`LICENSE`](LICENSE)).
+- Copies du référentiel (textes, espèces, palette, vecteurs), icônes tirées des aquarelles et skills de tiers : chacun garde sa licence, voir [`NOTICE.md`](NOTICE.md).
+- Données dont le modèle est tiré (IGN, Copernicus, SoilGrids, Open-Meteo, GBIF) : article « Les données et leurs sources » du Guide, dans le référentiel `adhumi/champis`.
