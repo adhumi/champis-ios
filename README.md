@@ -74,6 +74,7 @@ Packages/ChampisPMTiles/    paquet local : lecteur PMTiles (fichier ou Range HTT
 scripts/sync-vectors.sh     copie shared/vectors/, les espèces et la palette du référentiel dans le paquet, note VECTORS_VERSION
 scripts/sync-texts.sh       copie shared/texts/ du référentiel dans Champis/Resources/Texts/, note TEXTS_VERSION
 scripts/sync-icons.py       icônes et aperçus tirés de shared/illustrations/ du référentiel, note ICONS_VERSION
+scripts/group-symbols.py    symboles des familles du sélecteur d'espèce (SF Symbols maison), dessinés dans le script
 scripts/sync-skills.sh      copie les skills partagés du référentiel dans .claude/skills/
 docs/                       conception.md (conception et décisions datées), app-store.md (fiche App Store, confidentialité)
 ```
