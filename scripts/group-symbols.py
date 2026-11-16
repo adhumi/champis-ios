@@ -6,7 +6,7 @@
 
 Chaque glyphe est dessiné ici au trait dans une boîte 100 x 100 (mode "s" = trait, "f" = plein).
 Le script épaissit les traits, fusionne les contours et écrit dans Champis/Assets.xcassets un
-`Group-<groupe>.symbolset` au gabarit SF Symbols (graisse Regular, échelle S ; les autres graisses
+`Group-<groupe>.symbolset` au gabarit SF Symbols (graisse Regular, échelle M, la seule que Xcode exige ; les autres graisses
 et échelles en sont dérivées par le système). Le menu affiche `Group-<id>` s'il existe : un groupe
 nouveau du référentiel n'a pas d'icône tant que son glyphe n'est pas ajouté ici.
 
@@ -27,8 +27,8 @@ ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "Champis" / "Assets.xcassets"
 PREFIX = "Group-"
 
-STROKE = 6.8  # épaisseur du trait dans la boîte 100 x 100
-SCALE = 1.1  # boîte 100 -> unités du gabarit (un symbole S fait une centaine d'unités)
+STROKE = 5.4  # épaisseur du trait dans la boîte 100 x 100 (7,5 unités du gabarit, comme un symbole Regular)
+SCALE = 1.39  # boîte 100 -> unités du gabarit (un symbole M en fait environ 125)
 CAP_HEIGHT = 70.459  # hauteur de capitale du gabarit : le glyphe est centré dessus
 MARGIN = 6.0
 
@@ -284,11 +284,11 @@ def template(group: str, parts: list[tuple[str, str]]) -> str:
   <line id="Capline-M" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1055.54" y2="1055.54"/>
   <line id="Baseline-L" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1556" y2="1556"/>
   <line id="Capline-L" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1485.54" y2="1485.54"/>
-  <line id="left-margin-Regular-S" style="fill:none;stroke:#00AEEF;stroke-width:0.5;opacity:1.0;" x1="{x:.3f}" x2="{x:.3f}" y1="600.785" y2="720.121"/>
-  <line id="right-margin-Regular-S" style="fill:none;stroke:#00AEEF;stroke-width:0.5;opacity:1.0;" x1="{x + width:.3f}" x2="{x + width:.3f}" y1="600.785" y2="720.121"/>
+  <line id="left-margin-Regular-M" style="fill:none;stroke:#00AEEF;stroke-width:0.5;opacity:1.0;" x1="{x:.3f}" x2="{x:.3f}" y1="1030.79" y2="1150.12"/>
+  <line id="right-margin-Regular-M" style="fill:none;stroke:#00AEEF;stroke-width:0.5;opacity:1.0;" x1="{x + width:.3f}" x2="{x + width:.3f}" y1="1030.79" y2="1150.12"/>
  </g>
  <g id="Symbols">
-  <g id="Regular-S" transform="matrix(1 0 0 1 {x:.3f} 696)">
+  <g id="Regular-M" transform="matrix(1 0 0 1 {x:.3f} 1126)">
    <path d="{d}"/>
   </g>
  </g>
