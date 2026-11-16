@@ -31,7 +31,7 @@ struct PrivacyManifestTests {
 
     @Test("Réglages : Soutenir mène à la page du site, Confidentialité est dans le Guide")
     func settingsLinks() {
-        #expect(SettingsView.supportURL.absoluteString == "https://champis.app/web/soutenir.html")
+        #expect(SettingsView.supportURL.absoluteString == "https://champis.app/soutenir.html")
         #expect(SettingsView.contactURL.absoluteString == "mailto:hello@champis.app")
         #expect(SettingsView.legalArticles.map(\.id) == ["confidentialite", "mentions-legales"])
     }

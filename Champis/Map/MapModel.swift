@@ -90,11 +90,25 @@ final class MapModel {
     /// fait ≈ 20 000) : la carte demande le champ compact `/weather/field` du seul jour affiché,
     /// et change de jour en le redemandant (décision du 4 nov. 2026).
     nonisolated static let fieldZoom = 9.0
-    /// Centre de la France, vue d'ensemble, tant qu'on n'a pas de position.
-    static let initialRegion = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 46.8, longitude: 2.4),
-        span: MKCoordinateSpan(latitudeDelta: 9, longitudeDelta: 9)
-    )
+    /// Région d'ouverture de la carte (décision du 16 nov. 2026) : la dernière région vue, gardée
+    /// sur l'appareil (`SavedMapRegion`), sinon la France métropolitaine entière, Corse comprise.
+    static var initialRegion: MKCoordinateRegion {
+        let saved = SavedMapRegion.initial(stored: SavedMapRegion.storedValue(in: UserDefaults.standard))
+        return MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: saved.latitude, longitude: saved.longitude),
+            span: MKCoordinateSpan(latitudeDelta: saved.latitudeDelta, longitudeDelta: saved.longitudeDelta)
+        )
+    }
+
+    /// Fin d'un déplacement de la carte : garde le centre et l'étendue de la région vue, rien
+    /// d'autre, pour le lancement suivant. Une région non valide n'est pas gardée.
+    static func rememberRegion(_ region: MKCoordinateRegion) {
+        let saved = SavedMapRegion(
+            latitude: region.center.latitude, longitude: region.center.longitude,
+            latitudeDelta: region.span.latitudeDelta, longitudeDelta: region.span.longitudeDelta
+        )
+        saved?.save(in: UserDefaults.standard)
+    }
 
     // Réglages
     private(set) var layers: [Layer] = []

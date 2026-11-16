@@ -105,4 +105,5 @@ uv run scripts/sync-icons.py ../champis # icônes alternatives et aperçus
 
 - Code de ce dépôt : MIT ([`LICENSE`](LICENSE)).
 - Copies du référentiel (textes, espèces, palette, vecteurs), icônes tirées des aquarelles et skills de tiers : chacun garde sa licence, voir [`NOTICE.md`](NOTICE.md).
+- Nom et icônes : le nom « Champis », l'icône principale et les icônes alternatives identifient l'app publiée par l'auteur. Une version modifiée et redistribuée porte un autre nom et une autre icône, qui ne soit ni l'icône principale ni l'une des icônes alternatives ([`NOTICE.md`](NOTICE.md) › Nom et icônes).
 - Données dont le modèle est tiré (IGN, Copernicus, SoilGrids, Open-Meteo, GBIF) : article « Les données et leurs sources » du Guide, dans le référentiel `adhumi/champis`.

@@ -197,6 +197,11 @@ struct MapContainer: PlatformRepresentable {
 
         func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
             model.visibleRegionChanged(Self.bbox(of: mapView), zoom: Self.zoomLevel(of: mapView))
+            // dernière région vue, gardée à la fin du déplacement (pas à chaque image) ; rien tant
+            // que la vue n'a pas de taille : sa région n'est pas encore celle qu'on voit
+            if mapView.bounds.width > 0, mapView.bounds.height > 0 {
+                MapModel.rememberRegion(mapView.region)
+            }
         }
 
         @objc private func handleTap(_ gesture: PlatformGestureRecognizer) {
