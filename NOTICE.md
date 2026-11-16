@@ -20,8 +20,8 @@ Open-Meteo, GBIF) sont décrites dans l'article « Les données et leurs sources
 
 ## Nom et icônes
 
-Le nom « Champis » et les icônes de l'app, c'est-à-dire l'icône principale (`Champis/AppIcon.icon`,
-`Champis/Assets.xcassets/AppIcon.appiconset`) et les icônes alternatives
+Le nom « Champis » et les icônes de l'app, c'est-à-dire l'icône principale
+(`Champis/Assets.xcassets/AppIcon.appiconset`) et les icônes alternatives
 (`Champis/Assets.xcassets/Icon-*`), identifient l'app publiée par Adrien Humilière.
 
 Une version modifiée de l'app qui est redistribuée doit porter un autre nom et une autre icône, qui

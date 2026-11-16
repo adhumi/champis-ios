@@ -7,7 +7,7 @@
 Pour chaque planche : le papier est ramené au blanc, le sujet recadré au centre (86 % du côté),
 puis l'aquarelle reposée sur un fond crème commun aux dix icônes. Écrit dans Champis/Assets.xcassets :
 
-- Icon-<espèce>.appiconset : icône alternative 1024 px, iOS et iPadOS (PNG sans alpha) ;
+- Icon-<espèce>.appiconset : icône alternative 1024 px (sauf le cèpe de Bordeaux, icône principale), iOS et iPadOS (PNG sans alpha) ;
 - IconPreview-<espèce>.imageset : aperçu du sélecteur d'icônes, aussi vignette du sélecteur d'espèce
   de la carte (JPEG 300 px) ;
 - IconPreview-champis.imageset : aperçu de l'icône principale, tiré de AppIcon-1024.png ;
@@ -41,6 +41,10 @@ CREAM = np.array([0xF6, 0xF1, 0xE6]) / 255.0  # fond commun, un papier à peine 
 INK = 0.08  # écart au papier au-delà duquel un pixel appartient au sujet
 
 XCODE = {"author": "xcode", "version": 1}
+
+# Le cèpe de Bordeaux est l'icône principale (AppIcon.appiconset, 16 nov. 2026) : pas d'icône
+# alternative en double, mais son aperçu reste (vignette du sélecteur d'espèce).
+PRIMARY = "boletus_edulis"
 
 
 def icon(path: Path) -> Image.Image:
@@ -112,7 +116,7 @@ def main() -> int:
         print(f"planches introuvables dans {referential}/shared/illustrations (passer le chemin du référentiel)", file=sys.stderr)
         return 1
     # une icône par planche ; les jeux d'une planche disparue sont retirés
-    wanted = {f"Icon-{p.stem}" for p in plates}
+    wanted = {f"Icon-{p.stem}" for p in plates if p.stem != PRIMARY}
     for stale in ASSETS.glob("Icon-*.appiconset"):
         if stale.stem not in wanted:
             for f in stale.iterdir():
@@ -127,8 +131,11 @@ def main() -> int:
     names = []
     for plate in plates:
         image = icon(plate)
-        write_appiconset(f"Icon-{plate.stem}", image)
         write_preview(f"IconPreview-{plate.stem}", image)
+        if plate.stem == PRIMARY:
+            print(f"ok  IconPreview-{plate.stem} (icône principale)")
+            continue
+        write_appiconset(f"Icon-{plate.stem}", image)
         names.append(f"Icon-{plate.stem}")
         print(f"ok  Icon-{plate.stem}")
     write_preview("IconPreview-champis", Image.open(ASSETS / "AppIcon.appiconset" / "AppIcon-1024.png"))

@@ -96,4 +96,4 @@ Le script vérifie que `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES` du projet
 
 ## Icône principale
 
-`Champis/AppIcon.icon` est un document Icon Composer (Xcode 26+) : fond dégradé ciel, deux calques de forêt stylisée (bande claire avec sapins, bande sombre au premier plan), puis un groupe Liquid Glass avec deux calques séparés, `pied` et `chapeau`, teintés cèpe de Bordeaux. Les couleurs et les réglages de verre (reflet, translucidité, ombre) se modifient dans Icon Composer ; les formes sont les SVG de `Assets/`, canevas 1024 points. `Assets.xcassets/AppIcon.appiconset` garde un PNG 1024 plat en repli pour les emplacements qui n'utilisent pas le document.
+L'icône principale est, depuis le 16 nov. 2026, l'aquarelle du cèpe de Bordeaux (`boletus_edulis`) : `Assets.xcassets/AppIcon.appiconset` porte le PNG 1024 de `Icon-boletus_edulis` et ses déclinaisons macOS, et l'ancien document Icon Composer (`AppIcon.icon`, forêt et chapeau teintés) est supprimé. `IconPreview-champis` en est l'aperçu. Il n'y a donc pas d'icône alternative `Icon-boletus_edulis` (`sync-icons.py` l'ignore) ; l'aperçu `IconPreview-boletus_edulis` reste pour le sélecteur d'espèce.
