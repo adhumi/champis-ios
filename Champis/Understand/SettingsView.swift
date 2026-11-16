@@ -12,8 +12,8 @@ import UIKit
 /// Une autre adresse que l'API officielle met l'app en lecture seule : un bandeau le dit en tête
 /// des réglages, avec le retour à l'adresse officielle (décision du 13 nov. 2026).
 struct SettingsView: View {
-    /// La page Soutenir du site (`/soutenir` répondait 404 : le site est servi sous `/web/`).
-    static let supportURL = URL(string: "https://champis.app/web/soutenir.html")!
+    /// La page Soutenir du site, servie à la racine (l'ancienne adresse `/web/soutenir.html` y redirige).
+    static let supportURL = URL(string: "https://champis.app/soutenir.html")!
     static let developerTaps = 5
     /// Adresse de contact de l'éditeur (spec › Points encore ouverts, tranché le 6 nov. 2026).
     static let contactURL = URL(string: "mailto:hello@champis.app")!

@@ -13,10 +13,10 @@ collecte se fait aux trois endroits à la fois.
 | Sous-titre | La météo des champignons | 30 (24 utilisés) |
 | Texte promotionnel | Où et quand poussent cèpes et girolles, forêt par forêt, jour par jour. Gratuit, sans compte, sans publicité. | 170 (109 utilisés) |
 | Mots-clés | `champignons,cèpes,girolles,cueillette,forêt,mycologie,météo,lactaires,trompettes,pied de mouton` | 100 (95 utilisés) |
-| URL d'assistance | https://champis.app/web/comprendre.html?article=mentions-legales (l'adresse hello@champis.app y figure) | |
+| URL d'assistance | https://champis.app/comprendre.html?article=mentions-legales (l'adresse hello@champis.app y figure) | |
 | Adresse de contact (App Review et utilisateurs) | hello@champis.app | |
 | URL marketing | https://champis.app | |
-| URL de la politique de confidentialité | https://champis.app/web/comprendre.html?article=confidentialite | |
+| URL de la politique de confidentialité | https://champis.app/comprendre.html?article=confidentialite | |
 | Catégorie principale | Météo | |
 | Catégorie secondaire | Style de vie (comme `LSApplicationCategoryType`) | |
 | Prix | Gratuit ; le soutien facultatif viendra par achat intégré (lot C6) | |

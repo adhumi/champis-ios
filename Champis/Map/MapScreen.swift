@@ -16,8 +16,8 @@ import SwiftUI
 /// carte, rien, sauf une erreur ou une information qui change sa lecture (`MapModel.hasNotice`).
 struct MapScreen: View {
     /// L'API est sur son propre domaine depuis le découpage des dépôts (spec › Produit › Étape C,
-    /// lot C7, 6 nov. 2026) ; `champis.app` est le site, qui relaie encore l'API pour les versions
-    /// d'avant.
+    /// lot C7, 6 nov. 2026) ; `champis.app` est le site, qui ne relaie plus l'API depuis le
+    /// 13 nov. 2026 (404 hors de ses fichiers).
     static let defaultAPIBaseURL = "https://api.champis.app"
     /// Ancienne adresse par défaut, peut-être gardée par `@AppStorage` : lue comme la nouvelle.
     static let legacyAPIBaseURLs: Set<String> = ["https://champis.app", "https://champis.app/"]
