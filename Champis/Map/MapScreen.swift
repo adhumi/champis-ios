@@ -180,20 +180,17 @@ struct MapScreen: View {
     }
 
     /// Une ligne du menu : coche sur la couche affichée, nom français, nom latin en sous-titre,
-    /// et pour un groupe le symbole de sa famille (`GroupSymbol`, 16 nov. 2026).
+    /// et pour un groupe le symbole de sa famille (`GroupSymbol`, 16 nov. 2026). Titre, sous-titre
+    /// et image sont trois vues sœurs, la forme que le menu lit : avec un `Label` suivi d'un
+    /// `Text`, l'icône n'apparaissait pas sur iPhone (build 155).
     private func layerToggle(_ layer: Layer) -> some View {
         Toggle(isOn: layerBinding(layer)) {
-            if let symbol = GroupSymbol.assetName(for: layer.key) {
-                Label {
-                    Text(layer.title)
-                } icon: {
-                    Image(symbol)
-                }
-            } else {
-                Text(layer.title)
-            }
+            Text(layer.title)
             if !layer.latin.isEmpty {
                 Text(layer.latin)
+            }
+            if let symbol = GroupSymbol.assetName(for: layer.key) {
+                Image(symbol)
             }
         }
     }
