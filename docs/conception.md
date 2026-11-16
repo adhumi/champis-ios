@@ -96,4 +96,4 @@ Le script vérifie que `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES` du projet
 
 ## Icône principale
 
-L'icône principale est, depuis le 16 nov. 2026, l'aquarelle du cèpe de Bordeaux (`boletus_edulis`) : `Assets.xcassets/AppIcon.appiconset` porte le PNG 1024 de `Icon-boletus_edulis` et ses déclinaisons macOS, et l'ancien document Icon Composer (`AppIcon.icon`, forêt et chapeau teintés) est supprimé. `IconPreview-champis` en est l'aperçu.
+L'icône principale est, depuis le 16 nov. 2026, l'aquarelle du cèpe de Bordeaux (`boletus_edulis`) : `Assets.xcassets/AppIcon.appiconset` porte le PNG 1024 de `Icon-boletus_edulis` et ses déclinaisons macOS, et l'ancien document Icon Composer (`AppIcon.icon`, forêt et chapeau teintés) est supprimé. `IconPreview-champis` en est l'aperçu. Il n'y a donc pas d'icône alternative `Icon-boletus_edulis` (`sync-icons.py` l'ignore) ; l'aperçu `IconPreview-boletus_edulis` reste pour le sélecteur d'espèce.
