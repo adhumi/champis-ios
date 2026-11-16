@@ -153,8 +153,8 @@ struct MapScreen: View {
     }
 
     /// Sélecteur d'espèce (9 nov. 2026, comme celui du site) : dans la barre, la vignette
-    /// naturaliste et le nom de la couche ; dans le menu, les groupes (nom latin des genres en
-    /// sous-titre), un séparateur, puis les espèces (nom latin en sous-titre).
+    /// naturaliste et le nom de la couche ; dans le menu, les groupes (symbole de la famille, nom
+    /// latin des genres en sous-titre), un séparateur, puis les espèces (nom latin en sous-titre).
     private var layerMenu: some View {
         Menu {
             Section {
@@ -179,10 +179,19 @@ struct MapScreen: View {
         .accessibilityLabel("Espèce : \(model.selectedLayer?.title ?? "aucune")")
     }
 
-    /// Une ligne du menu : coche sur la couche affichée, nom français, nom latin en sous-titre.
+    /// Une ligne du menu : coche sur la couche affichée, nom français, nom latin en sous-titre,
+    /// et pour un groupe le symbole de sa famille (`GroupSymbol`, 16 nov. 2026).
     private func layerToggle(_ layer: Layer) -> some View {
         Toggle(isOn: layerBinding(layer)) {
-            Text(layer.title)
+            if let symbol = GroupSymbol.assetName(for: layer.key) {
+                Label {
+                    Text(layer.title)
+                } icon: {
+                    Image(symbol)
+                }
+            } else {
+                Text(layer.title)
+            }
             if !layer.latin.isEmpty {
                 Text(layer.latin)
             }
