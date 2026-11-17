@@ -170,6 +170,15 @@ final class MapModel {
     private(set) var pointForest: String?
     /// Phrases en clair de `GET /weather` › `summary` pour le point (lot 2).
     private(set) var pointSummary: [String]?
+    /// Les mêmes faits en une phrase (`GET /weather` › `sentence`, 17 nov. 2026) ; `nil` d'une API
+    /// plus ancienne : la fiche retombe sur `pointSummary`.
+    private(set) var pointSentence: String?
+    /// `GET /weather?cell=` du point pour toutes les espèces qui ont du terrain ici (17 nov. 2026) :
+    /// score des autres espèces, phrase, onze jours et facteurs de celle qui est mise en avant.
+    private(set) var pointDetail: CellWeather?
+    /// Espèce que l'utilisateur a mise en avant dans la fiche en touchant sa ligne ; `nil` : celle
+    /// qui porte le score de la couche. La couche de la carte ne change pas.
+    private(set) var featuredSpecies: String?
     /// Les onze jours du point : `T × M_eff × Φ` par jour pour l'espèce porteuse (lot 2).
     private(set) var pointDays: [CoinDay] = []
     /// Département sous le centre de la carte, pour colorer le bandeau des jours (lot 2).
@@ -662,23 +671,21 @@ final class MapModel {
     func select(latitude: Double, longitude: Double) {
         selection = MapSelection(latitude: latitude, longitude: longitude)
         inspectTask?.cancel()
-        pointFactors = nil
-        pointRow = nil
-        factorsStatus = nil
-        factorsProblem = nil
+        resetPointDetail()
         pointForest = nil
         if case .inspect? = problemRetry {
             setProblem(nil)
         }
         let settings = currentSettings()
         let store = store
+        let catalogSpecies = catalog.map { Array($0.species.keys) } ?? []
         isInspecting = true
         inspectTask = Task { [weak self] in
             guard let self else { return }
             defer { isInspecting = false }
             do {
                 let info = try await PointInspector.inspect(
-                    latitude: latitude, longitude: longitude, settings: settings, store: store
+                    latitude: latitude, longitude: longitude, settings: settings, store: store, catalogSpecies: catalogSpecies
                 )
                 guard !Task.isCancelled else { return }
                 pointInfo = info
@@ -691,34 +698,99 @@ final class MapModel {
         }
     }
 
-    /// Facteurs météo du point (`GET /weather?cell=&species=`), pour la fiche.
+    /// Météo du point (`GET /weather?cell=&species=`), pour la fiche : une seule requête porte
+    /// toutes les espèces qui ont du terrain ici (17 nov. 2026).
     func loadFactors(for info: PointInfo) async {
-        guard case .scored(let scored) = info.outcome, let cell = scored.cell, let date = info.date,
-              let altKey = scored.altKey
-        else { return }
+        guard info.mode == .score, let cell = info.cell, info.date != nil, info.altKey != nil else { return }
+        var species = Set(info.terrains.keys)
+        if let lead = info.scored?.species {
+            species.insert(lead)
+        }
+        guard !species.isEmpty else { return }
         factorsStatus = nil
         factorsProblem = nil
         do {
-            let detail = try await api.weatherDetail(cell: cell.id, species: [scored.species])
-            let rows = detail.species[scored.species] ?? []
-            let row = rows.first { $0.date == date }?.byAlt[altKey]
-            pointRow = row
-            pointFactors = row?.factors
-            pointSummary = row?.summary
-            // les onze jours suivent la carte : interpolés quand les cellules voisines ont le jour
-            // (/weather/bbox), sinon ceux de la cellule du point
-            let sample = weather.sample(lat: info.latitude, lon: info.longitude)
-            let palette = palette
-            pointDays = Self.pointDays(rows: rows, altKey: altKey, terrain: scored.terrain, species: scored.species) { day in
-                guard let sample, let palette else { return nil }
-                return sample.factor(species: scored.species, date: day, index: scored.altIndex, palette: palette)
-            }
-            if pointFactors == nil {
-                factorsStatus = "Facteurs indisponibles pour ce jour."
-            }
+            let detail = try await api.weatherDetail(cell: cell.id, species: species.sorted())
+            // un autre point a pu être touché entre-temps
+            guard pointInfo?.id == info.id else { return }
+            pointDetail = detail
+            applyFeatured(info)
         } catch {
+            guard pointInfo?.id == info.id else { return }
             factorsProblem = Problem("Météo de ce point indisponible", error: error)
         }
+    }
+
+    /// Met une espèce du point en avant dans la fiche, sans changer la couche de la carte.
+    func feature(_ species: String) {
+        guard let info = pointInfo, info.terrains[species] != nil || info.scored?.species == species else { return }
+        featuredSpecies = species == info.scored?.species ? nil : species
+        applyFeatured(info)
+    }
+
+    /// Espèce en tête de fiche : celle que l'utilisateur a touchée, sinon celle qui porte le score
+    /// de la couche ; `nil` quand la couche n'a rien ici et que rien n'est choisi.
+    func featured(for info: PointInfo) -> PointSpecies? {
+        if let chosen = featuredSpecies, chosen != info.scored?.species {
+            return pointSpecies(for: info).first { $0.id == chosen }
+        }
+        return info.scored.map { PointSpecies(id: $0.species, terrain: $0.terrain, value: $0.value) }
+    }
+
+    /// Les espèces qui ont du terrain au point, avec leur valeur du jour.
+    func pointSpecies(for info: PointInfo) -> [PointSpecies] {
+        PointFamilies.species(info: info, detail: pointDetail)
+    }
+
+    /// Les autres espèces du point, par famille (`PointFamilies.families`).
+    func pointFamilies(for info: PointInfo) -> [PointFamily] {
+        guard let catalog else { return [] }
+        return PointFamilies.families(pointSpecies(for: info), catalog: catalog, featured: featured(for: info)?.id)
+    }
+
+    /// Nom latin d'une espèce, vide s'il manque.
+    func speciesLatin(_ id: String) -> String {
+        catalog?.species[id]?.names?.la ?? ""
+    }
+
+    /// Ligne, phrase, facteurs et onze jours de l'espèce mise en avant, depuis `pointDetail`.
+    private func applyFeatured(_ info: PointInfo) {
+        guard let detail = pointDetail, let species = featured(for: info), let date = info.date, let altKey = info.altKey
+        else {
+            pointRow = nil
+            pointFactors = nil
+            pointSummary = nil
+            pointSentence = nil
+            pointDays = []
+            return
+        }
+        let rows = detail.species[species.id] ?? []
+        let row = rows.first { $0.date == date }?.byAlt[altKey]
+        pointRow = row
+        pointFactors = row?.factors
+        pointSummary = row?.summary
+        pointSentence = row?.sentence
+        // les onze jours suivent la carte pour une espèce de la couche : interpolés quand les
+        // cellules voisines ont le jour (/weather/bbox), sinon ceux de la cellule du point
+        let sample = info.layerValues[species.id] == nil ? nil : weather.sample(lat: info.latitude, lon: info.longitude)
+        let palette = palette
+        pointDays = Self.pointDays(rows: rows, altKey: altKey, terrain: species.terrain, species: species.id) { day in
+            guard let sample, let palette else { return nil }
+            return sample.factor(species: species.id, date: day, index: info.altIndex, palette: palette)
+        }
+        factorsStatus = pointFactors == nil ? "Facteurs indisponibles pour ce jour." : nil
+    }
+
+    private func resetPointDetail() {
+        pointFactors = nil
+        pointRow = nil
+        pointSummary = nil
+        pointSentence = nil
+        pointDetail = nil
+        pointDays = []
+        featuredSpecies = nil
+        factorsStatus = nil
+        factorsProblem = nil
     }
 
     /// Statut de la forêt au point touché (étape B5, 6 nov. 2026) : la couche ONF des forêts
@@ -819,12 +891,7 @@ final class MapModel {
         inspectTask?.cancel()
         selection = nil
         pointInfo = nil
-        pointFactors = nil
-        pointRow = nil
-        pointSummary = nil
-        pointDays = []
-        factorsStatus = nil
-        factorsProblem = nil
+        resetPointDetail()
         pointForest = nil
     }
 

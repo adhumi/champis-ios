@@ -55,6 +55,28 @@ nonisolated struct PointInfo: Identifiable, Sendable {
     let date: String?
     let outcome: Outcome
 
+    // Toutes les espèces du point (spec › App iOS › Fiche d'un point, 17 nov. 2026) : `outcome` ne
+    // parle que de la couche affichée, ce qui suit vaut pour tout le catalogue.
+
+    /// `T` du pixel pour chaque espèce du catalogue qui a du terrain ici (`T > 0`).
+    var terrains: [String: Double] = [:]
+    /// Valeur de chaque espèce de la couche telle que la carte la montre : `T` en mode terrain,
+    /// `S` interpolé entre cellules en mode score (absente sans météo).
+    var layerValues: [String: Double] = [:]
+    /// Cellule météo qui porte le point (mode score) ; `GET /weather?cell=` donne les autres espèces.
+    var cell: WeatherCellInfo? = nil
+    var stale = false
+    /// Indice `k` de la classe de 300 m du pixel, `nil` si inconnu.
+    var altClass: Int? = nil
+    /// Classe utilisée pour la météo (`"450"`), `nil` en mode terrain ou sans cellule.
+    var altKey: String? = nil
+    /// La classe vient de l'altitude médiane de la cellule, pas du pixel.
+    var altFallback = false
+    /// Indice lu dans la tuile d'altitude, tel que le coloriste l'emploie.
+    var altIndex: Int? = nil
+    /// Altitude du pixel (m) lue dans la couche E ; `nil` avec la seule couche A.
+    var altitudeM: Double? = nil
+
     var scored: Scored? {
         if case .scored(let s) = outcome { return s }
         return nil
@@ -76,9 +98,11 @@ nonisolated enum PointInspector {
     static let zoom = 15
 
     /// Lit `T` (et `A`) au pixel de la coordonnée pour chaque espèce de la couche et garde la
-    /// meilleure (règle 9), comme la fiche de la carte web.
+    /// meilleure (règle 9), comme la fiche de la carte web. `catalogSpecies` : les autres espèces
+    /// dont la fiche liste le terrain (17 nov. 2026) ; une tuile qui ne se lit pas pour l'une d'elles
+    /// l'écarte de la liste sans faire échouer la fiche.
     static func inspect(
-        latitude: Double, longitude: Double, settings: RenderSettings, store: TileStore
+        latitude: Double, longitude: Double, settings: RenderSettings, store: TileStore, catalogSpecies: [String] = []
     ) async throws -> PointInfo {
         let base = { (outcome: PointInfo.Outcome) in
             PointInfo(latitude: latitude, longitude: longitude, mode: settings.mode, date: settings.date, outcome: outcome)
@@ -110,6 +134,7 @@ nonisolated enum PointInspector {
         var best: PointInfo.Scored?
         var sawTerrain = false
         var terrains: [String: Double] = [:]
+        var layerValues: [String: Double] = [:]
         for sid in layer.members {
             guard let png = try await store.terrainTile(species: sid, z: zoom, x: t.x, y: t.y),
                   png.width == size, png.height == size, png.data.count >= size * size * png.channels,
@@ -138,13 +163,59 @@ nonisolated enum PointInspector {
                 candidate.altIndex = altIndex
                 candidate.altitudeM = altitudeM
             }
+            layerValues[sid] = candidate.value
             if let current = best, candidate.value <= current.value { continue }
             best = candidate
         }
+        var info: PointInfo
         if var best {
             best.terrains = terrains
-            return base(.scored(best))
+            info = base(.scored(best))
+        } else {
+            info = base(sawTerrain && useWeather ? .noWeather : .noData)
         }
-        return base(sawTerrain && useWeather ? .noWeather : .noData)
+        let others = await otherTerrains(
+            catalogSpecies.filter { !layer.members.contains($0) }, z: zoom, x: t.x, y: t.y, pixel: i, colorizer: colorizer,
+            store: store
+        )
+        info.terrains = terrains.merging(others) { layer, _ in layer }.filter { $0.value > 0 }
+        info.layerValues = layerValues
+        info.altClass = altClass
+        info.altIndex = altIndex
+        info.altitudeM = altitudeM
+        if let home = sample?.home {
+            info.cell = home.info
+            info.stale = home.stale
+            if let alt = home.altKey(classIndex: altClass, encoding: palette.altEncoding) {
+                info.altKey = alt.key
+                info.altFallback = alt.fallback
+            }
+        }
+        return info
+    }
+
+    /// `T` du pixel pour des espèces hors de la couche, lues en parallèle (une tuile `G` porte tout
+    /// un groupe : une lecture par famille). Une tuile absente ou illisible ne donne rien.
+    private static func otherTerrains(
+        _ species: [String], z: Int, x: Int, y: Int, pixel: Int, colorizer: TileColorizer, store: TileStore
+    ) async -> [String: Double] {
+        let size = TileMath.tileSize
+        return await withTaskGroup(of: (String, Double?).self) { group in
+            for sid in species {
+                group.addTask {
+                    guard let png = try? await store.terrainTile(species: sid, z: z, x: x, y: y),
+                          png.width == size, png.height == size, png.data.count >= size * size * png.channels
+                    else { return (sid, nil) }
+                    return (sid, colorizer.terrain(png, at: pixel))
+                }
+            }
+            var out: [String: Double] = [:]
+            for await (sid, terrain) in group {
+                if let terrain {
+                    out[sid] = terrain
+                }
+            }
+            return out
+        }
     }
 }

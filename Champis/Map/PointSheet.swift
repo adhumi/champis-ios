@@ -2,10 +2,13 @@ import ChampisScoring
 import SwiftUI
 
 /// Fiche du point touché (refonte UX, lot 2, décision du 1er nov. 2026) : le libellé de la palette
-/// et le jour en titre, l'espèce qui porte le score, des phrases en clair (terrain depuis le libellé
-/// de T, météo et saison depuis `GET /weather` › `summary`), les onze jours du point, les trois
-/// boutons de terrain, et tous les chiffres derrière « Détails ». La couleur ne porte jamais seule
-/// l'information : le libellé est toujours écrit.
+/// et le jour en titre, l'espèce mise en avant, les onze jours du point, les trois boutons de
+/// terrain, et tous les chiffres derrière « Détails ». Depuis le 17 nov. 2026 (spec › App iOS ›
+/// Fiche d'un point, toutes les espèces et une phrase) : une phrase rédigée, terrain compris
+/// (libellé de T, puis `GET /weather` › `sentence`), et sous l'espèce mise en avant toutes les
+/// autres espèces qui ont du terrain ici, par famille ; toucher une ligne la met en avant sans
+/// changer la couche de la carte. La couleur ne porte jamais seule l'information : le libellé est
+/// toujours écrit.
 struct PointSheet: View {
     nonisolated struct Factor: Identifiable, Sendable {
         let key: String
@@ -33,22 +36,25 @@ struct PointSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                switch info.outcome {
-                case .noData:
-                    Text("Hors forêt ou pas de donnée ici.")
-                        .foregroundStyle(.secondary)
-                case .noWeather:
-                    Section {
-                        Text("Du terrain, mais pas de météo pour ce secteur aujourd'hui : le serveur réessaie.")
+                if let featured {
+                    summarySection(featured)
+                } else {
+                    switch info.outcome {
+                    case .noWeather:
+                        Section {
+                            Text("Du terrain, mais pas de météo pour ce secteur aujourd'hui : le serveur réessaie.")
+                                .foregroundStyle(.secondary)
+                            forestRow
+                        }
+                    default:
+                        Text(families.isEmpty ? "Hors forêt ou pas de donnée ici." : "Pas de terrain ici pour l'espèce affichée sur la carte.")
                             .foregroundStyle(.secondary)
-                        forestRow
                     }
-                case .scored(let scored):
-                    summarySection(scored)
                 }
+                familySections
                 fieldSection
-                if case .scored(let scored) = info.outcome {
-                    detailsSection(scored)
+                if let featured {
+                    detailsSection(featured)
                 }
             }
             .navigationTitle(title)
@@ -62,7 +68,7 @@ struct PointSheet: View {
                 }
             }
             .sheet(item: $quickFound) { point in
-                QuickFoundSheet(model: model, point: point, initialSpecies: info.scored?.species)
+                QuickFoundSheet(model: model, point: point, initialSpecies: featured?.id ?? info.scored?.species)
             }
             .alert("Nom du coin", isPresented: $namingCoin) {
                 TextField("Nom", text: $coinName)
@@ -93,20 +99,49 @@ struct PointSheet: View {
 
     // MARK: - En clair
 
+    /// Espèce en tête de fiche : celle de la couche, ou celle dont l'utilisateur a touché la ligne.
+    private var featured: PointSpecies? { model.featured(for: info) }
+
+    /// Les autres espèces du point, par famille.
+    private var families: [PointFamily] { model.pointFamilies(for: info) }
+
+    /// L'espèce mise en avant est celle qui porte le score de la couche : son score est celui de
+    /// la carte, interpolé entre cellules.
+    private func isLayerLead(_ featured: PointSpecies) -> Bool {
+        featured.id == info.scored?.species
+    }
+
     @ViewBuilder
-    private func summarySection(_ scored: PointInfo.Scored) -> some View {
+    private func summarySection(_ featured: PointSpecies) -> some View {
+        let text = Self.sentence(
+            terrain: model.classify(featured.terrain)?.label, mode: info.mode, sentence: model.pointSentence,
+            summary: model.pointSummary
+        )
         Section {
-            HStack(spacing: 8) {
-                ScoreDot(value: scored.value, model: model, size: 16)
-                Text(headline(scored)).font(.title3).fontWeight(.semibold)
+            HStack(spacing: 10) {
+                SpeciesThumbnail(species: featured.id, size: 44)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 8) {
+                        ScoreDot(value: featured.value, model: model, size: 16)
+                        Text(headline(featured)).font(.title3).fontWeight(.semibold)
+                    }
+                    Text(subtitle(featured)).foregroundStyle(.secondary)
+                    let latin = model.speciesLatin(featured.id)
+                    if !latin.isEmpty {
+                        Text(latin).font(.subheadline).italic().foregroundStyle(.secondary)
+                    }
+                }
             }
             .accessibilityElement(children: .combine)
-            Text(subtitle(scored)).foregroundStyle(.secondary)
-            ForEach(phrases(scored), id: \.self) { phrase in
+            Text(text.sentence)
+            // API plus ancienne, sans `sentence` : la liste de phrases d'avant
+            ForEach(text.phrases, id: \.self) { phrase in
                 Text(phrase)
             }
-            if info.mode == .score, scored.cell != nil, model.pointSummary == nil, model.factorsStatus == nil,
-               model.factorsProblem == nil {
+            if info.mode == .score, model.pointSentence == nil, model.pointSummary == nil, let status = model.factorsStatus {
+                Text(status).foregroundStyle(.secondary)
+            }
+            if info.mode == .score, info.cell != nil, model.pointDetail == nil, model.factorsProblem == nil {
                 ProgressView().controlSize(.small)
             }
             if info.mode == .score, let problem = model.factorsProblem {
@@ -129,6 +164,63 @@ struct PointSheet: View {
         }
     }
 
+    /// Les autres espèces qui ont du terrain ici, une section par famille (17 nov. 2026).
+    @ViewBuilder
+    private var familySections: some View {
+        ForEach(families) { family in
+            Section {
+                ForEach(family.species) { species in
+                    Button {
+                        model.feature(species.id)
+                    } label: {
+                        speciesRow(species)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Affiche le détail de cette espèce")
+                }
+            } header: {
+                if let symbol = GroupSymbol.assetName(for: .group(family.id)) {
+                    Label {
+                        Text(family.title)
+                    } icon: {
+                        Image(symbol)
+                    }
+                } else {
+                    Text(family.title)
+                }
+            }
+        }
+    }
+
+    /// Icône, nom français, nom latin, pastille et libellé de palette : jamais de chiffre ici.
+    private func speciesRow(_ species: PointSpecies) -> some View {
+        HStack(spacing: 10) {
+            SpeciesThumbnail(species: species.id, size: 36)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.speciesName(species.id))
+                let latin = model.speciesLatin(species.id)
+                if !latin.isEmpty {
+                    Text(latin).font(.subheadline).italic().foregroundStyle(.secondary)
+                }
+            }
+            Spacer(minLength: 8)
+            if info.mode == .score, species.value == nil, info.cell != nil, model.pointDetail == nil, model.factorsProblem == nil {
+                ProgressView().controlSize(.small)
+            } else {
+                ScoreDot(value: species.value, model: model)
+                Text(scoreLabel(species.value)).font(.subheadline).foregroundStyle(.secondary)
+            }
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+
+    /// Libellé de palette d'une valeur ; sans météo pour l'espèce, on le dit.
+    private func scoreLabel(_ value: Double?) -> String {
+        guard let value else { return "Sans météo" }
+        return model.classify(value)?.fr ?? "Score"
+    }
+
     private func trendPhrase(today: String) -> String? {
         guard let goodMin = model.goodThreshold else { return nil }
         return CoinTrend.phrase(CoinTrend.kind(days: model.pointDays, today: today, goodMin: goodMin))
@@ -143,33 +235,37 @@ struct PointSheet: View {
         }
     }
 
-    private func headline(_ scored: PointInfo.Scored) -> String {
-        let label = model.classify(scored.value)?.fr ?? "Score"
+    private func headline(_ featured: PointSpecies) -> String {
+        let label = scoreLabel(featured.value)
         guard info.mode == .score, let date = info.date, let today = model.today else {
             return "\(label), toute saison"
         }
         return date == today ? "\(label) aujourd'hui" : "\(label) \(CoinTrend.weekdayName(iso: date))"
     }
 
-    private func subtitle(_ scored: PointInfo.Scored) -> String {
-        var parts = [model.speciesName(scored.species)]
+    private func subtitle(_ featured: PointSpecies) -> String {
+        var parts = [model.speciesName(featured.id)]
         if info.mode == .score, let date = info.date {
             parts.append(MapModel.format(iso: date))
         }
         return parts.joined(separator: " · ")
     }
 
-    /// Terrain d'abord (depuis le libellé de T), puis les phrases de l'API ; sans météo, on le dit.
-    private func phrases(_ scored: PointInfo.Scored) -> [String] {
-        var out = [Self.terrainPhrase(label: model.classify(scored.terrain)?.label)]
-        if info.mode == .terrain {
-            out.append("potentiel toute saison, sans la météo")
-        } else if let summary = model.pointSummary {
-            out += summary
-        } else if let status = model.factorsStatus {
-            out.append(status)
+    /// La phrase de la fiche : le terrain (depuis le libellé de palette de `T`, que l'API ne connaît
+    /// pas), deux-points, puis `sentence` de l'API et un point. Sans `sentence` (API plus ancienne),
+    /// le terrain seul et la liste `summary` à la suite (`phrases`). Fonction pure, testée.
+    nonisolated static func sentence(
+        terrain label: String?, mode: MapMode, sentence: String?, summary: [String]?
+    ) -> (sentence: String, phrases: [String]) {
+        let phrase = terrainPhrase(label: label)
+        let lead = phrase.prefix(1).uppercased() + phrase.dropFirst()
+        if mode == .terrain {
+            return ("\(lead) : potentiel toute saison, sans la météo.", [])
         }
-        return out
+        if let sentence, !sentence.isEmpty {
+            return ("\(lead) : \(sentence).", [])
+        }
+        return ("\(lead).", summary ?? [])
     }
 
     /// Phrase de terrain depuis le libellé de palette de `T` : l'API ne connaît pas le pixel.
@@ -242,26 +338,30 @@ struct PointSheet: View {
     }
 
     @ViewBuilder
-    private func detailsSection(_ scored: PointInfo.Scored) -> some View {
+    private func detailsSection(_ featured: PointSpecies) -> some View {
         Section("Détails") {
             DisclosureGroup("Chiffres et facteurs") {
-                LabeledContent(info.mode == .score ? "Score S" : "Potentiel T", value: Self.number(scored.value))
-                LabeledContent("Potentiel terrain T", value: Self.number(scored.terrain))
-                // `factor` est interpolé entre les cellules voisines, comme la couleur de la carte ;
-                // `M_eff` et `Φ` sont ceux de la cellule qui porte le point (bbox ou GET /weather).
-                let row = scored.row ?? model.pointRow
-                if let factor = scored.factor ?? row?.factor {
+                if let value = featured.value {
+                    LabeledContent(info.mode == .score ? "Score S" : "Potentiel T", value: Self.number(value))
+                }
+                LabeledContent("Potentiel terrain T", value: Self.number(featured.terrain))
+                // Espèce de la couche : `factor` est interpolé entre les cellules voisines, comme la
+                // couleur de la carte ; `M_eff` et `Φ` sont ceux de la cellule qui porte le point
+                // (bbox ou GET /weather). Autre espèce : tout vient de la cellule du point.
+                let scored = isLayerLead(featured) ? info.scored : nil
+                let row = scored?.row ?? model.pointRow
+                if let factor = scored?.factor ?? row?.factor {
                     LabeledContent("M_eff × Φ", value: Self.number(factor))
                 }
                 if let row {
                     LabeledContent("Indice météo M_eff", value: Self.number(row.mEff))
                     LabeledContent("Fenêtre Φ", value: Self.number(row.phi))
                 }
-                LabeledContent("Classe d'altitude", value: altitudeText(scored))
-                if let cell = scored.cell {
-                    LabeledContent("Cellule météo", value: cell.id + (scored.stale ? " · météo périmée" : ""))
+                LabeledContent("Classe d'altitude", value: altitudeText)
+                if let cell = info.cell {
+                    LabeledContent("Cellule météo", value: cell.id + (info.stale ? " · météo périmée" : ""))
                 }
-                if info.mode == .score, scored.cell != nil {
+                if info.mode == .score, info.cell != nil {
                     if let factors = model.pointFactors {
                         ForEach(Self.factors) { factor in
                             if let value = factors[factor.key] {
@@ -269,8 +369,13 @@ struct PointSheet: View {
                             }
                         }
                     }
-                    if scored.interpolated {
+                    if scored?.interpolated == true {
                         Text("Le score est interpolé entre les cellules météo voisines. M_eff, Φ et les facteurs sont ceux de la cellule qui porte ce point.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    if scored == nil {
+                        Text("Pour une espèce qui n'est pas affichée sur la carte, le score est celui de la cellule météo qui porte ce point, sans interpolation avec ses voisines : il peut différer d'un cran de la couleur qu'aurait la carte.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
@@ -282,15 +387,15 @@ struct PointSheet: View {
         }
     }
 
-    private func altitudeText(_ scored: PointInfo.Scored) -> String {
-        if let altitude = scored.altitudeM {
+    private var altitudeText: String {
+        if let altitude = info.altitudeM {
             return "\(Int(altitude)) m"
         }
         let classM = Int(model.palette?.altEncoding.classM ?? 300)
-        if let k = scored.altClass {
+        if let k = info.altClass {
             return "\(k * classM)–\((k + 1) * classM) m"
         }
-        if let key = scored.altKey, scored.altFallback {
+        if let key = info.altKey, info.altFallback {
             return "\(key) m (médiane cellule)"
         }
         return "inconnue"
