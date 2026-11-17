@@ -20,16 +20,16 @@ Les coins servent à calculer le score du jour et à vous prévenir quand il dev
 
 ## Combien de temps
 
-Coins et observations restent tant que vous ne les effacez pas. Le serveur et son hébergeur gardent des journaux techniques (adresse IP, page demandée, heure) quelques jours, durée fixée par l'hébergeur, seulement pour faire fonctionner et sécuriser le service.
+Coins et observations restent tant que vous ne les effacez pas. Le serveur et son hébergeur gardent des journaux techniques (adresse IP, page demandée, heure) quelques jours, durée fixée par l'hébergeur, seulement pour faire fonctionner et sécuriser le service. Le journal du serveur de Champis lui-même ne retient que la page demandée, sans la position ni les autres paramètres de la requête.
 
 Pour savoir si Champis sert, le serveur tient aussi des totaux par jour : ouvertures de la carte du site, observations reçues, appareils ayant des coins, notifications envoyées, espèces affichées sur la carte. Ce sont des nombres, sans adresse IP ni identifiant, gardés 13 mois.
 
-Pour compter les appareils qui utilisent l'app chaque jour, le serveur note une fois par jour une empreinte de l'identifiant pseudonyme : un hachage calculé avec une clé que seul le serveur connaît, qui ne permet de retrouver ni l'identifiant, ni vos coins, ni vos observations. Ces empreintes sont effacées après 13 mois. Rien de tel pour le site, qui n'a pas d'identifiant.
+Pour compter les appareils qui utilisent l'app chaque jour, le serveur note une fois par jour une empreinte de l'identifiant pseudonyme : un hachage calculé avec une clé que seul le serveur connaît et avec la date du jour. Elle change donc chaque jour : elle ne permet de retrouver ni l'identifiant, ni vos coins, ni vos observations, ni de savoir qu'un même appareil est revenu d'un jour à l'autre. Ces empreintes sont effacées après 13 mois, ou tout de suite quand vous supprimez vos données. Rien de tel pour le site, qui n'a pas d'identifiant.
 
 ## Qui d'autre intervient
 
 - **Railway**, l'hébergeur, pour le serveur et la base de données.
-- **Apple**, pour les notifications de l'app (le texte passe par son service de notifications) et pour le fond de carte de l'app (Plans).
+- **Apple**, pour les notifications de l'app (leur texte, qui cite le nom que vous avez donné au coin et l'espèce, passe par son service de notifications) et pour le fond de carte de l'app (Plans).
 - **La Géoplateforme de l'IGN** (data.geopf.fr), un service public : le statut de la forêt d'un point (publique ou non) et, sur le site, le fond de carte et la recherche de commune. Ce qui lui part : la position du point dont vous ouvrez la fiche, le texte tapé dans la recherche, la zone de carte affichée. Rien qui vous identifie : ni identifiant, ni coin, ni observation.
 - **OpenStreetMap**, sur le site, seulement si vous choisissez ce fond de carte : il reçoit alors la zone affichée.
 
@@ -39,6 +39,8 @@ Personne d'autre.
 
 Votre position n'est lue que quand vous le demandez, pour centrer la carte ou noter une observation. L'app ne tourne pas en arrière-plan : les notifications sont calculées par le serveur à partir de vos coins. Sur le site, « me localiser » lit la position dans le navigateur pour centrer la carte, sans l'envoyer nulle part.
 
+La carte retient la dernière vue affichée pour se rouvrir au même endroit : le niveau de zoom et le centre de la carte, rien d'autre. Cette vue reste sur votre appareil et n'est jamais envoyée, ni au serveur de Champis ni à un tiers. Sur le site, elle est gardée dans le stockage local de votre navigateur (`localStorage`, clé `champis.carte.vue`), pas dans un cookie ; pour l'effacer, supprimez les données du site champis.app dans les réglages du navigateur. En navigation privée, ou si le navigateur refuse ce stockage, rien n'est retenu et la carte s'ouvre sur la France entière. Dans l'app, elle est gardée dans les réglages de l'app et disparaît avec elle. Si vous veniez de centrer la carte sur votre position, la vue retenue est celle-là.
+
 ## Vos droits
 
-Dans les réglages de l'app, « Supprimer mes observations et mes coins » efface tout sur le serveur puis sur l'appareil, sans retour. Vous pouvez aussi demander l'accès à vos données, leur rectification ou leur export en écrivant à [hello@champis.app](mailto:hello@champis.app). Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL ([cnil.fr](https://www.cnil.fr)).
+Dans les réglages de l'app, « Supprimer mes observations et mes coins » efface tout sur le serveur (observations, coins, jeton de notification et empreintes de comptage de l'appareil) puis sur l'appareil, sans retour. Vous pouvez aussi demander l'accès à vos données, leur rectification ou leur export en écrivant à [hello@champis.app](mailto:hello@champis.app). Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL ([cnil.fr](https://www.cnil.fr)).

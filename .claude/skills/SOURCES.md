@@ -4,7 +4,7 @@ Deux familles, comme le veut la spec (« Décisions prises › Skills ») : des 
 
 ## Copies synchronisées depuis le monorepo `adhumi/champis`
 
-`champis-model`, `scoring-parity`, `spec-sync` : la source de vérité est `adhumi/champis/.claude/skills/`. Ne pas les modifier ici ; relancer `scripts/sync-skills.sh ../champis` après un changement là-bas. `SKILLS_VERSION` note le commit du monorepo synchronisé.
+`champis-model`, `scoring-parity`, `spec-sync`, `roadmap` : la source de vérité est `adhumi/champis/.claude/skills/`. Ne pas les modifier ici ; relancer `scripts/sync-skills.sh ../champis` après un changement là-bas. `SKILLS_VERSION` note le commit du monorepo synchronisé.
 
 ## Skills maison de ce dépôt (phase 4)
 

@@ -2,7 +2,7 @@
 
 Client iOS / iPadOS / macOS 26 de Champis. Le modèle, les règles d'espèces et la spec vivent dans le monorepo `adhumi/champis` (doc « Spec — Champis »). Les skills sont dans `.claude/skills/` (provenance dans `SOURCES.md`) :
 
-- `champis-model`, `scoring-parity`, `spec-sync` : copies du monorepo, synchronisées par `scripts/sync-skills.sh`, à ne pas modifier ici. Lis `champis-model` et `scoring-parity` avant tout code qui calcule ou affiche un score. Toute décision structurante passe par la spec avant le code (`spec-sync`).
+- `champis-model`, `scoring-parity`, `spec-sync`, `roadmap` : copies du référentiel, synchronisées par `scripts/sync-skills.sh`, à ne pas modifier ici. Lis `champis-model` et `scoring-parity` avant tout code qui calcule ou affiche un score. Toute décision structurante passe par la spec avant le code (`spec-sync`).
 - `swiftui-mapkit`, `offline`, `field-feedback` : skills maison de la phase 4, à lire avant de toucher la carte, le hors ligne, les observations ou les coins.
 - `swiftui-pro`, `swift-concurrency-pro`, `swift-testing-pro`, `ios-accessibility`, `background-execution` : skills communautaires copiés en dossier (MIT), à appliquer à toute revue ou écriture de code Swift.
 
@@ -23,6 +23,7 @@ Client iOS / iPadOS / macOS 26 de Champis. Le modèle, les règles d'espèces et
 ## Outillage
 
 - Jamais de commit poussé sur `main` sans PR : branche, PR, Xcode Cloud vert, fusion (règle du 30 oct. 2026).
+- Les issues GitHub sont la source de vérité de ce qui reste à faire (décision du 17 nov. 2026, skill `roadmap`) : lire les issues ouvertes de ce dépôt, et celles de `adhumi/champis` pour les sujets transverses, avant de commencer une tâche ; tout ce qui est remis à plus tard, découvert en chemin ou laissé hors périmètre devient une issue, jamais un « reste à faire » dans un message, un README ou un commentaire ; une PR cite son issue (`Closes #N`). Jamais de faille non corrigée, de secret ni de coût dans une issue : elles seront publiques.
 - Tests : Swift Testing (`@Test`, `#expect`), jamais XCTest. Schéma `Champis` partagé, utilisé par Xcode Cloud.
 - `cd Packages/ChampisScoring && swift test` pour le paquet seul.
 - Documentation : `README.md` (installer, lancer, compiler sans le compte de l'auteur, tester), `docs/conception.md` (ce que fait chaque partie de l'app et les décisions datées, déplacé du README le 15 nov. 2026), `docs/app-store.md` ; `SECURITY.md` et `CONTRIBUTING.md` pour les tiers.
