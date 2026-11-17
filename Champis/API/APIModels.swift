@@ -176,11 +176,14 @@ nonisolated struct WeatherRow: Codable, Hashable, Sendable {
     let summary: [String]?
     /// Âge en jours de la pluie déclenchante retenue ; `nil` sans événement (ou hors détail).
     let triggerDays: Int?
+    /// Les faits de `summary` en une phrase rédigée, sans majuscule initiale ni point final
+    /// (`GET /weather` seulement, 17 nov. 2026) ; `nil` d'une API ou d'un cache plus anciens.
+    var sentence: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case m = "M"
         case mEff = "M_eff"
-        case phi, factors, summary
+        case phi, factors, summary, sentence
         case triggerDays = "trigger_days"
     }
 
