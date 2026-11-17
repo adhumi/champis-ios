@@ -153,18 +153,18 @@ struct MapScreen: View {
     }
 
     /// Sélecteur d'espèce (9 nov. 2026, comme celui du site) : dans la barre, la vignette
-    /// naturaliste et le nom de la couche ; dans le menu, les groupes (nom latin des genres en
-    /// sous-titre), un séparateur, puis les espèces (nom latin en sous-titre).
+    /// naturaliste et le nom de la couche ; dans le menu, les groupes (symbole de la famille, nom
+    /// latin des genres en sous-titre), un séparateur, puis les espèces (nom latin en sous-titre).
     private var layerMenu: some View {
         Menu {
             Section {
                 ForEach(model.groupLayers) { layer in
-                    layerToggle(layer)
+                    layerButton(layer)
                 }
             }
             Section {
                 ForEach(model.speciesLayers) { layer in
-                    layerToggle(layer)
+                    layerButton(layer)
                 }
             }
         } label: {
@@ -179,12 +179,22 @@ struct MapScreen: View {
         .accessibilityLabel("Espèce : \(model.selectedLayer?.title ?? "aucune")")
     }
 
-    /// Une ligne du menu : coche sur la couche affichée, nom français, nom latin en sous-titre.
-    private func layerToggle(_ layer: Layer) -> some View {
-        Toggle(isOn: layerBinding(layer)) {
+    /// Une ligne du menu : nom français, nom latin en sous-titre, et une image. C'est un `Button`
+    /// dont le libellé porte deux `Text` et une `Image`, la forme que le menu lit ; un `Toggle`
+    /// (coche native) n'affichait pas l'image sur iPhone (16 nov. 2026). L'image est donc la coche
+    /// sur la couche affichée, sinon pour un groupe le symbole de sa famille (`GroupSymbol`).
+    private func layerButton(_ layer: Layer) -> some View {
+        Button {
+            model.select(layerKey: layer.key)
+        } label: {
             Text(layer.title)
             if !layer.latin.isEmpty {
                 Text(layer.latin)
+            }
+            if model.selectedLayer?.key == layer.key {
+                Image(systemName: "checkmark")
+            } else if let symbol = GroupSymbol.assetName(for: layer.key) {
+                Image(symbol)
             }
         }
     }
@@ -285,11 +295,6 @@ struct MapScreen: View {
 
     private var basemapBinding: Binding<Basemap> {
         Binding(get: { model.basemap }, set: { model.basemap = $0 })
-    }
-
-    /// Cocher une couche l'affiche ; décocher celle affichée ne fait rien (il en faut une).
-    private func layerBinding(_ layer: Layer) -> Binding<Bool> {
-        Binding(get: { model.selectedLayer?.key == layer.key }, set: { if $0 { model.select(layerKey: layer.key) } })
     }
 
     /// En disposition partagée, l'inspecteur montre la fiche : la feuille ne se présente jamais.

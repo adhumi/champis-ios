@@ -28,6 +28,14 @@ struct APIModelsTests {
         #expect(layers[3].illustration == "boletus_edulis")
     }
 
+    @Test("Symbole de famille : un par groupe, nommé par son identifiant, aucun pour une espèce")
+    func groupSymbol() {
+        #expect(GroupSymbol.name(for: .group("cepes")) == "Group-cepes")
+        #expect(GroupSymbol.name(for: .species("boletus_edulis")) == nil)
+        #expect(GroupSymbol.assetName(for: .group("cepes")) == "Group-cepes")
+        #expect(GroupSymbol.assetName(for: .group("groupe_inconnu")) == nil)
+    }
+
     @Test("Sélecteur d'espèce : genres d'un groupe et espèce de sa vignette, mêmes règles que le site")
     func layerNames() {
         #expect(LayerCatalog.groupLatin(["Lactarius deliciosus", "Lactifluus volemus", "Lactarius deterrimus"]) == "Lactarius, Lactifluus spp.")

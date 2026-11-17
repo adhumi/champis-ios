@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Écrit par scripts/group-symbols.py : ne pas modifier à la main. -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="3300" height="2200">
+ <g id="Notes">
+  <rect height="2200" id="artboard" style="fill:white;opacity:1" width="3300" x="0" y="0"/>
+  <text id="template-version" style="stroke:none;fill:black;font-family:sans-serif;font-size:13;text-anchor:end;" transform="matrix(1 0 0 1 3036 1933)">Template v.3.0</text>
+  <text id="descriptive-name" style="stroke:none;fill:black;font-family:sans-serif;font-size:13;text-anchor:end;" transform="matrix(1 0 0 1 3036 1969)">Group-pieds_bleus</text>
+ </g>
+ <g id="Guides">
+  <line id="Baseline-S" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="696" y2="696"/>
+  <line id="Capline-S" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="625.541" y2="625.541"/>
+  <line id="Baseline-M" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1126" y2="1126"/>
+  <line id="Capline-M" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1055.54" y2="1055.54"/>
+  <line id="Baseline-L" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1556" y2="1556"/>
+  <line id="Capline-L" style="fill:none;stroke:#27AAE1;opacity:1;stroke-width:0.5;" x1="263" x2="3036" y1="1485.54" y2="1485.54"/>
+  <line id="left-margin-Regular-M" style="fill:none;stroke:#00AEEF;stroke-width:0.5;opacity:1.0;" x1="1391.300" x2="1391.300" y1="1030.79" y2="1150.12"/>
+  <line id="right-margin-Regular-M" style="fill:none;stroke:#00AEEF;stroke-width:0.5;opacity:1.0;" x1="1524.786" x2="1524.786" y1="1030.79" y2="1150.12"/>
+ </g>
+ <g id="Symbols">
+  <g id="Regular-M" transform="matrix(1 0 0 1 1391.300 1126)">
+   <path d="M6.535 -42.720 Q12.808 -53.175 26.721 -60.764 Q37.529 -66.660 49.482 -69.233 Q56.614 -76.860 66.743 -76.860 Q76.872 -76.860 84.004 -69.233 Q95.957 -66.660 106.765 -60.764 Q120.678 -53.175 126.951 -42.720 Q127.575 -41.681 127.473 -40.474 Q127.371 -39.267 126.582 -38.347 Q122.860 -34.004 117.036 -32.818 Q113.851 -32.168 107.360 -32.366 Q96.938 -32.682 92.625 -29.447 Q92.561 -29.399 92.495 -29.354 Q92.430 -29.309 92.362 -29.267 Q86.908 -25.858 78.982 -24.459 Q79.709 -18.048 84.046 -7.909 Q88.566 2.659 88.566 7.860 Q88.566 22.733 66.743 22.733 Q44.920 22.733 44.920 7.860 Q44.920 2.659 49.440 -7.909 Q53.777 -18.048 54.504 -24.459 Q46.578 -25.858 41.124 -29.267 Q41.056 -29.309 40.991 -29.354 Q40.925 -29.399 40.861 -29.447 Q36.548 -32.682 26.126 -32.366 Q19.635 -32.168 16.450 -32.818 Q10.626 -34.004 6.904 -38.347 Q6.115 -39.267 6.013 -40.474 Q5.911 -41.681 6.535 -42.720 Z M61.956 -23.616 Q61.078 -16.031 56.341 -4.957 Q52.426 4.197 52.426 7.860 Q52.426 15.228 66.743 15.228 Q81.060 15.228 81.060 7.860 Q81.060 4.197 77.145 -4.957 Q72.408 -16.031 71.530 -23.616 Q69.218 -23.484 66.743 -23.484 Q64.268 -23.484 61.956 -23.616 Z M25.898 -39.868 Q38.804 -40.260 45.223 -35.557 Q52.644 -30.990 66.743 -30.990 Q80.842 -30.990 88.263 -35.557 Q94.682 -40.260 107.588 -39.868 Q115.019 -39.642 118.697 -41.551 Q113.381 -48.606 103.171 -54.175 Q92.808 -59.827 81.297 -62.129 Q80.680 -62.253 80.136 -62.571 Q79.593 -62.889 79.184 -63.367 Q74.052 -69.354 66.743 -69.354 Q59.434 -69.354 54.302 -63.367 Q53.893 -62.889 53.350 -62.571 Q52.806 -62.253 52.189 -62.129 Q40.678 -59.827 30.315 -54.175 Q20.105 -48.606 14.789 -41.551 Q18.467 -39.642 25.898 -39.868 Z"/>
+  </g>
+ </g>
+</svg>
