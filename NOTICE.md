@@ -10,7 +10,7 @@ Ce qui suit n'est pas du code de ce dépôt et garde sa propre licence.
 | `Champis/Resources/Texts/`, `Packages/ChampisScoring/Tests/ChampisScoringTests/Resources/` (espèces, palette, vecteurs) | Copies du référentiel `adhumi/champis`, mises à jour par `scripts/sync-*.sh` | CC BY 4.0 (« Champis, champis.app ») : `LICENSE-DATA.md` du référentiel |
 | `Champis/Assets.xcassets/Icon-*`, `IconPreview-*` | Dérivées des aquarelles du référentiel (`shared/illustrations/`), images générées avec Gemini par Adrien Humilière ; écrites par `scripts/sync-icons.py` | CC BY 4.0 comme images, dans la mesure où un droit existe sur une image générée ; leur emploi comme icône d'app : voir « Nom et icônes » |
 | `.claude/skills/swiftui-pro`, `swift-concurrency-pro`, `swift-testing-pro`, `ios-accessibility`, `background-execution` | Skills communautaires copiés ; auteurs, sources et commits dans `.claude/skills/SOURCES.md` | MIT, fichier `LICENSE` de chaque dossier |
-| `.claude/skills/champis-model`, `scoring-parity`, `spec-sync` | Copies du référentiel `adhumi/champis` | MIT |
+| `.claude/skills/champis-model`, `scoring-parity`, `spec-sync`, `roadmap` | Copies du référentiel `adhumi/champis` | MIT |
 
 Les photos des fiches d'espèces ne sont pas dans ce dépôt : l'app les charge depuis le site
 (`https://champis.app/shared/photos/<espèce>.jpg`), qui sert les copies du référentiel

@@ -15,7 +15,7 @@ Les décisions structurantes du projet (le modèle, les sources de données, le 
 ## Ce qui ne se modifie pas ici
 
 - Les fichiers d'espèces, la palette, les vecteurs de parité, les textes du Guide et les aquarelles vivent dans le référentiel `adhumi/champis`. Ils se modifient par une pull request là-bas ; ce dépôt n'en garde que des copies, mises à jour par `scripts/sync-vectors.sh`, `scripts/sync-texts.sh` et `scripts/sync-icons.py`, jamais à la main.
-- Les skills `champis-model`, `scoring-parity` et `spec-sync` de `.claude/skills/` sont aussi des copies du référentiel (`scripts/sync-skills.sh`).
+- Les skills `champis-model`, `scoring-parity`, `spec-sync` et `roadmap` de `.claude/skills/` sont aussi des copies du référentiel (`scripts/sync-skills.sh`).
 - Le scoring de référence est celui de `adhumi/champis-api`, en Python. `Packages/ChampisScoring` en est le portage : une règle se change d'abord là-bas, avec ses vecteurs, puis ici.
 
 ## Règles du dépôt

@@ -5,7 +5,7 @@ description: Toute décision de conception du projet Champis vit dans la spec (d
 
 # Synchronisation avec la spec
 
-La spec est le doc « Spec — Champis (carte de cueillette) ». Le code l'implémente ; il ne la précède jamais sur un choix structurant.
+La spec est le doc « Spec — Champis (carte de cueillette) ». Le code l'implémente ; il ne la précède jamais sur un choix structurant. La copie publique est dans `docs/spec/` du référentiel, expurgée, mise à jour par PR après un changement du doc.
 
 ## Ce qui doit être dans la spec avant d'être codé
 
