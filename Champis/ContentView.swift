@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Racine de l'app (refonte UX, lot 1) : trois onglets, une question chacun. Mes coins (quand ?),
-/// Carte (où ?), Guide (pourquoi ?). L'app s'ouvre toujours sur la carte (décision du
+/// Racine de l'app : deux onglets depuis le 19 nov. 2026, Mes coins (quand ?, avec le Guide sous
+/// les coins : pourquoi ?) et Carte (où ?) ; l'onglet Guide du lot 1 de la refonte UX est retiré.
+/// L'app s'ouvre toujours sur la carte (décision du
 /// 1er nov. 2026) ; une notification bascule sur Mes coins et ouvre le coin concerné. Lot 3 : sur
 /// iPad en largeur régulière et sur Mac, barre latérale et inspecteur (`SplitContentView`).
 struct ContentView: View {
@@ -57,9 +58,6 @@ struct ContentView: View {
             }
             Tab("Carte", systemImage: "map", value: AppRouter.Tab.map) {
                 MapScreen(model: model)
-            }
-            Tab("Guide", systemImage: "book", value: AppRouter.Tab.understand) {
-                UnderstandScreen(model: model)
             }
         }
     }

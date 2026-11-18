@@ -1,19 +1,25 @@
 import SwiftUI
 
 /// iPad et Mac (refonte UX, lot 3, décision du 1er nov. 2026) : la barre latérale porte Mes coins
-/// dépliés, Carte et Guide ; la carte occupe le détail ; la fiche d'un point ou d'un coin
+/// dépliés, Carte et les quatre entrées du Guide (19 nov. 2026 : plus d'écran Guide, les réglages
+/// s'ouvrent depuis la barre latérale) ; la carte occupe le détail ; la fiche d'un point ou d'un coin
 /// s'ouvre dans l'inspecteur, jamais en feuille. Choisir un coin recentre la carte.
 struct SplitContentView: View {
     nonisolated enum Item: Hashable, Sendable {
         case coin(UUID)
         case map
-        case understand
+        /// Un article du Guide, par son identifiant.
+        case article(String)
     }
 
     let model: MapModel
     let router: AppRouter
     @State private var selection: Item? = .map
     @State private var columns = NavigationSplitViewVisibility.automatic
+    @State private var guide = GuideCards.cards(from: Texts.index())
+    @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
+    @State private var showSettings = false
+    @State private var showLegalNotice = false
 
     private var field: FieldModel { model.field }
 
@@ -33,10 +39,9 @@ struct SplitContentView: View {
             router.coinToOpen = nil
         }
         .onChange(of: router.tab) { _, tab in
-            switch tab {
-            case .understand: selection = .understand
-            case .map where selection == .understand: selection = .map
-            default: break
+            // « Ouvrir la carte » depuis un article ou l'état vide
+            if tab == .map, case .article? = selection {
+                selection = .map
             }
         }
         .onChange(of: selection) { _, item in
@@ -75,18 +80,45 @@ struct SplitContentView: View {
             }
             Section {
                 Label("Carte", systemImage: "map").tag(Item.map)
-                Label("Guide", systemImage: "book").tag(Item.understand)
+            }
+            if !guide.isEmpty {
+                Section("Guide") {
+                    ForEach(guide) { card in
+                        GuideRow(card: card).tag(Item.article(card.id))
+                    }
+                }
             }
         }
         .navigationTitle("Champis")
         .refreshable { await field.refreshCoinScores() }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showSettings = true
+                } label: {
+                    Label("Réglages", systemImage: "slider.horizontal.3")
+                }
+            }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(model: model, apiBaseURL: $apiBaseURL, showLegalNotice: $showLegalNotice)
+        }
+        .alert(LegalNotice.title, isPresented: $showLegalNotice) {
+            Button("OK") {}
+        } message: {
+            Text(LegalNotice.text)
+        }
     }
 
     @ViewBuilder
     private var detail: some View {
         switch selection {
-        case .understand:
-            UnderstandScreen(model: model)
+        case .article(let id):
+            NavigationStack {
+                if let card = guide.first(where: { $0.id == id }) {
+                    ArticleView(article: card.article, model: model)
+                }
+            }
         default:
             MapScreen(model: model, layout: .split)
                 .inspector(isPresented: inspectorBinding) {

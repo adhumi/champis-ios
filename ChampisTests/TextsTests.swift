@@ -62,6 +62,18 @@ struct TextsTests {
         #expect(about.references["courtecuisse2013"]?.contains("Courtecuisse") == true)
         #expect(about.photo == nil)
     }
+
+    @Test("Section Guide de Mes coins : quatre entrées, dans l'ordre, sur les articles embarqués")
+    func guideCards() {
+        let cards = GuideCards.cards(from: Texts.index())
+        #expect(cards.map(\.id) == ["comment-ca-marche", "donnees-et-sources", "especes", "cueillir-sans-nuire"])
+        #expect(cards.map(\.title) == ["Comment ça marche ?", "Source des données", "Les champis de Champis", "Cueillir sans nuire"])
+        #expect(cards.allSatisfy { !$0.subtitle.isEmpty && !$0.article.icon.isEmpty })
+        // un article absent des textes embarqués n'a pas d'entrée ; les autres gardent leur ordre
+        let partial = GuideCards.cards(from: Texts.index().filter { $0.id != "especes" })
+        #expect(partial.map(\.id) == ["comment-ca-marche", "donnees-et-sources", "cueillir-sans-nuire"])
+        #expect(GuideCards.cards(from: []).isEmpty)
+    }
 }
 
 /// Étape A (spec › Produit, 6 nov. 2026) : plus rien de faux à l'écran. Les coins et les
