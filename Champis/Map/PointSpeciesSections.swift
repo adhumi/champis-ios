@@ -1,3 +1,4 @@
+import ChampisScoring
 import SwiftUI
 
 /// Les espèces qui ont du terrain à un endroit, une section par famille (spec › App iOS › Fiche
