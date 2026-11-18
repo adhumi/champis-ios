@@ -149,6 +149,16 @@ nonisolated struct ChampisAPI: Sendable {
         return try await get("weather", query: query)
     }
 
+    /// Détail de la cellule la plus proche d'un point (`GET /weather?lat=&lon=`) : la fiche d'un coin
+    /// ouverte depuis Mes coins, quand la carte n'a pas la météo de cet endroit (18 nov. 2026).
+    func weatherDetail(latitude: Double, longitude: Double, species: [String]) async throws -> CellWeather {
+        let query = [
+            URLQueryItem(name: "lat", value: Self.format(latitude)),
+            URLQueryItem(name: "lon", value: Self.format(longitude)),
+        ] + species.map { URLQueryItem(name: "species", value: $0) }
+        return try await get("weather", query: query)
+    }
+
     /// Indice par département (bandeau des jours), 11 jours, pour les espèces données.
     func departements(species: [String]) async throws -> DepartementsResponse {
         try await get("departements", query: species.map { URLQueryItem(name: "species", value: $0) })

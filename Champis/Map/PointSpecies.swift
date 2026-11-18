@@ -24,6 +24,15 @@ nonisolated struct PointFamily: Identifiable, Hashable, Sendable {
     var best: Double? { species.compactMap(\.value).max() }
 }
 
+/// Contenu d'une ligne d'espèce dépliée dans la fiche : sa phrase et sa tendance.
+nonisolated struct PointExpansion: Hashable, Sendable {
+    let sentence: String
+    /// Liste `summary` d'une API plus ancienne, sous la phrase de terrain ; vide sinon.
+    let phrases: [String]
+    /// « mieux samedi 7 », « stable toute la semaine »… ; `nil` si les jours ne le disent pas.
+    let trend: String?
+}
+
 /// Liste des espèces du point, fonctions pures : rien n'est nommé ici, tout vient de `GET /species`.
 nonisolated enum PointFamilies {
     /// Titre de la section des espèces sans groupe dans le référentiel.
@@ -49,6 +58,34 @@ nonisolated enum PointFamilies {
     static func factor(detail: CellWeather?, species: String, date: String?, altKey: String?) -> Double? {
         guard let date, let altKey else { return nil }
         return detail?.species[species]?.first { $0.date == date }?.byAlt[altKey]?.factor
+    }
+
+    /// Ce qu'une ligne dépliée montre pour son espèce (18 nov. 2026) : sa phrase (terrain du pixel,
+    /// liaison, `sentence` de l'API ; la liste `summary` d'une API plus ancienne) et la tendance de
+    /// ses onze jours. `nil` tant que la météo du point n'est pas arrivée. `interpolated` : `M_eff × Φ`
+    /// d'un jour tel que la carte le montre, pour une espèce de la couche.
+    static func expansion(
+        species: PointSpecies, info: PointInfo, detail: CellWeather?, terrainLabel: String?, today: String?,
+        goodMin: Double?, interpolated: (String) -> Double? = { _ in nil }
+    ) -> PointExpansion? {
+        if info.mode == .terrain {
+            let text = PointSheet.sentence(terrain: terrainLabel, mode: .terrain, sentence: nil, summary: nil)
+            return PointExpansion(sentence: text.sentence, phrases: [], trend: nil)
+        }
+        guard let detail, let date = info.date, let altKey = info.altKey else { return nil }
+        let rows = detail.species[species.id] ?? []
+        let row = rows.first { $0.date == date }?.byAlt[altKey]
+        let text = PointSheet.sentence(
+            terrain: terrainLabel, mode: .score, sentence: row?.sentence, tone: row?.sentenceTone, summary: row?.summary
+        )
+        var trend: String?
+        if let today, let goodMin {
+            let days = MapModel.pointDays(
+                rows: rows, altKey: altKey, terrain: species.terrain, species: species.id, interpolated: interpolated
+            )
+            trend = CoinTrend.phrase(CoinTrend.kind(days: days, today: today, goodMin: goodMin))
+        }
+        return PointExpansion(sentence: text.sentence, phrases: text.phrases, trend: trend)
     }
 
     /// Les espèces par famille, sans `featured` (elle a sa place en tête de fiche) : la famille de
