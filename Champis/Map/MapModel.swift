@@ -219,6 +219,8 @@ final class MapModel {
     @ObservationIgnored private var fieldCoverage: [FieldCoverageKey: WeatherCoverage] = [:]
     @ObservationIgnored private var weatherTask: Task<Void, Never>?
     @ObservationIgnored private var inspectTask: Task<Void, Never>?
+    /// Complétion des coins en cours (`completeCoinsInBackground`) : une seule à la fois.
+    @ObservationIgnored private var completeCoinsTask: Task<Void, Never>?
     @ObservationIgnored private var isLoadingBoundaries = false
     /// Ce que « Réessayer » relance pour `problem`.
     @ObservationIgnored private var problemRetry: Retry?
@@ -842,6 +844,14 @@ final class MapModel {
         var info = inspected ?? empty
         if info.terrains.isEmpty {
             info.terrains = coin.t.filter { $0.value > 0 && catalog.species[$0.key] != nil }
+        } else if info.terrainsComplete {
+            // les tuiles viennent d'être lues : un coin qui ne gardait pas le terrain de toutes
+            // les espèces de l'endroit est complété au passage (un coin est générique)
+            let merged = coin.t.merging(info.terrains) { _, read in read }
+            if merged != coin.t {
+                let field = field
+                Task { await field.setCoinTerrains([coin.id: merged]) }
+            }
         }
         // la carte a déjà la météo de l'endroit : la fiche est celle d'un point touché
         if info.scored != nil, info.cell != nil { return CoinPoint(info: info) }
@@ -1100,12 +1110,27 @@ final class MapModel {
         return (target, altClass, info.terrains.isEmpty ? layerTerrains : info.terrains)
     }
 
-    nonisolated static let completedCoinsKey = "coinsWithAllTerrains"
+    /// `.v2` : la première clé a pu marquer « complété » un coin dont la lecture avait été
+    /// interrompue ; tous les coins sont relus une fois.
+    nonisolated static let completedCoinsKey = "coinsWithAllTerrains.v2"
 
     /// Complète une fois les coins créés avant le 18 nov. 2026, qui ne gardaient que le terrain des
     /// espèces de la couche : relit dans les tuiles le terrain de toutes les espèces à l'endroit de
     /// chaque coin, puis synchronise. Un coin dont les tuiles ne se lisent pas (hors ligne) sera
-    /// réessayé au prochain passage. Appelée à l'ouverture de Mes coins.
+    /// réessayé au prochain passage.
+    ///
+    /// Lancée par `completeCoinsInBackground`, dans une tâche qui appartient au modèle : attachée à
+    /// la vue (`.task`), elle était annulée dès qu'on ouvrait un coin ou changeait d'onglet, ses
+    /// lectures de tuiles échouaient et les coins restaient incomplets (constaté le 18 nov. 2026 :
+    /// une trompette « bonne » dans la fiche d'un coin, absente de sa ligne dans Mes coins).
+    func completeCoinsInBackground() {
+        guard completeCoinsTask == nil else { return }
+        completeCoinsTask = Task { [weak self] in
+            await self?.completeCoins()
+            self?.completeCoinsTask = nil
+        }
+    }
+
     func completeCoins() async {
         guard let catalog else { return }
         let defaults = UserDefaults.standard
@@ -1121,7 +1146,10 @@ final class MapModel {
             let inspected = try? await PointInspector.inspect(
                 latitude: coin.lat, longitude: coin.lon, settings: settings, store: store, catalogSpecies: species
             )
-            guard let terrains = inspected?.terrains, !terrains.isEmpty else { continue }
+            // une lecture interrompue ou partielle ne compte pas : le coin sera relu
+            guard let inspected, inspected.terrainsComplete, !Task.isCancelled else { continue }
+            let terrains = inspected.terrains
+            guard !terrains.isEmpty else { continue }
             done.insert(coin.id.uuidString)
             // les tuiles l'emportent ; ce que le coin gardait et qu'elles n'ont plus reste
             let merged = coin.t.merging(terrains) { _, read in read }

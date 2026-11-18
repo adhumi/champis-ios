@@ -17,7 +17,6 @@ final class AppRouter {
     nonisolated enum Tab: Hashable, Sendable {
         case coins
         case map
-        case understand
     }
 
     static let shared = AppRouter()

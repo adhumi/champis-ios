@@ -60,6 +60,9 @@ nonisolated struct PointInfo: Identifiable, Sendable {
 
     /// `T` du pixel pour chaque espèce du catalogue qui a du terrain ici (`T > 0`).
     var terrains: [String: Double] = [:]
+    /// Faux si la tuile d'une espèce hors de la couche n'a pas pu être lue (réseau, annulation) :
+    /// `terrains` peut alors manquer d'espèces, et ne doit pas servir à compléter un coin.
+    var terrainsComplete = true
     /// Valeur de chaque espèce de la couche telle que la carte la montre : `T` en mode terrain,
     /// `S` interpolé entre cellules en mode score (absente sans météo).
     var layerValues: [String: Double] = [:]
@@ -181,7 +184,8 @@ nonisolated enum PointInspector {
             catalogSpecies.filter { !members.contains($0) }, z: zoom, x: t.x, y: t.y, pixel: i, colorizer: colorizer,
             store: store
         )
-        info.terrains = terrains.merging(others) { layer, _ in layer }.filter { $0.value > 0 }
+        info.terrains = terrains.merging(others.terrains) { layer, _ in layer }.filter { $0.value > 0 }
+        info.terrainsComplete = others.complete
         info.layerValues = layerValues
         info.altClass = altClass
         info.altIndex = altIndex
@@ -201,24 +205,34 @@ nonisolated enum PointInspector {
     /// un groupe : une lecture par famille). Une tuile absente ou illisible ne donne rien.
     private static func otherTerrains(
         _ species: [String], z: Int, x: Int, y: Int, pixel: Int, colorizer: TileColorizer, store: TileStore
-    ) async -> [String: Double] {
+    ) async -> (terrains: [String: Double], complete: Bool) {
         let size = TileMath.tileSize
-        return await withTaskGroup(of: (String, Double?).self) { group in
+        // (espèce, T du pixel ou nil, lecture aboutie) : une tuile absente est une lecture aboutie,
+        // une erreur (réseau, annulation) ne l'est pas
+        return await withTaskGroup(of: (String, Double?, Bool).self) { group in
             for sid in species {
                 group.addTask {
-                    guard let png = try? await store.terrainTile(species: sid, z: z, x: x, y: y),
-                          png.width == size, png.height == size, png.data.count >= size * size * png.channels
-                    else { return (sid, nil) }
-                    return (sid, colorizer.terrain(png, at: pixel))
+                    do {
+                        guard let png = try await store.terrainTile(species: sid, z: z, x: x, y: y),
+                              png.width == size, png.height == size, png.data.count >= size * size * png.channels
+                        else { return (sid, nil, true) }
+                        return (sid, colorizer.terrain(png, at: pixel), true)
+                    } catch {
+                        return (sid, nil, false)
+                    }
                 }
             }
             var out: [String: Double] = [:]
-            for await (sid, terrain) in group {
+            var complete = true
+            for await (sid, terrain, read) in group {
                 if let terrain {
                     out[sid] = terrain
                 }
+                if !read {
+                    complete = false
+                }
             }
-            return out
+            return (out, complete)
         }
     }
 }

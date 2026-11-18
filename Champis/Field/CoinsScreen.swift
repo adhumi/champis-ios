@@ -7,12 +7,16 @@ import SwiftUI
 /// valent au moins « moyen » (18 nov. 2026 : un coin est générique, sans en-tête de date ni tendance) ;
 /// jamais un chiffre avant « Détails ». Toucher un coin pousse sa fiche dans la pile : la même
 /// `PointSheet` que par son épingle sur la carte (`CoinPointView`, `MapModel.openCoin`, 18 nov. 2026).
-/// L'état vide porte la promesse de confidentialité.
+/// L'état vide porte la promesse de confidentialité. Sous les coins, la section Guide : quatre
+/// articles embarqués (`GuideCards`), l'onglet Guide étant retiré depuis le 19 nov. 2026 ; les
+/// autres articles se lisent depuis les réglages.
 struct CoinsScreen: View {
     let model: MapModel
     let router: AppRouter
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
-    @State private var path: [UUID] = []
+    @State private var path = NavigationPath()
+    /// Les quatre entrées du Guide, sous les coins (19 nov. 2026 : l'onglet Guide est retiré).
+    @State private var guide = GuideCards.cards(from: Texts.index())
     @State private var showSettings = false
     @State private var showLegalNotice = false
 
@@ -20,14 +24,11 @@ struct CoinsScreen: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            Group {
-                if field.coins.isEmpty {
-                    EmptyCoinsView { router.tab = .map }
-                } else {
-                    coinsList
-                }
-            }
+            coinsList
             .navigationTitle("Mes coins")
+            .navigationDestination(for: Article.self) { article in
+                ArticleView(article: article, model: model)
+            }
             // la même fiche que par l'épingle du coin sur la carte, poussée dans la pile (18 nov. 2026)
             .navigationDestination(for: UUID.self) { id in
                 CoinPointView(coinID: id, model: model)
@@ -51,13 +52,14 @@ struct CoinsScreen: View {
             }
             .task {
                 await field.refreshCoinScores()
-                // coins d'avant le 18 nov. 2026 : le terrain de toutes les espèces, une fois
-                await model.completeCoins()
+                // coins d'avant le 18 nov. 2026 : le terrain de toutes les espèces, une fois, dans
+                // une tâche du modèle (quitter cet écran ne l'interrompt pas)
+                model.completeCoinsInBackground()
             }
             .refreshable { await field.refreshCoinScores() }
             .onChange(of: router.coinToOpen, initial: true) { _, id in
                 guard let id, field.coins.contains(where: { $0.id == id }) else { return }
-                path = [id]
+                path = NavigationPath([id])
                 router.coinToOpen = nil
             }
         }
@@ -76,6 +78,9 @@ struct CoinsScreen: View {
                 }
             }
             Section {
+                if field.coins.isEmpty {
+                    EmptyCoinsView { router.tab = .map }
+                }
                 ForEach(CoinTrend.order(field.coins, scores: field.coinScores)) { coin in
                     NavigationLink(value: coin.id) {
                         CoinRowView(coin: coin, score: field.coinScores[coin.id], model: model)
@@ -84,6 +89,15 @@ struct CoinsScreen: View {
             } footer: {
                 if field.pendingCount > 0 {
                     Text("\(field.pendingCount) observation(s) à envoyer")
+                }
+            }
+            if !guide.isEmpty {
+                Section("Guide") {
+                    ForEach(guide) { card in
+                        NavigationLink(value: card.article) {
+                            GuideRow(card: card)
+                        }
+                    }
                 }
             }
         }
@@ -276,7 +290,7 @@ struct EmptyCoinsView: View {
             Label("Aucun coin pour l'instant", systemImage: "star")
         } description: {
             Text(
-                "Ajoutez vos coins depuis la carte : touchez un endroit, puis « Ajouter à mes coins ». " +
+                "Ajoutez vos coins depuis la carte : touchez un endroit, puis l'étoile de sa fiche. " +
                 "Ils restent sur cet appareil et sur le serveur sous un identifiant pseudonyme, jamais partagés."
             )
         } actions: {
