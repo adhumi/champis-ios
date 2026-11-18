@@ -1,4 +1,5 @@
 import ChampisScoring
+import Foundation
 import SwiftUI
 
 /// Fiche du point touché (refonte UX, lot 2, décision du 1er nov. 2026) : le libellé de la palette
