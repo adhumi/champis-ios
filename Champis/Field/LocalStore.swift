@@ -157,6 +157,24 @@ actor LocalStore {
 
     /// Retire un coin de l'appareil. La base le garde : elle est la pierre tombale qui empêche la
     /// fusion de le reprendre du serveur tant que la suppression n'y est pas arrivée.
+    /// Remplace le terrain par espèce (`t`) de coins existants (18 nov. 2026 : un coin est
+    /// générique, il garde le terrain de toutes les espèces de l'endroit). Rend vrai si un coin a
+    /// changé ; un identifiant inconnu est ignoré.
+    func setCoinTerrains(_ updates: [UUID: [String: Double]]) throws -> Bool {
+        try load()
+        var next = coinsFile
+        var changed = false
+        for index in next.coins.indices {
+            guard let t = updates[next.coins[index].id], !t.isEmpty, t != next.coins[index].t else { continue }
+            next.coins[index].t = t
+            changed = true
+        }
+        if changed {
+            try commit(next)
+        }
+        return changed
+    }
+
     func removeCoin(_ id: UUID) throws {
         try load()
         var next = coinsFile

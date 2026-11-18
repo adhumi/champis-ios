@@ -274,6 +274,8 @@ final class MapModel {
     var legend: [Palette.Threshold] { catalog?.palette.thresholds ?? [] }
     /// Seuil « bon » de la palette (notification et tendance des coins) ; `nil` tant que rien n'est chargé.
     var goodThreshold: Double? { palette?.thresholds.first { $0.label == "bon" }?.min }
+    /// Seuil « moyen » de la palette : à partir de lui, la liste Mes coins nomme une espèce.
+    var mediumThreshold: Double? { palette?.thresholds.first { $0.label == "moyen" }?.min }
 
     /// `today` de l'API, par la météo ou l'indice par département, selon ce qui est arrivé.
     var today: String? { weather.today ?? deptIndex?.today }
@@ -736,7 +738,7 @@ final class MapModel {
             pointDetail = detail
             applyFeatured(info)
         } catch {
-            guard pointInfo?.id == info.id else { return }
+            guard pointInfo?.id == info.id, !Problem.isCancellation(error) else { return }
             factorsProblem = Problem("Météo de ce point indisponible", error: error)
         }
     }
@@ -859,7 +861,9 @@ final class MapModel {
             info.date = info.date ?? detail.today
             return CoinPoint(info: Self.withLead(info, members: layer?.members ?? [], detail: detail), detail: detail)
         } catch {
-            return CoinPoint(info: info, problem: Problem("Météo de ce coin indisponible", error: error))
+            // annulée (retour à la liste pendant la lecture) : pas une panne à afficher
+            let problem = Problem.isCancellation(error) ? nil : Problem("Météo de ce coin indisponible", error: error)
+            return CoinPoint(info: info, problem: problem)
         }
     }
 
@@ -1090,8 +1094,45 @@ final class MapModel {
         // sinon le centre de sa classe
         let altClass = scored.altitudeM.map { Int($0) }
             ?? scored.altClass.map { $0 * classM + classM / 2 } ?? scored.altKey.flatMap { Int($0) } ?? 0
-        let terrains = scored.terrains.isEmpty ? [scored.species: scored.terrain] : scored.terrains
-        return (target, altClass, terrains)
+        // un coin est générique (18 nov. 2026) : le terrain de toutes les espèces de l'endroit,
+        // pas seulement de celles de la couche ; à défaut, celles de la couche
+        let layerTerrains = scored.terrains.isEmpty ? [scored.species: scored.terrain] : scored.terrains
+        return (target, altClass, info.terrains.isEmpty ? layerTerrains : info.terrains)
+    }
+
+    nonisolated static let completedCoinsKey = "coinsWithAllTerrains"
+
+    /// Complète une fois les coins créés avant le 18 nov. 2026, qui ne gardaient que le terrain des
+    /// espèces de la couche : relit dans les tuiles le terrain de toutes les espèces à l'endroit de
+    /// chaque coin, puis synchronise. Un coin dont les tuiles ne se lisent pas (hors ligne) sera
+    /// réessayé au prochain passage. Appelée à l'ouverture de Mes coins.
+    func completeCoins() async {
+        guard let catalog else { return }
+        let defaults = UserDefaults.standard
+        var done = Set(defaults.stringArray(forKey: Self.completedCoinsKey) ?? [])
+        let pending = field.coins.filter { !done.contains($0.id.uuidString) }
+        guard !pending.isEmpty else { return }
+        let settings = RenderSettings(
+            layer: nil, mode: .terrain, date: nil, weather: WeatherField(), colorizer: TileColorizer(palette: catalog.palette)
+        )
+        let species = Array(catalog.species.keys)
+        var updates: [UUID: [String: Double]] = [:]
+        for coin in pending {
+            let inspected = try? await PointInspector.inspect(
+                latitude: coin.lat, longitude: coin.lon, settings: settings, store: store, catalogSpecies: species
+            )
+            guard let terrains = inspected?.terrains, !terrains.isEmpty else { continue }
+            done.insert(coin.id.uuidString)
+            // les tuiles l'emportent ; ce que le coin gardait et qu'elles n'ont plus reste
+            let merged = coin.t.merging(terrains) { _, read in read }
+            if merged != coin.t {
+                updates[coin.id] = merged
+            }
+        }
+        defaults.set(Array(done), forKey: Self.completedCoinsKey)
+        guard !updates.isEmpty else { return }
+        await field.setCoinTerrains(updates)
+        await field.refreshCoinScores()
     }
 
     /// Crée le coin depuis sa fiche, la ferme, et propose une fois d'embarquer son département s'il

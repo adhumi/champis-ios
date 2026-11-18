@@ -74,6 +74,13 @@ nonisolated struct CoinDay: Decodable, Hashable, Sendable {
     let leading: String?
 }
 
+/// Score du jour d'une espèce d'un coin (`GET /coins` › `species`, 18 nov. 2026).
+nonisolated struct CoinSpeciesScore: Decodable, Hashable, Identifiable, Sendable {
+    /// Identifiant de l'espèce.
+    let id: String
+    let value: Double
+}
+
 /// Un coin tel que `GET /coins` le renvoie : avec le score du jour calculé par le backend.
 nonisolated struct ScoredCoin: Decodable, Hashable, Identifiable, Sendable {
     let id: UUID
@@ -90,9 +97,12 @@ nonisolated struct ScoredCoin: Decodable, Hashable, Identifiable, Sendable {
     /// Phrases du jour pour l'espèce qui porte le score, à la classe d'altitude du coin
     /// (étape B2, 6 nov. 2026) ; vide avec un serveur d'avant l'étape B.
     let summary: [String]
+    /// Score du jour de chaque espèce du coin, du meilleur au moins bon (18 nov. 2026 : un coin
+    /// est générique) ; vide sans météo ou avec un serveur plus ancien.
+    let species: [CoinSpeciesScore]
 
     enum CodingKeys: String, CodingKey {
-        case id, name, score, leading, best, days, summary
+        case id, name, score, leading, best, days, summary, species
         case bestDay = "best_day"
     }
 
@@ -106,11 +116,12 @@ nonisolated struct ScoredCoin: Decodable, Hashable, Identifiable, Sendable {
         best = try c.decodeIfPresent(Double.self, forKey: .best)
         days = try c.decodeIfPresent([CoinDay].self, forKey: .days) ?? []
         summary = try c.decodeIfPresent([String].self, forKey: .summary) ?? []
+        species = try c.decodeIfPresent([CoinSpeciesScore].self, forKey: .species) ?? []
     }
 
     init(
         id: UUID, name: String, score: Double?, leading: String?, bestDay: String?, best: Double?, days: [CoinDay],
-        summary: [String] = []
+        summary: [String] = [], species: [CoinSpeciesScore] = []
     ) {
         self.id = id
         self.name = name
@@ -120,6 +131,7 @@ nonisolated struct ScoredCoin: Decodable, Hashable, Identifiable, Sendable {
         self.best = best
         self.days = days
         self.summary = summary
+        self.species = species
     }
 }
 

@@ -3,7 +3,8 @@ import Foundation
 import SwiftUI
 
 /// Onglet Mes coins (refonte UX, lot 1) : la réponse à « j'y vais ce week-end ou pas ? ».
-/// Liste classée par score du jour, libellé de la palette et espèce porteuse, tendance en mots ;
+/// Liste classée par score du jour ; chaque coin avec sa miniature de carte et les espèces qui y
+/// valent au moins « moyen » (18 nov. 2026 : un coin est générique, sans en-tête de date ni tendance) ;
 /// jamais un chiffre avant « Détails ». Toucher un coin pousse sa fiche dans la pile : la même
 /// `PointSheet` que par son épingle sur la carte (`CoinPointView`, `MapModel.openCoin`, 18 nov. 2026).
 /// L'état vide porte la promesse de confidentialité.
@@ -48,7 +49,11 @@ struct CoinsScreen: View {
             } message: {
                 Text(LegalNotice.text)
             }
-            .task { await field.refreshCoinScores() }
+            .task {
+                await field.refreshCoinScores()
+                // coins d'avant le 18 nov. 2026 : le terrain de toutes les espèces, une fois
+                await model.completeCoins()
+            }
             .refreshable { await field.refreshCoinScores() }
             .onChange(of: router.coinToOpen, initial: true) { _, id in
                 guard let id, field.coins.contains(where: { $0.id == id }) else { return }
@@ -76,12 +81,6 @@ struct CoinsScreen: View {
                         CoinRowView(coin: coin, score: field.coinScores[coin.id], model: model)
                     }
                 }
-            } header: {
-                if let today = field.coinsToday {
-                    Text("Météo du \(MapModel.format(iso: today))")
-                } else {
-                    Text("Météo en attente")
-                }
             } footer: {
                 if field.pendingCount > 0 {
                     Text("\(field.pendingCount) observation(s) à envoyer")
@@ -91,40 +90,53 @@ struct CoinsScreen: View {
     }
 }
 
-/// Une ligne : nom, pastille et libellé du jour, espèce qui porte le score, tendance.
+/// Une ligne (18 nov. 2026 : un coin est générique, pas lié à une espèce) : la miniature de carte
+/// de l'endroit, le nom, puis une ligne par espèce notée au moins « moyen » aujourd'hui (pastille,
+/// nom, libellé ; `CoinTrend.worthSpecies`). Si aucune n'atteint moyen : la pastille et le libellé
+/// du coin, sans nom d'espèce. Pas de tendance.
 struct CoinRowView: View {
     let coin: Coin
     let score: ScoredCoin?
     let model: MapModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(coin.name).font(.headline)
-            HStack(spacing: 6) {
-                ScoreDot(value: score?.score, model: model, size: 10)
-                Text(stateText)
-            }
-            .font(.subheadline)
-            if let trend {
-                Text(trend).font(.footnote).foregroundStyle(.secondary)
+        HStack(alignment: .top, spacing: 12) {
+            CoinThumbnail(latitude: coin.lat, longitude: coin.lon)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(coin.name).font(.headline)
+                if species.isEmpty {
+                    HStack(spacing: 6) {
+                        ScoreDot(value: score?.score, model: model, size: 10)
+                        Text(stateText)
+                    }
+                    .font(.subheadline)
+                } else {
+                    ForEach(species) { item in
+                        HStack(spacing: 6) {
+                            ScoreDot(value: item.value, model: model, size: 10)
+                            Text(model.speciesName(item.id))
+                            Text(model.classify(item.value)?.fr ?? "").foregroundStyle(.secondary)
+                        }
+                        .font(.subheadline)
+                    }
+                }
             }
         }
         .accessibilityElement(children: .combine)
     }
 
-    private var stateText: String {
-        guard let value = score?.score, let threshold = model.classify(value) else {
-            return "pas de météo aujourd'hui"
-        }
-        if let leading = score?.leading {
-            return "\(threshold.fr) · \(model.speciesName(leading).lowercased())"
-        }
-        return threshold.fr
+    /// Les espèces à nommer : celles qui valent au moins « moyen » aujourd'hui.
+    private var species: [CoinSpeciesScore] {
+        guard let score, let min = model.mediumThreshold else { return [] }
+        return CoinTrend.worthSpecies(score, min: min)
     }
 
-    private var trend: String? {
-        guard let score, let today = model.field.coinsToday, let goodMin = model.goodThreshold else { return nil }
-        return CoinTrend.phrase(CoinTrend.kind(days: score.days, today: today, goodMin: goodMin))
+    /// Libellé du coin quand aucune espèce n'est nommée : « Faible », « Très faible ».
+    private var stateText: String {
+        guard let value = score?.score, let threshold = model.classify(value) else {
+            return "Pas de météo aujourd'hui"
+        }
+        return threshold.fr
     }
 }
 
