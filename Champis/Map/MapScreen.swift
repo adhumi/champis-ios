@@ -299,7 +299,11 @@ struct MapScreen: View {
 
     /// En disposition partagée, l'inspecteur montre la fiche : la feuille ne se présente jamais.
     private var pointBinding: Binding<PointInfo?> {
-        Binding(get: { layout == .compact ? model.pointInfo : nil }, set: { if $0 == nil { model.clearSelection() } })
+        // une fiche ouverte depuis Mes coins se présente sur sa liste (`CoinsScreen`), pas ici
+        Binding(
+            get: { layout == .compact && model.pointOrigin == .map ? model.pointInfo : nil },
+            set: { if $0 == nil { model.clearSelection() } }
+        )
     }
 
     /// Adresse de l'API d'après le réglage : https exigé (`ChampisAPI.isAcceptable`), sinon

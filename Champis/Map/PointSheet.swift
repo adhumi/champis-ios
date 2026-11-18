@@ -10,8 +10,8 @@ import SwiftUI
 /// d'un coin, une seule vue) : la fiche se ferme par une croix à gauche de la barre ; à droite, une
 /// étoile ajoute le point à mes coins (vide) ou retire le coin (pleine, après confirmation) ;
 /// toucher une autre espèce déplie sa ligne (phrase et tendance, `PointSpeciesSections`) sans
-/// changer l'espèce en exergue ; ouverte par l'épingle d'un coin, la fiche porte son nom, Renommer
-/// et Supprimer. La couleur ne porte jamais seule l'information : le libellé est toujours écrit.
+/// changer l'espèce en exergue ; pour un coin, ouverte par son épingle ou depuis Mes coins (la
+/// même fiche, `MapModel.openCoin`), elle porte son nom, Itinéraire, Renommer et Supprimer. La couleur ne porte jamais seule l'information : le libellé est toujours écrit.
 struct PointSheet: View {
     nonisolated struct Factor: Identifiable, Sendable {
         let key: String
@@ -334,7 +334,24 @@ struct PointSheet: View {
         return info.scored != nil
     }
 
+    /// Actions d'un coin : Itinéraire, Voir sur la carte quand la fiche vient de Mes coins, Renommer
+    /// et Supprimer.
+    @ViewBuilder
     private var coinSection: some View {
+        Section {
+            if model.pointOrigin == .coins {
+                Button {
+                    showOnMap()
+                } label: {
+                    Label("Voir sur la carte", systemImage: "map")
+                }
+            }
+            if let directions = Self.directionsURL(latitude: info.latitude, longitude: info.longitude) {
+                Link(destination: directions) {
+                    Label("Itinéraire", systemImage: "arrow.triangle.turn.up.right.diamond")
+                }
+            }
+        }
         Section {
             Button("Renommer") {
                 coinName = coin?.name ?? ""
@@ -351,11 +368,29 @@ struct PointSheet: View {
         Task { await field.renameCoin(id, to: name) }
     }
 
-    /// Retire le coin ; la fiche reste ouverte sur le point, étoile vide.
+    /// Retire le coin. Sur la carte, la fiche reste ouverte sur le point, étoile vide ; ouverte
+    /// depuis Mes coins, elle se ferme avec lui.
     private func removeCoin() {
         guard let id = coin?.id else { return }
         let field = model.field
+        if model.pointOrigin == .coins {
+            model.clearSelection()
+        }
         Task { await field.removeCoin(id) }
+    }
+
+    /// Ferme la fiche et montre l'endroit du coin sur la carte.
+    private func showOnMap() {
+        model.clearSelection()
+        model.focus(latitude: info.latitude, longitude: info.longitude)
+        AppRouter.shared.tab = .map
+    }
+
+    /// Itinéraire vers le coin dans Plans (étape B2) : la destination seule, Plans choisit le trajet.
+    nonisolated static func directionsURL(latitude: Double, longitude: Double) -> URL? {
+        var components = URLComponents(string: "https://maps.apple.com/")
+        components?.queryItems = [URLQueryItem(name: "daddr", value: String(format: "%.6f,%.6f", latitude, longitude))]
+        return components?.url
     }
 
     private var point: MapSelection {

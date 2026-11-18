@@ -39,7 +39,7 @@ struct ProblemTests {
 
     @Test("Itinéraire d'un coin : destination dans Plans")
     func directions() {
-        let url = CoinDetailView.directionsURL(latitude: 46.9, longitude: 6.35)
+        let url = PointSheet.directionsURL(latitude: 46.9, longitude: 6.35)
         #expect(url?.absoluteString == "https://maps.apple.com/?daddr=46.900000,6.350000")
     }
 }

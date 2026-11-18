@@ -5,7 +5,7 @@ import SwiftUI
 /// d'un point et fiche d'un coin, une seule vue, 18 nov. 2026) : aquarelle, nom français, nom
 /// latin, pastille et libellé de palette du score du jour, jamais de chiffre. Toucher une ligne la
 /// déplie sur la phrase et la tendance de l'espèce ; une seule ligne ouverte à la fois. Partagé par
-/// la fiche d'un point (`PointSheet`) et celle d'un coin (`CoinDetailView`).
+/// la fiche d'un point et celle d'un coin (`PointSheet`).
 struct PointSpeciesSections: View {
     let families: [PointFamily]
     let model: MapModel

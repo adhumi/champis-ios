@@ -39,6 +39,14 @@ struct SplitContentView: View {
         .onChange(of: selection) { _, item in
             if case .coin(let id)? = item, let coin = field.coins.first(where: { $0.id == id }) {
                 model.center(latitude: coin.lat, longitude: coin.lon)
+                // la même fiche que par l'épingle du coin (révisé le 18 nov. 2026)
+                model.openCoin(coin)
+            }
+        }
+        .onChange(of: model.pointCoinID) { _, id in
+            // fiche du coin fermée par sa croix : la barre latérale revient à la carte
+            if id == nil, case .coin? = selection {
+                selection = .map
             }
         }
         .onChange(of: field.coins) { _, coins in
@@ -90,10 +98,9 @@ struct SplitContentView: View {
     private var inspector: some View {
         if let info = model.pointInfo {
             PointSheet(info: info, model: model)
-        } else if case .coin(let id)? = selection {
-            NavigationStack {
-                CoinDetailView(coinID: id, model: model, router: router)
-            }
+        } else if case .coin? = selection {
+            // la fiche du coin se lit (tuiles, météo)
+            ProgressView()
         }
     }
 
