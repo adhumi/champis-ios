@@ -371,6 +371,8 @@ final class FieldModel {
             adopt(try await api.coins(user: userID))
             clear(.coinScores)
         } catch {
+            // annulée : la vue a disparu ou un autre rafraîchissement a pris la suite
+            guard !Problem.isCancellation(error) else { return }
             fail(Problem("Score des coins indisponible", error: error), retry: .coinScores)
         }
     }

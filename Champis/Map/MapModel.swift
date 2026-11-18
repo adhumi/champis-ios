@@ -738,7 +738,7 @@ final class MapModel {
             pointDetail = detail
             applyFeatured(info)
         } catch {
-            guard pointInfo?.id == info.id else { return }
+            guard pointInfo?.id == info.id, !Problem.isCancellation(error) else { return }
             factorsProblem = Problem("Météo de ce point indisponible", error: error)
         }
     }
@@ -861,7 +861,9 @@ final class MapModel {
             info.date = info.date ?? detail.today
             return CoinPoint(info: Self.withLead(info, members: layer?.members ?? [], detail: detail), detail: detail)
         } catch {
-            return CoinPoint(info: info, problem: Problem("Météo de ce coin indisponible", error: error))
+            // annulée (retour à la liste pendant la lecture) : pas une panne à afficher
+            let problem = Problem.isCancellation(error) ? nil : Problem("Météo de ce coin indisponible", error: error)
+            return CoinPoint(info: info, problem: problem)
         }
     }
 

@@ -4,6 +4,13 @@ import Foundation
 /// connaît, la cause en mots (« pas de connexion à Internet ») ; le détail technique (code HTTP,
 /// message système, chemin d'API) reste à part, montré seulement derrière « Détails ».
 nonisolated struct Problem: Equatable, Sendable {
+    /// Une requête annulée (la vue qui l'attendait a disparu, un rafraîchissement en a remplacé un
+    /// autre) n'est pas une panne : on ne l'affiche pas (18 nov. 2026, « URLError −999 : annulé »).
+    static func isCancellation(_ error: any Error) -> Bool {
+        if error is CancellationError { return true }
+        return (error as? URLError)?.code == .cancelled
+    }
+
     /// Phrase en clair, sans jargon ni point final.
     let text: String
     /// Détail technique, à la demande.

@@ -42,4 +42,12 @@ struct ProblemTests {
         let url = PointSheet.directionsURL(latitude: 46.9, longitude: 6.35)
         #expect(url?.absoluteString == "https://maps.apple.com/?daddr=46.900000,6.350000")
     }
+
+    @Test("Une requête annulée n'est pas une panne à afficher")
+    func cancellation() {
+        #expect(Problem.isCancellation(URLError(.cancelled)))
+        #expect(Problem.isCancellation(CancellationError()))
+        #expect(!Problem.isCancellation(URLError(.notConnectedToInternet)))
+        #expect(!Problem.isCancellation(URLError(.timedOut)))
+    }
 }
