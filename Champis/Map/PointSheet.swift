@@ -12,7 +12,8 @@ import SwiftUI
 /// étoile ajoute le point à mes coins (vide) ou retire le coin (pleine, après confirmation) ;
 /// toucher une autre espèce déplie sa ligne (phrase et tendance, `PointSpeciesSections`) sans
 /// changer l'espèce en exergue ; pour un coin, ouverte par son épingle ou depuis Mes coins (la
-/// même fiche, `MapModel.openCoin`), elle porte son nom, Itinéraire, Renommer et Supprimer. La couleur ne porte jamais seule l'information : le libellé est toujours écrit.
+/// même fiche, `MapModel.openCoin`, poussée dans la pile de Mes coins : `pushed`), elle porte son
+/// nom, Itinéraire, Renommer et Supprimer. La couleur ne porte jamais seule l'information : le libellé est toujours écrit.
 struct PointSheet: View {
     nonisolated struct Factor: Identifiable, Sendable {
         let key: String
@@ -33,6 +34,10 @@ struct PointSheet: View {
 
     let info: PointInfo
     let model: MapModel
+    /// Poussée dans la pile de navigation de Mes coins (18 nov. 2026) : la fiche n'a alors ni sa
+    /// propre pile ni sa croix, le retour de la pile la ferme. En feuille ou dans l'inspecteur
+    /// (carte, iPad, Mac) : `false`.
+    var pushed = false
     @State private var quickFound: MapSelection?
     @State private var namingCoin = false
     @State private var coinName = ""
@@ -42,8 +47,20 @@ struct PointSheet: View {
     @State private var confirmDeleteCoin = false
 
     var body: some View {
-        NavigationStack {
-            List {
+        if pushed {
+            content
+        } else {
+            NavigationStack {
+                content
+            }
+            #if os(iOS)
+            .presentationDetents([.medium, .large])
+            #endif
+        }
+    }
+
+    private var content: some View {
+        List {
                 if let featured {
                     summarySection(featured)
                 } else {
@@ -75,12 +92,14 @@ struct PointSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    // ferme la feuille comme l'inspecteur : c'est la sélection qui commande
-                    Button {
-                        model.clearSelection()
-                    } label: {
-                        Label("Fermer", systemImage: "xmark")
+                if !pushed {
+                    ToolbarItem(placement: .cancellationAction) {
+                        // ferme la feuille comme l'inspecteur : c'est la sélection qui commande
+                        Button {
+                            model.clearSelection()
+                        } label: {
+                            Label("Fermer", systemImage: "xmark")
+                        }
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
@@ -107,7 +126,6 @@ struct PointSheet: View {
             } message: {
                 Text("Le coin reste privé. Une notification viendra quand son score sera bon ou excellent.")
             }
-        }
         // par point : dans l'inspecteur (iPad, Mac), la fiche reste la même vue d'un point à l'autre
         .task(id: info.id) { await model.loadFactors(for: info) }
         // statut de la forêt (étape B5) : en parallèle de la météo, la fiche ne l'attend pas
@@ -124,9 +142,6 @@ struct PointSheet: View {
                 }
             }
         }
-        #if os(iOS)
-        .presentationDetents([.medium, .large])
-        #endif
     }
 
     // MARK: - En clair

@@ -4,20 +4,21 @@ import SwiftUI
 
 /// Onglet Mes coins (refonte UX, lot 1) : la réponse à « j'y vais ce week-end ou pas ? ».
 /// Liste classée par score du jour, libellé de la palette et espèce porteuse, tendance en mots ;
-/// jamais un chiffre avant « Détails ». Toucher un coin ouvre sa fiche en feuille : la même
-/// `PointSheet` que par son épingle sur la carte (`MapModel.openCoin`, révisé le 18 nov. 2026).
+/// jamais un chiffre avant « Détails ». Toucher un coin pousse sa fiche dans la pile : la même
+/// `PointSheet` que par son épingle sur la carte (`CoinPointView`, `MapModel.openCoin`, 18 nov. 2026).
 /// L'état vide porte la promesse de confidentialité.
 struct CoinsScreen: View {
     let model: MapModel
     let router: AppRouter
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
+    @State private var path: [UUID] = []
     @State private var showSettings = false
     @State private var showLegalNotice = false
 
     private var field: FieldModel { model.field }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if field.coins.isEmpty {
                     EmptyCoinsView { router.tab = .map }
@@ -26,9 +27,9 @@ struct CoinsScreen: View {
                 }
             }
             .navigationTitle("Mes coins")
-            // la même fiche que par l'épingle du coin sur la carte (révisé le 18 nov. 2026)
-            .sheet(item: coinSheetBinding) { info in
-                PointSheet(info: info, model: model)
+            // la même fiche que par l'épingle du coin sur la carte, poussée dans la pile (18 nov. 2026)
+            .navigationDestination(for: UUID.self) { id in
+                CoinPointView(coinID: id, model: model)
             }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -50,8 +51,8 @@ struct CoinsScreen: View {
             .task { await field.refreshCoinScores() }
             .refreshable { await field.refreshCoinScores() }
             .onChange(of: router.coinToOpen, initial: true) { _, id in
-                guard let id, let coin = field.coins.first(where: { $0.id == id }) else { return }
-                model.openCoin(coin)
+                guard let id, field.coins.contains(where: { $0.id == id }) else { return }
+                path = [id]
                 router.coinToOpen = nil
             }
         }
@@ -60,15 +61,6 @@ struct CoinsScreen: View {
     private func retry() {
         let field = field
         Task { await field.retry() }
-    }
-
-    /// La fiche d'un coin ouverte depuis cette liste ; en disposition partagée (iPad, Mac),
-    /// l'inspecteur la montre et cet écran n'existe pas.
-    private var coinSheetBinding: Binding<PointInfo?> {
-        Binding(
-            get: { model.pointOrigin == .coins ? model.pointInfo : nil },
-            set: { if $0 == nil { model.clearSelection() } }
-        )
     }
 
     private var coinsList: some View {
@@ -80,19 +72,9 @@ struct CoinsScreen: View {
             }
             Section {
                 ForEach(CoinTrend.order(field.coins, scores: field.coinScores)) { coin in
-                    Button {
-                        model.openCoin(coin)
-                    } label: {
-                        HStack {
-                            CoinRowView(coin: coin, score: field.coinScores[coin.id], model: model)
-                            Spacer(minLength: 8)
-                            if model.isInspecting, model.pointCoinID == coin.id {
-                                ProgressView().controlSize(.small)
-                            }
-                        }
-                        .contentShape(Rectangle())
+                    NavigationLink(value: coin.id) {
+                        CoinRowView(coin: coin, score: field.coinScores[coin.id], model: model)
                     }
-                    .buttonStyle(.plain)
                 }
             } header: {
                 if let today = field.coinsToday {
@@ -217,6 +199,59 @@ struct CoinDaysView: View {
     private func accessibilityLabel(_ day: CoinDay) -> String {
         let label = day.value.flatMap { model.classify($0)?.fr } ?? "pas de météo"
         return "\(CoinTrend.shortDay(iso: day.date)) : \(label)"
+    }
+}
+
+/// Fiche d'un coin poussée dans la pile de Mes coins (18 nov. 2026) : la même `PointSheet` que par
+/// son épingle sur la carte, sans feuille. Elle lit l'endroit du coin à l'ouverture
+/// (`MapModel.openCoin`), montre une roue en attendant, et rend la sélection au retour. La pile
+/// revient à la liste quand la fiche n'est plus celle de ce coin (supprimé, « Voir sur la carte »).
+struct CoinPointView: View {
+    let coinID: UUID
+    let model: MapModel
+    @Environment(\.dismiss) private var dismiss
+    /// La vue a rendu elle-même la sélection en disparaissant (retour, changement d'onglet) : ce
+    /// n'est pas une raison de quitter la pile.
+    @State private var releasedOnDisappear = false
+
+    private var coin: Coin? { model.field.coins.first { $0.id == coinID } }
+
+    /// La fiche ouverte dans le modèle est bien celle de ce coin, depuis Mes coins.
+    private var isCurrent: Bool {
+        model.pointOrigin == .coins && model.pointCoinID == coinID
+    }
+
+    var body: some View {
+        Group {
+            if isCurrent, let info = model.pointInfo {
+                PointSheet(info: info, model: model, pushed: true)
+            } else {
+                ProgressView()
+                    .navigationTitle(coin?.name ?? "Coin")
+                    #if os(iOS)
+                    .navigationBarTitleDisplayMode(.inline)
+                    #endif
+            }
+        }
+        .onAppear {
+            releasedOnDisappear = false
+            if !isCurrent, let coin {
+                model.openCoin(coin)
+            }
+        }
+        .onDisappear {
+            // retour à la liste ou autre onglet : la sélection est rendue, sauf si elle a déjà
+            // changé de main (« Voir sur la carte »)
+            if isCurrent {
+                releasedOnDisappear = true
+                model.clearSelection()
+            }
+        }
+        .onChange(of: model.pointCoinID) { _, id in
+            if id != coinID, !releasedOnDisappear {
+                dismiss()
+            }
+        }
     }
 }
 
