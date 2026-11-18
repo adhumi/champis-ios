@@ -71,7 +71,9 @@ enum CoinSnapshots {
     nonisolated static let spanMeters: CLLocationDistance = 1500
 
     /// Un aperçu carré du fond Plans standard centré sur l'endroit ; `nil` si Plans ne répond pas.
-    nonisolated static func make(latitude: Double, longitude: Double, side: CGFloat, dark: Bool, scale: CGFloat) async -> Image? {
+    /// Sur l'acteur principal : l'apparence et l'échelle de l'aperçu se règlent par des propriétés
+    /// d'UIKit qui lui sont réservées ; le rendu lui-même se fait ailleurs, pendant l'attente.
+    static func make(latitude: Double, longitude: Double, side: CGFloat, dark: Bool, scale: CGFloat) async -> Image? {
         let options = MKMapSnapshotter.Options()
         let center = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
         options.region = MKCoordinateRegion(center: center, latitudinalMeters: spanMeters, longitudinalMeters: spanMeters)
