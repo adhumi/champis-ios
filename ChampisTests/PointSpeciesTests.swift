@@ -209,4 +209,29 @@ struct PointSpeciesTests {
         #expect(!MapContainer.Coordinator.hitsPin(tap: CGPoint(x: 140, y: 190), anchor: anchor))
         #expect(!MapContainer.Coordinator.hitsPin(tap: CGPoint(x: 100, y: 120), anchor: anchor))
     }
+
+    @Test("Coin ouvert depuis Mes coins : la meilleure espèce de sa cible en exergue, d'après la cellule")
+    func coinLead() throws {
+        let detail = try Fixtures.decode(CellWeather.self, Self.detailJSON)
+        var info = PointInfo(latitude: 47.04, longitude: 8.44, mode: .score, date: "2026-10-30", outcome: .noData)
+        info.terrains = ["cantharellus_cibarius": 0.5, "boletus_aereus": 0.5]
+        info.altKey = "450"
+        info.cell = detail.cell
+        let cepes = MapModel.withLead(info, members: ["boletus_aereus", "boletus_edulis"], detail: detail)
+        let lead = try #require(cepes.scored)
+        #expect(lead.species == "boletus_aereus")
+        #expect(abs(lead.value - 0.1) < 1e-9)
+        #expect(lead.cell?.id == "c_1" && lead.altKey == "450")
+        #expect(lead.terrains.keys.sorted() == ["boletus_aereus"])
+        #expect(cepes.layerValues.keys.sorted() == ["boletus_aereus"])
+        // le reste de l'endroit suit : toutes les espèces, la cellule, la classe
+        #expect(cepes.terrains == info.terrains)
+        #expect(cepes.cell?.id == "c_1" && cepes.altKey == "450" && cepes.date == "2026-10-30")
+        let girolle = MapModel.withLead(info, members: ["cantharellus_cibarius"], detail: detail)
+        #expect(girolle.scored?.species == "cantharellus_cibarius")
+        #expect(abs((girolle.scored?.value ?? 0) - 0.2) < 1e-9)
+        // cible sans terrain ni météo ici : rien en exergue, l'endroit inchangé
+        let none = MapModel.withLead(info, members: ["boletus_edulis"], detail: detail)
+        #expect(none.scored == nil && none.terrains == info.terrains)
+    }
 }

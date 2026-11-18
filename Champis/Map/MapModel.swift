@@ -182,6 +182,9 @@ final class MapModel {
     /// Coin dont la fiche est ouverte par son épingle sur la carte (18 nov. 2026) : la fiche porte
     /// son nom, l'étoile pleine, Renommer et Supprimer. `nil` pour un point touché.
     private(set) var pointCoinID: UUID?
+    /// D'où la fiche a été ouverte : la carte la présente sur elle-même, Mes coins sur sa liste
+    /// (18 nov. 2026 : la même fiche des deux côtés).
+    private(set) var pointOrigin: PointOrigin = .map
     /// Les onze jours du point : `T × M_eff × Φ` par jour pour l'espèce porteuse (lot 2).
     private(set) var pointDays: [CoinDay] = []
     /// Département sous le centre de la carte, pour colorer le bandeau des jours (lot 2).
@@ -219,6 +222,11 @@ final class MapModel {
     @ObservationIgnored private var isLoadingBoundaries = false
     /// Ce que « Réessayer » relance pour `problem`.
     @ObservationIgnored private var problemRetry: Retry?
+
+    nonisolated enum PointOrigin: Sendable {
+        case map
+        case coins
+    }
 
     /// Ce que « Réessayer » relance (étape B4).
     nonisolated enum Retry: Equatable, Sendable {
@@ -705,6 +713,14 @@ final class MapModel {
     /// Météo du point (`GET /weather?cell=&species=`), pour la fiche : une seule requête porte
     /// toutes les espèces qui ont du terrain ici (17 nov. 2026).
     func loadFactors(for info: PointInfo) async {
+        // fiche d'un coin ouverte depuis Mes coins : sa météo est déjà là, ou se redemande entière
+        if pointOrigin == .coins, pointInfo?.id == info.id {
+            if pointDetail != nil { return }
+            if info.cell == nil, let coin = pointCoin {
+                openCoin(coin)
+                return
+            }
+        }
         guard info.mode == .score, let cell = info.cell, info.date != nil, info.altKey != nil else { return }
         var species = Set(info.terrains.keys)
         if let lead = info.scored?.species {
@@ -773,30 +789,60 @@ final class MapModel {
         }
     }
 
-    /// Ce que la fiche d'un coin ouverte depuis Mes coins sait de son endroit (18 nov. 2026).
+    /// Ouvre la fiche d'un coin depuis Mes coins : la même que par son épingle sur la carte (révisé
+    /// le 18 nov. 2026). L'espèce en exergue est la meilleure de la cible du coin, quelle que soit
+    /// la couche affichée ; la météo vient de la carte si elle a celle de l'endroit, sinon de
+    /// `GET /weather?lat=&lon=`.
+    func openCoin(_ coin: Coin) {
+        selection = MapSelection(latitude: coin.lat, longitude: coin.lon)
+        inspectTask?.cancel()
+        resetPointDetail()
+        pointCoinID = coin.id
+        pointOrigin = .coins
+        pointForest = nil
+        pointInfo = nil
+        isInspecting = true
+        inspectTask = Task { [weak self] in
+            guard let self else { return }
+            defer { isInspecting = false }
+            let loaded = await coinPoint(for: coin)
+            guard !Task.isCancelled else { return }
+            pointDetail = loaded.detail
+            factorsProblem = loaded.problem
+            pointInfo = loaded.info
+            applyFeatured(loaded.info)
+        }
+    }
+
+    /// Ce que la fiche d'un coin ouverte depuis Mes coins sait de son endroit.
     nonisolated struct CoinPoint: Sendable {
-        /// Terrain de toutes les espèces à l'endroit du coin, cellule et classe d'altitude.
         var info: PointInfo
-        /// `GET /weather?lat=&lon=` pour ces espèces ; `nil` sans réponse.
+        /// `GET /weather?lat=&lon=` pour les espèces de l'endroit ; `nil` quand la carte avait déjà
+        /// la météo (la fiche la charge comme pour un point) ou sans réponse.
         var detail: CellWeather?
         var problem: Problem?
     }
 
-    /// Lit l'endroit d'un coin comme un point touché, sans couche ni espèce en exergue : le terrain
-    /// de chaque espèce du catalogue dans les tuiles (à défaut, hors ligne, le `T` gardé par le
-    /// coin), puis la météo de la cellule la plus proche. `nil` tant que le catalogue manque.
-    func coinPoint(for coin: Coin) async -> CoinPoint? {
-        guard let catalog else { return nil }
+    /// Lit l'endroit d'un coin comme un point touché, avec sa cible pour couche : le terrain de
+    /// chaque espèce du catalogue dans les tuiles (à défaut, hors ligne, le `T` gardé par le coin),
+    /// puis, si la carte n'a pas la météo de l'endroit, celle de la cellule la plus proche.
+    func coinPoint(for coin: Coin) async -> CoinPoint {
         let day = field.coinsToday ?? today
+        let empty = PointInfo(latitude: coin.lat, longitude: coin.lon, mode: .score, date: day, outcome: .noData)
+        guard let catalog else { return CoinPoint(info: empty) }
+        let layer = layers.first { Self.apiTarget($0.key) == coin.target }
         let settings = RenderSettings(
-            layer: nil, mode: .score, date: day, weather: weather, colorizer: TileColorizer(palette: catalog.palette)
+            layer: layer, mode: .score, date: day, weather: weather, colorizer: TileColorizer(palette: catalog.palette)
         )
-        var info = (try? await PointInspector.inspect(
+        let inspected = try? await PointInspector.inspect(
             latitude: coin.lat, longitude: coin.lon, settings: settings, store: store, catalogSpecies: Array(catalog.species.keys)
-        )) ?? PointInfo(latitude: coin.lat, longitude: coin.lon, mode: .score, date: day, outcome: .noData)
+        )
+        var info = inspected ?? empty
         if info.terrains.isEmpty {
             info.terrains = coin.t.filter { $0.value > 0 && catalog.species[$0.key] != nil }
         }
+        // la carte a déjà la météo de l'endroit : la fiche est celle d'un point touché
+        if info.scored != nil, info.cell != nil { return CoinPoint(info: info) }
         guard !info.terrains.isEmpty else { return CoinPoint(info: info) }
         do {
             let detail = try await api.weatherDetail(latitude: coin.lat, longitude: coin.lon, species: info.terrains.keys.sorted())
@@ -806,16 +852,54 @@ final class MapModel {
             let k: Int = info.altClass ?? Int(kept.rounded(.down))
             info.cell = detail.cell
             info.stale = detail.stale
-            info.layerValues = [:]
             if let alt = WeatherField.Cell(info: detail.cell, stale: detail.stale).altKey(classIndex: k, encoding: encoding) {
                 info.altKey = alt.key
                 info.altFallback = alt.fallback
             }
             info.date = info.date ?? detail.today
-            return CoinPoint(info: info, detail: detail)
+            return CoinPoint(info: Self.withLead(info, members: layer?.members ?? [], detail: detail), detail: detail)
         } catch {
             return CoinPoint(info: info, problem: Problem("Météo de ce coin indisponible", error: error))
         }
+    }
+
+    /// `info` avec, en exergue, la meilleure espèce de `members` d'après la météo de la cellule
+    /// (`detail`) : `T × M_eff × Φ` à la classe d'altitude du pixel, sans interpolation. Inchangé si
+    /// aucune espèce de `members` n'a de terrain et de météo ici. Fonction pure, testée.
+    nonisolated static func withLead(_ info: PointInfo, members: [String], detail: CellWeather) -> PointInfo {
+        guard let date = info.date, let altKey = info.altKey else { return info }
+        var best: PointInfo.Scored?
+        var values: [String: Double] = [:]
+        for sid in members {
+            guard let terrain = info.terrains[sid],
+                  let row = detail.species[sid]?.first(where: { $0.date == date })?.byAlt[altKey]
+            else { continue }
+            let factor: Double = row.factor
+            let value: Double = terrain * factor
+            values[sid] = value
+            if let current = best, value <= current.value { continue }
+            best = PointInfo.Scored(
+                species: sid, terrain: terrain, factor: factor, value: value, row: row, cell: detail.cell, stale: detail.stale,
+                altClass: info.altClass, altKey: altKey, altFallback: info.altFallback
+            )
+        }
+        guard var best else { return info }
+        best.terrains = info.terrains.filter { members.contains($0.key) }
+        best.altIndex = info.altIndex
+        best.altitudeM = info.altitudeM
+        var out = PointInfo(
+            latitude: info.latitude, longitude: info.longitude, mode: info.mode, date: info.date, outcome: .scored(best)
+        )
+        out.terrains = info.terrains
+        out.layerValues = values
+        out.cell = info.cell
+        out.stale = info.stale
+        out.altClass = info.altClass
+        out.altKey = info.altKey
+        out.altFallback = info.altFallback
+        out.altIndex = info.altIndex
+        out.altitudeM = info.altitudeM
+        return out
     }
 
     /// Nom latin d'une espèce, vide s'il manque.
@@ -862,6 +946,7 @@ final class MapModel {
         pointDetail = nil
         pointDays = []
         pointCoinID = nil
+        pointOrigin = .map
         factorsStatus = nil
         factorsProblem = nil
     }

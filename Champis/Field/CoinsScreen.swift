@@ -4,19 +4,20 @@ import SwiftUI
 
 /// Onglet Mes coins (refonte UX, lot 1) : la réponse à « j'y vais ce week-end ou pas ? ».
 /// Liste classée par score du jour, libellé de la palette et espèce porteuse, tendance en mots ;
-/// jamais un chiffre avant « Détails ». L'état vide porte la promesse de confidentialité.
+/// jamais un chiffre avant « Détails ». Toucher un coin ouvre sa fiche en feuille : la même
+/// `PointSheet` que par son épingle sur la carte (`MapModel.openCoin`, révisé le 18 nov. 2026).
+/// L'état vide porte la promesse de confidentialité.
 struct CoinsScreen: View {
     let model: MapModel
     let router: AppRouter
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
-    @State private var path: [UUID] = []
     @State private var showSettings = false
     @State private var showLegalNotice = false
 
     private var field: FieldModel { model.field }
 
     var body: some View {
-        NavigationStack(path: $path) {
+        NavigationStack {
             Group {
                 if field.coins.isEmpty {
                     EmptyCoinsView { router.tab = .map }
@@ -25,8 +26,9 @@ struct CoinsScreen: View {
                 }
             }
             .navigationTitle("Mes coins")
-            .navigationDestination(for: UUID.self) { id in
-                CoinDetailView(coinID: id, model: model, router: router)
+            // la même fiche que par l'épingle du coin sur la carte (révisé le 18 nov. 2026)
+            .sheet(item: coinSheetBinding) { info in
+                PointSheet(info: info, model: model)
             }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -48,8 +50,8 @@ struct CoinsScreen: View {
             .task { await field.refreshCoinScores() }
             .refreshable { await field.refreshCoinScores() }
             .onChange(of: router.coinToOpen, initial: true) { _, id in
-                guard let id, field.coins.contains(where: { $0.id == id }) else { return }
-                path = [id]
+                guard let id, let coin = field.coins.first(where: { $0.id == id }) else { return }
+                model.openCoin(coin)
                 router.coinToOpen = nil
             }
         }
@@ -58,6 +60,15 @@ struct CoinsScreen: View {
     private func retry() {
         let field = field
         Task { await field.retry() }
+    }
+
+    /// La fiche d'un coin ouverte depuis cette liste ; en disposition partagée (iPad, Mac),
+    /// l'inspecteur la montre et cet écran n'existe pas.
+    private var coinSheetBinding: Binding<PointInfo?> {
+        Binding(
+            get: { model.pointOrigin == .coins ? model.pointInfo : nil },
+            set: { if $0 == nil { model.clearSelection() } }
+        )
     }
 
     private var coinsList: some View {
@@ -69,9 +80,19 @@ struct CoinsScreen: View {
             }
             Section {
                 ForEach(CoinTrend.order(field.coins, scores: field.coinScores)) { coin in
-                    NavigationLink(value: coin.id) {
-                        CoinRowView(coin: coin, score: field.coinScores[coin.id], model: model)
+                    Button {
+                        model.openCoin(coin)
+                    } label: {
+                        HStack {
+                            CoinRowView(coin: coin, score: field.coinScores[coin.id], model: model)
+                            Spacer(minLength: 8)
+                            if model.isInspecting, model.pointCoinID == coin.id {
+                                ProgressView().controlSize(.small)
+                            }
+                        }
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                 }
             } header: {
                 if let today = field.coinsToday {
@@ -196,203 +217,6 @@ struct CoinDaysView: View {
     private func accessibilityLabel(_ day: CoinDay) -> String {
         let label = day.value.flatMap { model.classify($0)?.fr } ?? "pas de météo"
         return "\(CoinTrend.shortDay(iso: day.date)) : \(label)"
-    }
-}
-
-/// Fiche d'un coin ouverte depuis Mes coins : la même vue que la fiche d'un point, sans espèce en
-/// exergue (spec › App iOS › Fiche d'un point et fiche d'un coin, une seule vue, 18 nov. 2026). En
-/// tête le résumé du coin (le jour choisi en mots, les onze jours, la tendance, de `GET /coins`),
-/// Voir sur la carte et Itinéraire ; puis toutes les espèces qui ont du terrain à cet endroit, par
-/// famille, à déplier (`PointSpeciesSections`, terrain lu dans les tuiles et météo de la cellule la
-/// plus proche : `MapModel.coinPoint`) ; puis Détails, Renommer et Supprimer. L'étoile pleine de la
-/// barre retire le coin après confirmation.
-struct CoinDetailView: View {
-    let coinID: UUID
-    let model: MapModel
-    let router: AppRouter
-    @State private var selectedDay = ""
-    @State private var renaming = false
-    @State private var newName = ""
-    @State private var confirmDelete = false
-    /// L'endroit du coin lu comme un point : terrain et météo de toutes les espèces.
-    @State private var point: MapModel.CoinPoint?
-    @State private var loadingPoint = false
-    /// Espèce dont la ligne est dépliée ; une seule à la fois.
-    @State private var expanded: String?
-    @Environment(\.dismiss) private var dismiss
-
-    private var field: FieldModel { model.field }
-    private var coin: Coin? { field.coins.first { $0.id == coinID } }
-    private var score: ScoredCoin? { field.coinScores[coinID] }
-    private var today: String { field.coinsToday ?? "" }
-    private var day: CoinDay? {
-        score?.days.first { $0.date == (selectedDay.isEmpty ? today : selectedDay) }
-    }
-
-    var body: some View {
-        List {
-            if let coin {
-                Section {
-                    HStack(spacing: 8) {
-                        ScoreDot(value: day?.value ?? (selectedDay.isEmpty ? score?.score : nil), model: model, size: 16)
-                        Text(headline).font(.title3).fontWeight(.semibold)
-                    }
-                    .accessibilityElement(children: .combine)
-                    Text(subtitle).foregroundStyle(.secondary)
-                    if let score, !score.days.isEmpty {
-                        CoinDaysView(days: score.days, today: today, selected: selectionBinding, model: model)
-                            .padding(.vertical, 4)
-                    }
-                    if let trend = trendPhrase {
-                        Text("Tendance : \(trend)").fontWeight(.semibold)
-                    }
-                }
-                Section {
-                    Button {
-                        model.focus(latitude: coin.lat, longitude: coin.lon)
-                        router.tab = .map
-                    } label: {
-                        Label("Voir sur la carte", systemImage: "map")
-                    }
-                    if let directions = Self.directionsURL(latitude: coin.lat, longitude: coin.lon) {
-                        Link(destination: directions) {
-                            Label("Itinéraire", systemImage: "arrow.triangle.turn.up.right.diamond")
-                        }
-                    }
-                }
-                speciesSections
-                Section("Détails") {
-                    LabeledContent("Cible", value: model.layerTitle(forTarget: coin.target))
-                    LabeledContent("Classe d'altitude", value: "\(coin.altClass) m")
-                    ForEach(coin.t.keys.sorted(), id: \.self) { sid in
-                        LabeledContent("T · \(model.speciesName(sid))", value: PointSheet.number(coin.t[sid] ?? 0))
-                    }
-                    if let value = day?.value ?? score?.score {
-                        LabeledContent("Score du jour", value: PointSheet.number(value))
-                    }
-                    if let leading = day?.leading ?? score?.leading, let t = coin.t[leading], t > 0,
-                       let value = day?.value ?? score?.score {
-                        LabeledContent("M_eff × Φ", value: PointSheet.number(value / t))
-                    }
-                }
-                Section {
-                    Button("Renommer") {
-                        newName = coin.name
-                        renaming = true
-                    }
-                    Button("Supprimer", role: .destructive) { confirmDelete = true }
-                }
-            } else {
-                Text("Ce coin n'existe plus.").foregroundStyle(.secondary)
-            }
-        }
-        .navigationTitle(coin?.name ?? "Coin")
-        .toolbar {
-            if coin != nil {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        confirmDelete = true
-                    } label: {
-                        Label("Retirer de mes coins", systemImage: "star.fill")
-                    }
-                }
-            }
-        }
-        .task(id: coinID) { await loadPoint() }
-        .alert("Nom du coin", isPresented: $renaming) {
-            TextField("Nom", text: $newName)
-            Button("Enregistrer") {
-                let name = newName
-                let field = field
-                Task { await field.renameCoin(coinID, to: name) }
-            }
-            Button("Annuler", role: .cancel) {}
-        }
-        .confirmationDialog("Supprimer ce coin ?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Supprimer", role: .destructive) {
-                let field = field
-                Task { await field.removeCoin(coinID) }
-                dismiss()
-            }
-        } message: {
-            Text("Le coin est retiré de l'appareil et du serveur.")
-        }
-        .task { await field.refreshCoinScores() }
-    }
-
-    /// Les espèces qui ont du terrain à l'endroit du coin, par famille et par score, à déplier ;
-    /// aucune n'est en exergue. Une roue pendant la lecture, l'erreur en clair avec « Réessayer ».
-    @ViewBuilder
-    private var speciesSections: some View {
-        if let point {
-            PointSpeciesSections(
-                families: model.families(PointFamilies.species(info: point.info, detail: point.detail), featured: nil),
-                model: model, pending: false, expanded: $expanded
-            ) { species in
-                PointFamilies.expansion(
-                    species: species, info: point.info, detail: point.detail,
-                    terrainLabel: model.classify(species.terrain)?.label, today: point.info.date, goodMin: model.goodThreshold
-                )
-            }
-            if let problem = point.problem {
-                Section {
-                    ProblemView(problem: problem) {
-                        Task { await loadPoint() }
-                    }
-                }
-            }
-        } else if loadingPoint {
-            Section {
-                ProgressView().controlSize(.small)
-            }
-        }
-    }
-
-    private func loadPoint() async {
-        guard let coin else { return }
-        expanded = nil
-        point = nil
-        loadingPoint = true
-        let loaded = await model.coinPoint(for: coin)
-        // un autre coin a pu être choisi entre-temps (inspecteur de l'iPad et du Mac) : sa tâche suit
-        guard !Task.isCancelled else { return }
-        point = loaded
-        loadingPoint = false
-    }
-
-    /// Itinéraire vers le coin dans Plans (étape B2) : la destination seule, Plans choisit le trajet.
-    nonisolated static func directionsURL(latitude: Double, longitude: Double) -> URL? {
-        var components = URLComponents(string: "https://maps.apple.com/")
-        components?.queryItems = [URLQueryItem(name: "daddr", value: String(format: "%.6f,%.6f", latitude, longitude))]
-        return components?.url
-    }
-
-    private var selectionBinding: Binding<String> {
-        Binding(get: { selectedDay.isEmpty ? today : selectedDay }, set: { selectedDay = $0 })
-    }
-
-    private var headline: String {
-        let iso = selectedDay.isEmpty ? today : selectedDay
-        let value = day?.value ?? (iso == today ? score?.score : nil)
-        guard let value, let threshold = model.classify(value) else { return "Pas de météo" }
-        return iso == today ? "\(threshold.fr) aujourd'hui" : "\(threshold.fr) \(CoinTrend.weekdayName(iso: iso))"
-    }
-
-    private var subtitle: String {
-        let iso = selectedDay.isEmpty ? today : selectedDay
-        var parts: [String] = []
-        if let leading = day?.leading ?? (iso == today ? score?.leading : nil) {
-            parts.append(model.speciesName(leading).lowercased())
-        }
-        if !iso.isEmpty {
-            parts.append(MapModel.format(iso: iso))
-        }
-        return parts.joined(separator: " · ")
-    }
-
-    private var trendPhrase: String? {
-        guard let score, let goodMin = model.goodThreshold, !today.isEmpty else { return nil }
-        return CoinTrend.phrase(CoinTrend.kind(days: score.days, today: today, goodMin: goodMin))
     }
 }
 
