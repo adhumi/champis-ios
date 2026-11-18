@@ -115,7 +115,7 @@ struct PointSheet: View {
     private func summarySection(_ featured: PointSpecies) -> some View {
         let text = Self.sentence(
             terrain: model.classify(featured.terrain)?.label, mode: info.mode, sentence: model.pointSentence,
-            summary: model.pointSummary
+            tone: model.pointSentenceTone, summary: model.pointSummary
         )
         Section {
             HStack(spacing: 10) {
@@ -252,10 +252,10 @@ struct PointSheet: View {
     }
 
     /// La phrase de la fiche : le terrain (depuis le libellé de palette de `T`, que l'API ne connaît
-    /// pas), deux-points, puis `sentence` de l'API et un point. Sans `sentence` (API plus ancienne),
-    /// le terrain seul et la liste `summary` à la suite (`phrases`). Fonction pure, testée.
+    /// pas), une liaison (`link`), puis `sentence` de l'API et un point. Sans `sentence` (API plus
+    /// ancienne), le terrain seul et la liste `summary` à la suite (`phrases`). Fonction pure, testée.
     nonisolated static func sentence(
-        terrain label: String?, mode: MapMode, sentence: String?, summary: [String]?
+        terrain label: String?, mode: MapMode, sentence: String?, tone: String? = nil, summary: [String]?
     ) -> (sentence: String, phrases: [String]) {
         let phrase = terrainPhrase(label: label)
         let lead = phrase.prefix(1).uppercased() + phrase.dropFirst()
@@ -263,9 +263,31 @@ struct PointSheet: View {
             return ("\(lead) : potentiel toute saison, sans la météo.", [])
         }
         if let sentence, !sentence.isEmpty {
-            return ("\(lead) : \(sentence).", [])
+            return ("\(lead)\(link(terrain: label, tone: tone))\(sentence).", [])
         }
         return ("\(lead).", summary ?? [])
+    }
+
+    /// Ce qui relie le terrain à la phrase (spec › App iOS › Liaison entre le terrain et la phrase,
+    /// 18 nov. 2026) : « et » quand la suite va dans le même sens que le terrain, « mais » quand
+    /// elle s'y oppose, une virgule quand l'un des deux est neutre ; les deux-points d'avant sans
+    /// `sentence_tone` (réponse plus ancienne). Le sens du terrain vient de son libellé de palette.
+    nonisolated static func link(terrain label: String?, tone: String?) -> String {
+        let weather: Bool?
+        switch tone {
+        case "favorable": weather = true
+        case "defavorable": weather = false
+        case "neutre": weather = nil
+        default: return " : "
+        }
+        let terrain: Bool?
+        switch label {
+        case "excellent", "bon": terrain = true
+        case "moyen", nil: terrain = nil
+        default: terrain = false
+        }
+        guard let weather, let terrain else { return ", " }
+        return weather == terrain ? " et " : " mais "
     }
 
     /// Phrase de terrain depuis le libellé de palette de `T` : l'API ne connaît pas le pixel.
