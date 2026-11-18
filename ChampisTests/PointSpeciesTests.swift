@@ -158,13 +158,13 @@ struct PointSpeciesTests {
         info.terrains = ["cantharellus_cibarius": 0.5, "boletus_aereus": 0.5]
         info.altKey = "450"
         let girolle = PointSpecies(id: "cantharellus_cibarius", terrain: 0.5, value: 0.2)
-        let open = try #require(PointFamilies.expansion(
+        let unfolded = try #require(PointFamilies.expansion(
             species: girolle, info: info, detail: detail, terrainLabel: "bon", today: "2026-10-30", goodMin: 0.5
         ))
-        #expect(open.sentence == "Terrain favorable mais la dernière grosse pluie remonte à 22 jours et la pousse s'essouffle ; la saison touche à sa fin.")
-        #expect(open.phrases.isEmpty)
+        #expect(unfolded.sentence == "Terrain favorable mais la dernière grosse pluie remonte à 22 jours et la pousse s'essouffle ; la saison touche à sa fin.")
+        #expect(unfolded.phrases.isEmpty)
         // un seul jour connu : pas de tendance à dire
-        #expect(open.trend == nil)
+        #expect(unfolded.trend == nil)
         // API plus ancienne : le terrain, puis la liste d'avant
         let aereus = PointSpecies(id: "boletus_aereus", terrain: 0.5, value: 0.1)
         let old = try #require(PointFamilies.expansion(

@@ -802,7 +802,8 @@ final class MapModel {
             let detail = try await api.weatherDetail(latitude: coin.lat, longitude: coin.lon, species: info.terrains.keys.sorted())
             let encoding = catalog.palette.altEncoding
             // la classe du pixel lue dans la tuile, sinon celle que le coin a gardée (en mètres)
-            let k = info.altClass ?? Int((Double(coin.altClass) / encoding.classM).rounded(.down))
+            let kept: Double = Double(coin.altClass) / encoding.classM
+            let k: Int = info.altClass ?? Int(kept.rounded(.down))
             info.cell = detail.cell
             info.stale = detail.stale
             info.layerValues = [:]

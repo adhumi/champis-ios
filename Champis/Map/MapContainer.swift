@@ -224,7 +224,11 @@ struct MapContainer: PlatformRepresentable {
         /// `MKMarkerAnnotationView` est au-dessus de son point d'ancrage. La bande verticale est
         /// symétrique, pour ne pas dépendre du sens de l'axe vertical de la vue (iOS, macOS).
         nonisolated static func hitsPin(tap: CGPoint, anchor: CGPoint) -> Bool {
-            abs(tap.x - anchor.x) <= 22 && abs(tap.y - anchor.y) <= 44
+            let dx: CGFloat = abs(tap.x - anchor.x)
+            let dy: CGFloat = abs(tap.y - anchor.y)
+            let halfWidth: CGFloat = 22
+            let halfHeight: CGFloat = 44
+            return dx <= halfWidth && dy <= halfHeight
         }
 
         /// Appui long (lot 3) : le menu de terrain au point pressé, sans passer par la fiche.

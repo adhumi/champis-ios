@@ -58,11 +58,7 @@ struct PointSheet: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                PointSpeciesSections(
-                    families: families, model: model,
-                    pending: info.mode == .score && info.cell != nil && model.pointDetail == nil && model.factorsProblem == nil,
-                    expanded: $expanded
-                ) { species in
+                PointSpeciesSections(families: families, model: model, pending: isLoadingWeather, expanded: $expanded) { species in
                     model.expansion(for: species, info: info)
                 }
                 fieldSection
@@ -139,6 +135,13 @@ struct PointSheet: View {
 
     /// Les autres espèces du point, par famille.
     private var families: [PointFamily] { model.pointFamilies(for: info) }
+
+    /// La météo des espèces du point est demandée et n'est pas encore arrivée.
+    private var isLoadingWeather: Bool {
+        guard info.mode == .score, info.cell != nil else { return false }
+        if model.pointDetail != nil { return false }
+        return model.factorsProblem == nil
+    }
 
     @ViewBuilder
     private func summarySection(_ featured: PointSpecies) -> some View {
@@ -322,7 +325,13 @@ struct PointSheet: View {
         } label: {
             Label(coin != nil ? "Retirer de mes coins" : "Ajouter à mes coins", systemImage: coin != nil ? "star.fill" : "star")
         }
-        .disabled(coin == nil && info.scored == nil)
+        .disabled(!canToggleCoin)
+    }
+
+    /// L'étoile agit : il y a un coin à retirer, ou un point noté à ajouter.
+    private var canToggleCoin: Bool {
+        if coin != nil { return true }
+        return info.scored != nil
     }
 
     private var coinSection: some View {
