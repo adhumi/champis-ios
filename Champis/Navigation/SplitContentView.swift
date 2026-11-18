@@ -31,7 +31,7 @@ struct SplitContentView: View {
         }
         .task {
             await field.refreshCoinScores()
-            await model.completeCoins()
+            model.completeCoinsInBackground()
         }
         .onChange(of: router.coinToOpen, initial: true) { _, id in
             guard let id, field.coins.contains(where: { $0.id == id }) else { return }

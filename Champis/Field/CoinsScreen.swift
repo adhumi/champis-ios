@@ -52,8 +52,9 @@ struct CoinsScreen: View {
             }
             .task {
                 await field.refreshCoinScores()
-                // coins d'avant le 18 nov. 2026 : le terrain de toutes les espèces, une fois
-                await model.completeCoins()
+                // coins d'avant le 18 nov. 2026 : le terrain de toutes les espèces, une fois, dans
+                // une tâche du modèle (quitter cet écran ne l'interrompt pas)
+                model.completeCoinsInBackground()
             }
             .refreshable { await field.refreshCoinScores() }
             .onChange(of: router.coinToOpen, initial: true) { _, id in
