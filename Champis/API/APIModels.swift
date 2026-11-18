@@ -211,6 +211,8 @@ nonisolated struct CellWeather: Codable, Sendable {
     let cell: WeatherCellInfo
     let stale: Bool
     let species: [String: [WeatherDay]]
+    /// Jour de l'API ; lu pour la fiche d'un coin quand rien d'autre ne l'a encore dit.
+    var today: String? = nil
 }
 
 /// Indice d'un département pour un jour : `value` nil quand la météo manque ; `leading` = espèce qui

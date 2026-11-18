@@ -199,8 +199,13 @@ struct CoinDaysView: View {
     }
 }
 
-/// Fiche d'un coin : le jour choisi en mots, les onze jours, Voir sur la carte, Renommer,
-/// Supprimer, et les chiffres derrière « Détails ».
+/// Fiche d'un coin ouverte depuis Mes coins : la même vue que la fiche d'un point, sans espèce en
+/// exergue (spec › App iOS › Fiche d'un point et fiche d'un coin, une seule vue, 18 nov. 2026). En
+/// tête le résumé du coin (le jour choisi en mots, les onze jours, la tendance, de `GET /coins`),
+/// Voir sur la carte et Itinéraire ; puis toutes les espèces qui ont du terrain à cet endroit, par
+/// famille, à déplier (`PointSpeciesSections`, terrain lu dans les tuiles et météo de la cellule la
+/// plus proche : `MapModel.coinPoint`) ; puis Détails, Renommer et Supprimer. L'étoile pleine de la
+/// barre retire le coin après confirmation.
 struct CoinDetailView: View {
     let coinID: UUID
     let model: MapModel
@@ -209,6 +214,11 @@ struct CoinDetailView: View {
     @State private var renaming = false
     @State private var newName = ""
     @State private var confirmDelete = false
+    /// L'endroit du coin lu comme un point : terrain et météo de toutes les espèces.
+    @State private var point: MapModel.CoinPoint?
+    @State private var loadingPoint = false
+    /// Espèce dont la ligne est dépliée ; une seule à la fois.
+    @State private var expanded: String?
     @Environment(\.dismiss) private var dismiss
 
     private var field: FieldModel { model.field }
@@ -229,12 +239,6 @@ struct CoinDetailView: View {
                     }
                     .accessibilityElement(children: .combine)
                     Text(subtitle).foregroundStyle(.secondary)
-                    // phrases du jour (étape B2) : pour l'espèce qui porte le score, à la classe du coin
-                    if isToday {
-                        ForEach(score?.summary ?? [], id: \.self) { phrase in
-                            Text(phrase)
-                        }
-                    }
                     if let score, !score.days.isEmpty {
                         CoinDaysView(days: score.days, today: today, selected: selectionBinding, model: model)
                             .padding(.vertical, 4)
@@ -256,6 +260,7 @@ struct CoinDetailView: View {
                         }
                     }
                 }
+                speciesSections
                 Section("Détails") {
                     LabeledContent("Cible", value: model.layerTitle(forTarget: coin.target))
                     LabeledContent("Classe d'altitude", value: "\(coin.altClass) m")
@@ -282,6 +287,18 @@ struct CoinDetailView: View {
             }
         }
         .navigationTitle(coin?.name ?? "Coin")
+        .toolbar {
+            if coin != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        confirmDelete = true
+                    } label: {
+                        Label("Retirer de mes coins", systemImage: "star.fill")
+                    }
+                }
+            }
+        }
+        .task(id: coinID) { await loadPoint() }
         .alert("Nom du coin", isPresented: $renaming) {
             TextField("Nom", text: $newName)
             Button("Enregistrer") {
@@ -303,9 +320,44 @@ struct CoinDetailView: View {
         .task { await field.refreshCoinScores() }
     }
 
-    /// Le jour affiché est aujourd'hui : les phrases de `GET /coins` ne valent que pour lui.
-    private var isToday: Bool {
-        selectedDay.isEmpty || selectedDay == today
+    /// Les espèces qui ont du terrain à l'endroit du coin, par famille et par score, à déplier ;
+    /// aucune n'est en exergue. Une roue pendant la lecture, l'erreur en clair avec « Réessayer ».
+    @ViewBuilder
+    private var speciesSections: some View {
+        if let point {
+            PointSpeciesSections(
+                families: model.families(PointFamilies.species(info: point.info, detail: point.detail), featured: nil),
+                model: model, pending: false, expanded: $expanded
+            ) { species in
+                PointFamilies.expansion(
+                    species: species, info: point.info, detail: point.detail,
+                    terrainLabel: model.classify(species.terrain)?.label, today: point.info.date, goodMin: model.goodThreshold
+                )
+            }
+            if let problem = point.problem {
+                Section {
+                    ProblemView(problem: problem) {
+                        Task { await loadPoint() }
+                    }
+                }
+            }
+        } else if loadingPoint {
+            Section {
+                ProgressView().controlSize(.small)
+            }
+        }
+    }
+
+    private func loadPoint() async {
+        guard let coin else { return }
+        expanded = nil
+        point = nil
+        loadingPoint = true
+        let loaded = await model.coinPoint(for: coin)
+        // un autre coin a pu être choisi entre-temps (inspecteur de l'iPad et du Mac) : sa tâche suit
+        guard !Task.isCancelled else { return }
+        point = loaded
+        loadingPoint = false
     }
 
     /// Itinéraire vers le coin dans Plans (étape B2) : la destination seule, Plans choisit le trajet.

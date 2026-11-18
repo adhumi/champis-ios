@@ -52,7 +52,7 @@ nonisolated struct PointInfo: Identifiable, Sendable {
     let latitude: Double
     let longitude: Double
     let mode: MapMode
-    let date: String?
+    var date: String?
     let outcome: Outcome
 
     // Toutes les espèces du point (spec › App iOS › Fiche d'un point, 17 nov. 2026) : `outcome` ne
@@ -107,7 +107,10 @@ nonisolated enum PointInspector {
         let base = { (outcome: PointInfo.Outcome) in
             PointInfo(latitude: latitude, longitude: longitude, mode: settings.mode, date: settings.date, outcome: outcome)
         }
-        guard let layer = settings.layer, let colorizer = settings.colorizer else { return base(.noData) }
+        // sans couche (fiche d'un coin ouverte depuis Mes coins, 18 nov. 2026) : seulement le
+        // terrain des espèces du catalogue, aucune n'est en exergue
+        let members = settings.layer?.members ?? []
+        guard let colorizer = settings.colorizer, !members.isEmpty || !catalogSpecies.isEmpty else { return base(.noData) }
         let size = TileMath.tileSize
         let t = TileMath.tile(lon: longitude, lat: latitude, z: zoom)
         let i = t.py * size + t.px
@@ -135,7 +138,7 @@ nonisolated enum PointInspector {
         var sawTerrain = false
         var terrains: [String: Double] = [:]
         var layerValues: [String: Double] = [:]
-        for sid in layer.members {
+        for sid in members {
             guard let png = try await store.terrainTile(species: sid, z: zoom, x: t.x, y: t.y),
                   png.width == size, png.height == size, png.data.count >= size * size * png.channels,
                   let terrain = colorizer.terrain(png, at: i)
@@ -175,7 +178,7 @@ nonisolated enum PointInspector {
             info = base(sawTerrain && useWeather ? .noWeather : .noData)
         }
         let others = await otherTerrains(
-            catalogSpecies.filter { !layer.members.contains($0) }, z: zoom, x: t.x, y: t.y, pixel: i, colorizer: colorizer,
+            catalogSpecies.filter { !members.contains($0) }, z: zoom, x: t.x, y: t.y, pixel: i, colorizer: colorizer,
             store: store
         )
         info.terrains = terrains.merging(others) { layer, _ in layer }.filter { $0.value > 0 }

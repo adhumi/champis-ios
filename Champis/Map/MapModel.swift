@@ -179,9 +179,9 @@ final class MapModel {
     /// `GET /weather?cell=` du point pour toutes les espèces qui ont du terrain ici (17 nov. 2026) :
     /// score des autres espèces, phrase, onze jours et facteurs de celle qui est mise en avant.
     private(set) var pointDetail: CellWeather?
-    /// Espèce que l'utilisateur a mise en avant dans la fiche en touchant sa ligne ; `nil` : celle
-    /// qui porte le score de la couche. La couche de la carte ne change pas.
-    private(set) var featuredSpecies: String?
+    /// Coin dont la fiche est ouverte par son épingle sur la carte (18 nov. 2026) : la fiche porte
+    /// son nom, l'étoile pleine, Renommer et Supprimer. `nil` pour un point touché.
+    private(set) var pointCoinID: UUID?
     /// Les onze jours du point : `T × M_eff × Φ` par jour pour l'espèce porteuse (lot 2).
     private(set) var pointDays: [CoinDay] = []
     /// Département sous le centre de la carte, pour colorer le bandeau des jours (lot 2).
@@ -671,10 +671,11 @@ final class MapModel {
 
     // MARK: - Fiche au toucher
 
-    func select(latitude: Double, longitude: Double) {
+    func select(latitude: Double, longitude: Double, coinID: UUID? = nil) {
         selection = MapSelection(latitude: latitude, longitude: longitude)
         inspectTask?.cancel()
         resetPointDetail()
+        pointCoinID = coinID
         pointForest = nil
         if case .inspect? = problemRetry {
             setProblem(nil)
@@ -724,20 +725,22 @@ final class MapModel {
         }
     }
 
-    /// Met une espèce du point en avant dans la fiche, sans changer la couche de la carte.
-    func feature(_ species: String) {
-        guard let info = pointInfo, info.terrains[species] != nil || info.scored?.species == species else { return }
-        featuredSpecies = species == info.scored?.species ? nil : species
-        applyFeatured(info)
+    /// Ouvre la fiche à l'endroit d'un coin, depuis son épingle sur la carte.
+    func selectCoin(_ coin: Coin) {
+        select(latitude: coin.lat, longitude: coin.lon, coinID: coin.id)
     }
 
-    /// Espèce en tête de fiche : celle que l'utilisateur a touchée, sinon celle qui porte le score
-    /// de la couche ; `nil` quand la couche n'a rien ici et que rien n'est choisi.
+    /// Le coin de la fiche ouverte, s'il existe encore.
+    var pointCoin: Coin? {
+        guard let id = pointCoinID else { return nil }
+        return field.coins.first { $0.id == id }
+    }
+
+    /// Espèce en tête de fiche : celle qui porte le score de la couche (règle 9) ; `nil` quand la
+    /// couche n'a rien ici. Toucher une autre espèce déplie sa ligne, sans la mettre en exergue
+    /// (18 nov. 2026).
     func featured(for info: PointInfo) -> PointSpecies? {
-        if let chosen = featuredSpecies, chosen != info.scored?.species {
-            return pointSpecies(for: info).first { $0.id == chosen }
-        }
-        return info.scored.map { PointSpecies(id: $0.species, terrain: $0.terrain, value: $0.value) }
+        info.scored.map { PointSpecies(id: $0.species, terrain: $0.terrain, value: $0.value) }
     }
 
     /// Les espèces qui ont du terrain au point, avec leur valeur du jour.
@@ -747,8 +750,72 @@ final class MapModel {
 
     /// Les autres espèces du point, par famille (`PointFamilies.families`).
     func pointFamilies(for info: PointInfo) -> [PointFamily] {
+        families(pointSpecies(for: info), featured: featured(for: info)?.id)
+    }
+
+    /// Des espèces par famille, d'après le catalogue ; vide tant qu'il n'est pas chargé.
+    func families(_ species: [PointSpecies], featured: String?) -> [PointFamily] {
         guard let catalog else { return [] }
-        return PointFamilies.families(pointSpecies(for: info), catalog: catalog, featured: featured(for: info)?.id)
+        return PointFamilies.families(species, catalog: catalog, featured: featured)
+    }
+
+    /// Phrase et tendance d'une espèce de la fiche du point, pour sa ligne dépliée ; `nil` tant que
+    /// la météo du point n'est pas arrivée. Une espèce de la couche suit la carte, jour par jour.
+    func expansion(for species: PointSpecies, info: PointInfo) -> PointExpansion? {
+        let sample = info.layerValues[species.id] == nil ? nil : weather.sample(lat: info.latitude, lon: info.longitude)
+        let palette = palette
+        return PointFamilies.expansion(
+            species: species, info: info, detail: pointDetail, terrainLabel: classify(species.terrain)?.label,
+            today: today, goodMin: goodThreshold
+        ) { day in
+            guard let sample, let palette else { return nil }
+            return sample.factor(species: species.id, date: day, index: info.altIndex, palette: palette)
+        }
+    }
+
+    /// Ce que la fiche d'un coin ouverte depuis Mes coins sait de son endroit (18 nov. 2026).
+    nonisolated struct CoinPoint: Sendable {
+        /// Terrain de toutes les espèces à l'endroit du coin, cellule et classe d'altitude.
+        var info: PointInfo
+        /// `GET /weather?lat=&lon=` pour ces espèces ; `nil` sans réponse.
+        var detail: CellWeather?
+        var problem: Problem?
+    }
+
+    /// Lit l'endroit d'un coin comme un point touché, sans couche ni espèce en exergue : le terrain
+    /// de chaque espèce du catalogue dans les tuiles (à défaut, hors ligne, le `T` gardé par le
+    /// coin), puis la météo de la cellule la plus proche. `nil` tant que le catalogue manque.
+    func coinPoint(for coin: Coin) async -> CoinPoint? {
+        guard let catalog else { return nil }
+        let day = field.coinsToday ?? today
+        let settings = RenderSettings(
+            layer: nil, mode: .score, date: day, weather: weather, colorizer: TileColorizer(palette: catalog.palette)
+        )
+        var info = (try? await PointInspector.inspect(
+            latitude: coin.lat, longitude: coin.lon, settings: settings, store: store, catalogSpecies: Array(catalog.species.keys)
+        )) ?? PointInfo(latitude: coin.lat, longitude: coin.lon, mode: .score, date: day, outcome: .noData)
+        if info.terrains.isEmpty {
+            info.terrains = coin.t.filter { $0.value > 0 && catalog.species[$0.key] != nil }
+        }
+        guard !info.terrains.isEmpty else { return CoinPoint(info: info) }
+        do {
+            let detail = try await api.weatherDetail(latitude: coin.lat, longitude: coin.lon, species: info.terrains.keys.sorted())
+            let encoding = catalog.palette.altEncoding
+            // la classe du pixel lue dans la tuile, sinon celle que le coin a gardée (en mètres)
+            let kept: Double = Double(coin.altClass) / encoding.classM
+            let k: Int = info.altClass ?? Int(kept.rounded(.down))
+            info.cell = detail.cell
+            info.stale = detail.stale
+            info.layerValues = [:]
+            if let alt = WeatherField.Cell(info: detail.cell, stale: detail.stale).altKey(classIndex: k, encoding: encoding) {
+                info.altKey = alt.key
+                info.altFallback = alt.fallback
+            }
+            info.date = info.date ?? detail.today
+            return CoinPoint(info: info, detail: detail)
+        } catch {
+            return CoinPoint(info: info, problem: Problem("Météo de ce coin indisponible", error: error))
+        }
     }
 
     /// Nom latin d'une espèce, vide s'il manque.
@@ -756,7 +823,7 @@ final class MapModel {
         catalog?.species[id]?.names?.la ?? ""
     }
 
-    /// Ligne, phrase, facteurs et onze jours de l'espèce mise en avant, depuis `pointDetail`.
+    /// Ligne, phrase, facteurs et onze jours de l'espèce en exergue, depuis `pointDetail`.
     private func applyFeatured(_ info: PointInfo) {
         guard let detail = pointDetail, let species = featured(for: info), let date = info.date, let altKey = info.altKey
         else {
@@ -794,7 +861,7 @@ final class MapModel {
         pointSentenceTone = nil
         pointDetail = nil
         pointDays = []
-        featuredSpecies = nil
+        pointCoinID = nil
         factorsStatus = nil
         factorsProblem = nil
     }

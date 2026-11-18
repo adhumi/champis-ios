@@ -5,10 +5,13 @@ import SwiftUI
 /// et le jour en titre, l'espèce mise en avant, les onze jours du point, les trois boutons de
 /// terrain, et tous les chiffres derrière « Détails ». Depuis le 17 nov. 2026 (spec › App iOS ›
 /// Fiche d'un point, toutes les espèces et une phrase) : une phrase rédigée, terrain compris
-/// (libellé de T, puis `GET /weather` › `sentence`), et sous l'espèce mise en avant toutes les
-/// autres espèces qui ont du terrain ici, par famille ; toucher une ligne la met en avant sans
-/// changer la couche de la carte. La couleur ne porte jamais seule l'information : le libellé est
-/// toujours écrit.
+/// (libellé de T, puis `GET /weather` › `sentence`), et sous l'espèce en exergue toutes les autres
+/// espèces qui ont du terrain ici, par famille. Depuis le 18 nov. 2026 (Fiche d'un point et fiche
+/// d'un coin, une seule vue) : la fiche se ferme par une croix à gauche de la barre ; à droite, une
+/// étoile ajoute le point à mes coins (vide) ou retire le coin (pleine, après confirmation) ;
+/// toucher une autre espèce déplie sa ligne (phrase et tendance, `PointSpeciesSections`) sans
+/// changer l'espèce en exergue ; ouverte par l'épingle d'un coin, la fiche porte son nom, Renommer
+/// et Supprimer. La couleur ne porte jamais seule l'information : le libellé est toujours écrit.
 struct PointSheet: View {
     nonisolated struct Factor: Identifiable, Sendable {
         let key: String
@@ -32,6 +35,10 @@ struct PointSheet: View {
     @State private var quickFound: MapSelection?
     @State private var namingCoin = false
     @State private var coinName = ""
+    /// Espèce dont la ligne est dépliée ; une seule à la fois.
+    @State private var expanded: String?
+    @State private var renamingCoin = false
+    @State private var confirmDeleteCoin = false
 
     var body: some View {
         NavigationStack {
@@ -51,10 +58,15 @@ struct PointSheet: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                familySections
+                PointSpeciesSections(families: families, model: model, pending: isLoadingWeather, expanded: $expanded) { species in
+                    model.expansion(for: species, info: info)
+                }
                 fieldSection
                 if let featured {
                     detailsSection(featured)
+                }
+                if coin != nil {
+                    coinSection
                 }
             }
             .navigationTitle(title)
@@ -62,10 +74,27 @@ struct PointSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .cancellationAction) {
                     // ferme la feuille comme l'inspecteur : c'est la sélection qui commande
-                    Button("OK") { model.clearSelection() }
+                    Button {
+                        model.clearSelection()
+                    } label: {
+                        Label("Fermer", systemImage: "xmark")
+                    }
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    starButton
+                }
+            }
+            .alert("Nom du coin", isPresented: $renamingCoin) {
+                TextField("Nom", text: $coinName)
+                Button("Enregistrer") { renameCoin() }
+                Button("Annuler", role: .cancel) {}
+            }
+            .confirmationDialog("Supprimer ce coin ?", isPresented: $confirmDeleteCoin, titleVisibility: .visible) {
+                Button("Supprimer", role: .destructive) { removeCoin() }
+            } message: {
+                Text("Le coin est retiré de l'appareil et du serveur.")
             }
             .sheet(item: $quickFound) { point in
                 QuickFoundSheet(model: model, point: point, initialSpecies: featured?.id ?? info.scored?.species)
@@ -82,6 +111,8 @@ struct PointSheet: View {
         .task(id: info.id) { await model.loadFactors(for: info) }
         // statut de la forêt (étape B5) : en parallèle de la météo, la fiche ne l'attend pas
         .task(id: info.id) { await model.loadForest(for: info) }
+        // dans l'inspecteur (iPad, Mac) la vue reste d'un point à l'autre : rien ne reste déplié
+        .onChange(of: info.id) { expanded = nil }
         .onAppear {
             // appui long › « Ajouter à mes coins » : la fiche s'ouvre déjà sur le nom
             if model.coinRequestFromLongPress {
@@ -99,16 +130,17 @@ struct PointSheet: View {
 
     // MARK: - En clair
 
-    /// Espèce en tête de fiche : celle de la couche, ou celle dont l'utilisateur a touché la ligne.
+    /// Espèce en tête de fiche : celle qui porte le score de la couche.
     private var featured: PointSpecies? { model.featured(for: info) }
 
     /// Les autres espèces du point, par famille.
     private var families: [PointFamily] { model.pointFamilies(for: info) }
 
-    /// L'espèce mise en avant est celle qui porte le score de la couche : son score est celui de
-    /// la carte, interpolé entre cellules.
-    private func isLayerLead(_ featured: PointSpecies) -> Bool {
-        featured.id == info.scored?.species
+    /// La météo des espèces du point est demandée et n'est pas encore arrivée.
+    private var isLoadingWeather: Bool {
+        guard info.mode == .score, info.cell != nil else { return false }
+        if model.pointDetail != nil { return false }
+        return model.factorsProblem == nil
     }
 
     @ViewBuilder
@@ -162,57 +194,6 @@ struct PointSheet: View {
             }
             forestRow
         }
-    }
-
-    /// Les autres espèces qui ont du terrain ici, une section par famille (17 nov. 2026).
-    @ViewBuilder
-    private var familySections: some View {
-        ForEach(families) { family in
-            Section {
-                ForEach(family.species) { species in
-                    Button {
-                        model.feature(species.id)
-                    } label: {
-                        speciesRow(species)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityHint("Affiche le détail de cette espèce")
-                }
-            } header: {
-                if let symbol = GroupSymbol.assetName(for: .group(family.id)) {
-                    Label {
-                        Text(family.title)
-                    } icon: {
-                        Image(symbol)
-                    }
-                } else {
-                    Text(family.title)
-                }
-            }
-        }
-    }
-
-    /// Icône, nom français, nom latin, pastille et libellé de palette : jamais de chiffre ici.
-    private func speciesRow(_ species: PointSpecies) -> some View {
-        HStack(spacing: 10) {
-            SpeciesThumbnail(species: species.id, size: 36)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(model.speciesName(species.id))
-                let latin = model.speciesLatin(species.id)
-                if !latin.isEmpty {
-                    Text(latin).font(.subheadline).italic().foregroundStyle(.secondary)
-                }
-            }
-            Spacer(minLength: 8)
-            if info.mode == .score, species.value == nil, info.cell != nil, model.pointDetail == nil, model.factorsProblem == nil {
-                ProgressView().controlSize(.small)
-            } else {
-                ScoreDot(value: species.value, model: model)
-                Text(scoreLabel(species.value)).font(.subheadline).foregroundStyle(.secondary)
-            }
-        }
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
     }
 
     /// Libellé de palette d'une valeur ; sans météo pour l'espèce, on le dit.
@@ -323,15 +304,58 @@ struct PointSheet: View {
                 Label("Rien trouvé ici", systemImage: "xmark.circle")
             }
             .disabled(notFoundSpecies.isEmpty)
-            if info.scored != nil {
-                Button {
-                    coinName = ""
-                    namingCoin = true
-                } label: {
-                    Label("Ajouter à mes coins", systemImage: "star")
-                }
-            }
         }
+    }
+
+    // MARK: - Coin
+
+    /// Le coin dont l'épingle a ouvert la fiche, tant qu'il existe.
+    private var coin: Coin? { model.pointCoin }
+
+    /// Étoile de la barre : vide, elle ajoute le point à mes coins (le nom est demandé) ; pleine, le
+    /// point est un coin et elle le retire après confirmation.
+    private var starButton: some View {
+        Button {
+            if coin != nil {
+                confirmDeleteCoin = true
+            } else {
+                coinName = ""
+                namingCoin = true
+            }
+        } label: {
+            Label(coin != nil ? "Retirer de mes coins" : "Ajouter à mes coins", systemImage: coin != nil ? "star.fill" : "star")
+        }
+        .disabled(!canToggleCoin)
+    }
+
+    /// L'étoile agit : il y a un coin à retirer, ou un point noté à ajouter.
+    private var canToggleCoin: Bool {
+        if coin != nil { return true }
+        return info.scored != nil
+    }
+
+    private var coinSection: some View {
+        Section {
+            Button("Renommer") {
+                coinName = coin?.name ?? ""
+                renamingCoin = true
+            }
+            Button("Supprimer", role: .destructive) { confirmDeleteCoin = true }
+        }
+    }
+
+    private func renameCoin() {
+        guard let id = coin?.id else { return }
+        let name = coinName
+        let field = model.field
+        Task { await field.renameCoin(id, to: name) }
+    }
+
+    /// Retire le coin ; la fiche reste ouverte sur le point, étoile vide.
+    private func removeCoin() {
+        guard let id = coin?.id else { return }
+        let field = model.field
+        Task { await field.removeCoin(id) }
     }
 
     private var point: MapSelection {
@@ -356,7 +380,8 @@ struct PointSheet: View {
     // MARK: - Détails
 
     private var title: String {
-        info.scored == nil ? "Point" : (info.mode == .score ? "Score du jour" : "Potentiel")
+        if let coin { return coin.name }
+        return info.scored == nil ? "Point" : (info.mode == .score ? "Score du jour" : "Potentiel")
     }
 
     @ViewBuilder
@@ -367,10 +392,9 @@ struct PointSheet: View {
                     LabeledContent(info.mode == .score ? "Score S" : "Potentiel T", value: Self.number(value))
                 }
                 LabeledContent("Potentiel terrain T", value: Self.number(featured.terrain))
-                // Espèce de la couche : `factor` est interpolé entre les cellules voisines, comme la
-                // couleur de la carte ; `M_eff` et `Φ` sont ceux de la cellule qui porte le point
-                // (bbox ou GET /weather). Autre espèce : tout vient de la cellule du point.
-                let scored = isLayerLead(featured) ? info.scored : nil
+                // `factor` est interpolé entre les cellules voisines, comme la couleur de la carte ;
+                // `M_eff` et `Φ` sont ceux de la cellule qui porte le point (bbox ou GET /weather).
+                let scored = info.scored
                 let row = scored?.row ?? model.pointRow
                 if let factor = scored?.factor ?? row?.factor {
                     LabeledContent("M_eff × Φ", value: Self.number(factor))
@@ -396,11 +420,9 @@ struct PointSheet: View {
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
-                    if scored == nil {
-                        Text("Pour une espèce qui n'est pas affichée sur la carte, le score est celui de la cellule météo qui porte ce point, sans interpolation avec ses voisines : il peut différer d'un cran de la couleur qu'aurait la carte.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("Pour les espèces de la liste qui ne sont pas affichées sur la carte, le score est celui de la cellule météo qui porte ce point, sans interpolation avec ses voisines : il peut différer d'un cran de la couleur qu'aurait la carte.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                     Text("Chaque facteur vaut de 0 à 1. Les facteurs terrain (essence, pH, exposition) ne sont pas dans les tuiles.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)

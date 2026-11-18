@@ -150,4 +150,63 @@ struct PointSpeciesTests {
         // un coin ne garde toujours que les espèces de la couche
         #expect(info.scored?.terrains.keys.sorted() == ["boletus_edulis"])
     }
+
+    @Test("Ligne dépliée : la phrase de l'espèce et sa tendance ; rien tant que la météo manque")
+    func expansion() throws {
+        let detail = try Fixtures.decode(CellWeather.self, Self.detailJSON)
+        var info = PointInfo(latitude: 47.04, longitude: 8.44, mode: .score, date: "2026-10-30", outcome: .noData)
+        info.terrains = ["cantharellus_cibarius": 0.5, "boletus_aereus": 0.5]
+        info.altKey = "450"
+        let girolle = PointSpecies(id: "cantharellus_cibarius", terrain: 0.5, value: 0.2)
+        let unfolded = try #require(PointFamilies.expansion(
+            species: girolle, info: info, detail: detail, terrainLabel: "bon", today: "2026-10-30", goodMin: 0.5
+        ))
+        #expect(unfolded.sentence == "Terrain favorable mais la dernière grosse pluie remonte à 22 jours et la pousse s'essouffle ; la saison touche à sa fin.")
+        #expect(unfolded.phrases.isEmpty)
+        // un seul jour connu : pas de tendance à dire
+        #expect(unfolded.trend == nil)
+        // API plus ancienne : le terrain, puis la liste d'avant
+        let aereus = PointSpecies(id: "boletus_aereus", terrain: 0.5, value: 0.1)
+        let old = try #require(PointFamilies.expansion(
+            species: aereus, info: info, detail: detail, terrainLabel: "moyen", today: "2026-10-30", goodMin: 0.5
+        ))
+        #expect(old.sentence == "Terrain moyen." && old.phrases == ["pleine saison"])
+        // la météo du point n'est pas arrivée
+        #expect(PointFamilies.expansion(species: girolle, info: info, detail: nil, terrainLabel: "bon", today: nil, goodMin: nil) == nil)
+        var terrain = PointInfo(latitude: 47.04, longitude: 8.44, mode: .terrain, date: nil, outcome: .noData)
+        terrain.terrains = ["cantharellus_cibarius": 0.5]
+        let potential = PointFamilies.expansion(species: girolle, info: terrain, detail: nil, terrainLabel: "bon", today: nil, goodMin: nil)
+        #expect(potential?.sentence == "Terrain favorable : potentiel toute saison, sans la météo.")
+    }
+
+    @Test("Inspecteur sans couche (fiche d'un coin) : le terrain du catalogue, aucune espèce en exergue")
+    func inspectsWithoutLayer() async throws {
+        let store = try await PointInspectorTests.store(altClass: 1)
+        let settings = RenderSettings(
+            layer: nil, mode: .score, date: "2026-10-30", weather: try PointInspectorTests.weather(),
+            colorizer: TileColorizer(palette: try PointInspectorTests.palette())
+        )
+        let info = try await PointInspector.inspect(
+            latitude: PointInspectorTests.latitude, longitude: PointInspectorTests.longitude, settings: settings, store: store,
+            catalogSpecies: ["boletus_edulis", "cantharellus_cibarius"]
+        )
+        #expect(info.scored == nil && info.isNoData)
+        #expect(info.terrains == ["boletus_edulis": 1.0])
+        #expect(info.layerValues.isEmpty)
+        #expect(info.cell?.id == "c_1" && info.altKey == "450")
+        // sans couche ni catalogue : rien à lire
+        let nothing = try await PointInspector.inspect(
+            latitude: PointInspectorTests.latitude, longitude: PointInspectorTests.longitude, settings: settings, store: store
+        )
+        #expect(nothing.terrains.isEmpty && nothing.isNoData)
+    }
+
+    @Test("Toucher sur l'épingle d'un coin : autour du ballon, pas plus loin")
+    func pinHit() {
+        let anchor = CGPoint(x: 100, y: 200)
+        #expect(MapContainer.Coordinator.hitsPin(tap: CGPoint(x: 104, y: 170), anchor: anchor))
+        #expect(MapContainer.Coordinator.hitsPin(tap: anchor, anchor: anchor))
+        #expect(!MapContainer.Coordinator.hitsPin(tap: CGPoint(x: 140, y: 190), anchor: anchor))
+        #expect(!MapContainer.Coordinator.hitsPin(tap: CGPoint(x: 100, y: 120), anchor: anchor))
+    }
 }

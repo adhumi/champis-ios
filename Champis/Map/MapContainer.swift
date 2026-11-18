@@ -170,7 +170,8 @@ struct MapContainer: PlatformRepresentable {
             let view = mapView.dequeueReusableAnnotationView(withIdentifier: "pin") as? MKMarkerAnnotationView
                 ?? MKMarkerAnnotationView(annotation: point, reuseIdentifier: "pin")
             view.annotation = point
-            view.canShowCallout = true
+            // un coin ouvre sa fiche au toucher (`handleTap`), pas une bulle
+            view.canShowCallout = kind != .coin
             switch kind {
             case .found:
                 view.markerTintColor = PlatformColor.systemGreen
@@ -207,8 +208,27 @@ struct MapContainer: PlatformRepresentable {
         @objc private func handleTap(_ gesture: PlatformGestureRecognizer) {
             guard let mapView else { return }
             let point = gesture.location(in: mapView)
+            // sur l'épingle d'un coin : la fiche s'ouvre à l'endroit du coin, avec son nom (18 nov. 2026)
+            if let coin = model.field.coins.first(where: { coin in
+                guard let pin = coinPins[coin.id] else { return false }
+                return Self.hitsPin(tap: point, anchor: mapView.convert(pin.coordinate, toPointTo: mapView))
+            }) {
+                model.selectCoin(coin)
+                return
+            }
             let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
             model.select(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        }
+
+        /// Vrai si un toucher tombe sur le ballon d'une épingle ancrée en `anchor` : le ballon d'un
+        /// `MKMarkerAnnotationView` est au-dessus de son point d'ancrage. La bande verticale est
+        /// symétrique, pour ne pas dépendre du sens de l'axe vertical de la vue (iOS, macOS).
+        nonisolated static func hitsPin(tap: CGPoint, anchor: CGPoint) -> Bool {
+            let dx: CGFloat = abs(tap.x - anchor.x)
+            let dy: CGFloat = abs(tap.y - anchor.y)
+            let halfWidth: CGFloat = 22
+            let halfHeight: CGFloat = 44
+            return dx <= halfWidth && dy <= halfHeight
         }
 
         /// Appui long (lot 3) : le menu de terrain au point pressé, sans passer par la fiche.
