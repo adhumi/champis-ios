@@ -173,6 +173,9 @@ final class MapModel {
     /// Les mêmes faits en une phrase (`GET /weather` › `sentence`, 17 nov. 2026) ; `nil` d'une API
     /// plus ancienne : la fiche retombe sur `pointSummary`.
     private(set) var pointSentence: String?
+    /// Sens de la première proposition de `pointSentence` (`GET /weather` › `sentence_tone`,
+    /// 18 nov. 2026) : la fiche en tire « et », « mais » ou une virgule après le terrain.
+    private(set) var pointSentenceTone: String?
     /// `GET /weather?cell=` du point pour toutes les espèces qui ont du terrain ici (17 nov. 2026) :
     /// score des autres espèces, phrase, onze jours et facteurs de celle qui est mise en avant.
     private(set) var pointDetail: CellWeather?
@@ -761,6 +764,7 @@ final class MapModel {
             pointFactors = nil
             pointSummary = nil
             pointSentence = nil
+            pointSentenceTone = nil
             pointDays = []
             return
         }
@@ -770,6 +774,7 @@ final class MapModel {
         pointFactors = row?.factors
         pointSummary = row?.summary
         pointSentence = row?.sentence
+        pointSentenceTone = row?.sentenceTone
         // les onze jours suivent la carte pour une espèce de la couche : interpolés quand les
         // cellules voisines ont le jour (/weather/bbox), sinon ceux de la cellule du point
         let sample = info.layerValues[species.id] == nil ? nil : weather.sample(lat: info.latitude, lon: info.longitude)
@@ -786,6 +791,7 @@ final class MapModel {
         pointRow = nil
         pointSummary = nil
         pointSentence = nil
+        pointSentenceTone = nil
         pointDetail = nil
         pointDays = []
         featuredSpecies = nil

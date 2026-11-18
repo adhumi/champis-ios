@@ -20,7 +20,8 @@ struct PointSpeciesTests {
           { "date": "2026-10-30", "by_alt": { "450": {
             "M": 0.8, "M_eff": 0.8, "phi": 0.5, "factors": { "temp": 1.0 }, "trigger_days": 22,
             "summary": ["grosse pluie il y a 22 jours : la pousse s'essouffle", "fin de saison"],
-            "sentence": "la dernière grosse pluie remonte à 22 jours et la pousse s'essouffle ; la saison touche à sa fin"
+            "sentence": "la dernière grosse pluie remonte à 22 jours et la pousse s'essouffle ; la saison touche à sa fin",
+            "sentence_tone": "defavorable"
           } } }
         ],
         "boletus_aereus": [
@@ -42,8 +43,23 @@ struct PointSpeciesTests {
         #expect(old.phrases == ["sol sec", "fin de saison"])
         let loading = PointSheet.sentence(terrain: "moyen", mode: .score, sentence: nil, summary: nil)
         #expect(loading.sentence == "Terrain moyen." && loading.phrases.isEmpty)
-        let terrain = PointSheet.sentence(terrain: "faible", mode: .terrain, sentence: "ignorée", summary: nil)
+        let terrain = PointSheet.sentence(terrain: "faible", mode: .terrain, sentence: "ignorée", tone: "favorable", summary: nil)
         #expect(terrain.sentence == "Terrain peu favorable : potentiel toute saison, sans la météo.")
+    }
+
+    @Test("Liaison : « et » dans le même sens que le terrain, « mais » à l'opposé, virgule si neutre")
+    func link() {
+        let late = "la dernière grosse pluie remonte à 23 jours et la pousse s'essouffle"
+        let but = PointSheet.sentence(terrain: "excellent", mode: .score, sentence: late, tone: "defavorable", summary: nil)
+        #expect(but.sentence == "Terrain très favorable mais \(late).")
+        #expect(PointSheet.link(terrain: "bon", tone: "favorable") == " et ")
+        #expect(PointSheet.link(terrain: "faible", tone: "defavorable") == " et ")
+        #expect(PointSheet.link(terrain: "tres_faible", tone: "favorable") == " mais ")
+        #expect(PointSheet.link(terrain: "bon", tone: "neutre") == ", ")
+        #expect(PointSheet.link(terrain: "moyen", tone: "defavorable") == ", ")
+        #expect(PointSheet.link(terrain: nil, tone: "favorable") == ", ")
+        // réponse plus ancienne, sans sentence_tone : les deux-points d'avant
+        #expect(PointSheet.link(terrain: "bon", tone: nil) == " : ")
     }
 
     @Test("GET /weather : sentence se décode, et manque sans erreur d'une API plus ancienne")
@@ -52,7 +68,8 @@ struct PointSpeciesTests {
         let girolle = try #require(detail.species["cantharellus_cibarius"]?.first?.byAlt["450"])
         #expect(girolle.sentence?.hasPrefix("la dernière grosse pluie remonte à 22 jours") == true)
         let aereus = try #require(detail.species["boletus_aereus"]?.first?.byAlt["450"])
-        #expect(aereus.sentence == nil && aereus.summary == ["pleine saison"])
+        #expect(girolle.sentenceTone == "defavorable")
+        #expect(aereus.sentence == nil && aereus.sentenceTone == nil && aereus.summary == ["pleine saison"])
     }
 
     @Test("Valeurs : la couche garde celle de la carte, les autres T × M_eff × Φ de la cellule")

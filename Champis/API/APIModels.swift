@@ -179,12 +179,16 @@ nonisolated struct WeatherRow: Codable, Hashable, Sendable {
     /// Les faits de `summary` en une phrase rédigée, sans majuscule initiale ni point final
     /// (`GET /weather` seulement, 17 nov. 2026) ; `nil` d'une API ou d'un cache plus anciens.
     var sentence: String? = nil
+    /// Sens de la première proposition de `sentence` (`favorable`, `defavorable`, `neutre`), pour
+    /// la liaison avec le terrain (18 nov. 2026) ; `nil` d'une réponse plus ancienne.
+    var sentenceTone: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case m = "M"
         case mEff = "M_eff"
         case phi, factors, summary, sentence
         case triggerDays = "trigger_days"
+        case sentenceTone = "sentence_tone"
     }
 
     /// Facteur appliqué à T : `M_eff × Φ`.
