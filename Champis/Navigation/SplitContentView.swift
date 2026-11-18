@@ -23,7 +23,10 @@ struct SplitContentView: View {
         } detail: {
             detail
         }
-        .task { await field.refreshCoinScores() }
+        .task {
+            await field.refreshCoinScores()
+            await model.completeCoins()
+        }
         .onChange(of: router.coinToOpen, initial: true) { _, id in
             guard let id, field.coins.contains(where: { $0.id == id }) else { return }
             selection = .coin(id)

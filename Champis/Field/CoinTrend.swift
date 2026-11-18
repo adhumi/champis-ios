@@ -42,6 +42,17 @@ nonisolated enum CoinTrend {
         }
     }
 
+    /// Les espèces à nommer sur la ligne d'un coin (18 nov. 2026 : un coin est générique) : celles
+    /// dont le score du jour atteint `min`, le seuil « moyen » de la palette, du meilleur au moins
+    /// bon. Avec un serveur d'avant `species`, l'espèce qui porte le score si elle l'atteint. Vide :
+    /// la ligne ne nomme aucune espèce, seulement le libellé du coin.
+    static func worthSpecies(_ score: ScoredCoin, min: Double) -> [CoinSpeciesScore] {
+        if score.species.isEmpty, let leading = score.leading, let value = score.score {
+            return value >= min ? [CoinSpeciesScore(id: leading, value: value)] : []
+        }
+        return score.species.filter { $0.value >= min }.sorted { $0.value > $1.value }
+    }
+
     /// Coins classés du meilleur au moins bon ; sans météo en dernier ; à égalité, par nom.
     static func order(_ coins: [Coin], scores: [UUID: ScoredCoin]) -> [Coin] {
         coins.sorted { a, b in

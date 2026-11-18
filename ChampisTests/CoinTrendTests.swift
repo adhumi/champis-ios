@@ -86,4 +86,25 @@ struct CoinTrendTests {
         router.open(coinID: id)
         #expect(router.tab == .coins && router.coinToOpen == id)
     }
+
+    @Test("Ligne d'un coin : les espèces qui valent au moins « moyen », sinon aucune n'est nommée")
+    func worthSpecies() throws {
+        let id = UUID()
+        let json = """
+        { "id": "\(id.uuidString)", "name": "Combe", "score": 0.6, "leading": "craterellus_cornucopioides",
+          "best_day": null, "best": null, "days": [],
+          "species": [ { "id": "craterellus_cornucopioides", "value": 0.6 }, { "id": "boletus_edulis", "value": 0.35 },
+                       { "id": "boletus_aereus", "value": 0.1 } ] }
+        """
+        let scored = try JSONDecoder().decode(ScoredCoin.self, from: Data(json.utf8))
+        #expect(scored.species.map(\.id) == ["craterellus_cornucopioides", "boletus_edulis", "boletus_aereus"])
+        #expect(CoinTrend.worthSpecies(scored, min: 0.3).map(\.id) == ["craterellus_cornucopioides", "boletus_edulis"])
+        // rien n'atteint le seuil : la ligne ne nomme aucune espèce
+        #expect(CoinTrend.worthSpecies(scored, min: 0.7).isEmpty)
+        // serveur d'avant `species` : l'espèce qui porte le score, si elle atteint le seuil
+        let old = ScoredCoin(id: id, name: "Combe", score: 0.4, leading: "boletus_edulis", bestDay: nil, best: nil, days: [])
+        #expect(old.species.isEmpty)
+        #expect(CoinTrend.worthSpecies(old, min: 0.3) == [CoinSpeciesScore(id: "boletus_edulis", value: 0.4)])
+        #expect(CoinTrend.worthSpecies(old, min: 0.5).isEmpty)
+    }
 }

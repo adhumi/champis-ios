@@ -263,6 +263,20 @@ final class FieldModel {
         await pushCoins()
     }
 
+    /// Complète le terrain par espèce de coins existants, puis synchronise (18 nov. 2026). Rien
+    /// n'est envoyé si rien ne change.
+    func setCoinTerrains(_ updates: [UUID: [String: Double]]) async {
+        guard !updates.isEmpty else { return }
+        do {
+            guard try await store.setCoinTerrains(updates) else { return }
+        } catch {
+            fail(Problem("Les coins n'ont pas pu être mis à jour sur l'appareil", error: error, retryable: false))
+            return
+        }
+        await refreshFromStore()
+        await pushCoins()
+    }
+
     func removeCoin(_ id: UUID) async {
         do {
             try await store.removeCoin(id)
