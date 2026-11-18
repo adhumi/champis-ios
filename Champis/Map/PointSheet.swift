@@ -65,6 +65,9 @@ struct PointSheet: View {
                 if model.pointForest != nil {
                     Section {
                         forestRow
+                            // vert forêt clair : la couleur d'accent de l'app, assez légère pour
+                            // que le texte reste lisible en clair comme en sombre
+                            .listRowBackground(Color.accentColor.opacity(0.16))
                     }
                 }
                 if let featured {
