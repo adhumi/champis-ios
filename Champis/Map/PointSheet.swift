@@ -61,6 +61,12 @@ struct PointSheet: View {
 
     private var content: some View {
         List {
+                // statut de la forêt : sa propre section, en tête de fiche (18 nov. 2026)
+                if model.pointForest != nil {
+                    Section {
+                        forestRow
+                    }
+                }
                 if let featured {
                     summarySection(featured)
                 } else {
@@ -69,7 +75,6 @@ struct PointSheet: View {
                         Section {
                             Text("Du terrain, mais pas de météo pour ce secteur aujourd'hui : le serveur réessaie.")
                                 .foregroundStyle(.secondary)
-                            forestRow
                         }
                     default:
                         Text(families.isEmpty ? "Hors forêt ou pas de donnée ici." : "Pas de terrain ici pour l'espèce affichée sur la carte.")
@@ -208,7 +213,6 @@ struct PointSheet: View {
                     Text("Tendance : \(trend)").fontWeight(.semibold)
                 }
             }
-            forestRow
         }
     }
 
