@@ -902,6 +902,11 @@ final class MapModel {
         return out
     }
 
+    /// Nom latin d'une espèce, vide s'il manque.
+    func speciesLatin(_ id: String) -> String {
+        catalog?.species[id]?.names?.la ?? ""
+    }
+
     /// Ligne, phrase, facteurs et onze jours de l'espèce en exergue, depuis `pointDetail`.
     private func applyFeatured(_ info: PointInfo) {
         guard let detail = pointDetail, let species = featured(for: info), let date = info.date, let altKey = info.altKey
