@@ -13,12 +13,11 @@ import SwiftUI
 struct CoinsScreen: View {
     let model: MapModel
     let router: AppRouter
-    @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
+    /// Toucher le titre de la liste : la feuille qui la porte s'ouvre ou se replie (`CoinsPanel`).
+    var onTitleTap: () -> Void = {}
     @State private var path = NavigationPath()
     /// Les quatre entrées du Guide, sous les coins (19 nov. 2026 : l'onglet Guide est retiré).
     @State private var guide = GuideCards.cards(from: Texts.index())
-    @State private var showSettings = false
-    @State private var showLegalNotice = false
 
     private var field: FieldModel { model.field }
 
@@ -26,6 +25,10 @@ struct CoinsScreen: View {
         NavigationStack(path: $path) {
             coinsList
             .navigationTitle("Mes coins")
+            #if os(iOS)
+            // la liste vit dans une feuille : un titre en ligne, qui tient dans la barre au repos
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .navigationDestination(for: Article.self) { article in
                 ArticleView(article: article, model: model)
             }
@@ -34,23 +37,21 @@ struct CoinsScreen: View {
                 CoinPointView(coinID: id, model: model)
             }
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showSettings = true
-                    } label: {
-                        Label("Réglages", systemImage: "slider.horizontal.3")
+                // le titre est un bouton : il ouvre ou replie la feuille ; les réglages sont dans
+                // le menu « … » de la carte (19 nov. 2026)
+                ToolbarItem(placement: .principal) {
+                    Button(action: onTitleTap) {
+                        VStack(spacing: 1) {
+                            Text("Mes coins").font(.headline)
+                            Text(summary).font(.caption).foregroundStyle(.secondary)
+                        }
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Ouvre ou replie la liste des coins")
                 }
             }
-            .sheet(isPresented: $showSettings) {
-                SettingsView(model: model, apiBaseURL: $apiBaseURL, showLegalNotice: $showLegalNotice)
-            }
-            .alert(LegalNotice.title, isPresented: $showLegalNotice) {
-                Button("OK") {}
-            } message: {
-                Text(LegalNotice.text)
-            }
-            .task {
+            // la feuille est là dès le lancement : la liste se charge quand le catalogue est arrivé
+            .task(id: model.layers.isEmpty) {
                 await field.refreshCoinScores()
                 // coins d'avant le 18 nov. 2026 : le terrain de toutes les espèces, une fois, dans
                 // une tâche du modèle (quitter cet écran ne l'interrompt pas)
@@ -68,6 +69,23 @@ struct CoinsScreen: View {
     private func retry() {
         let field = field
         Task { await field.retry() }
+    }
+
+    /// Sous le titre, ce que la barre au repos dit des coins : le meilleur du jour, sinon leur nombre.
+    private var summary: String {
+        Self.summary(coins: field.coins, scores: field.coinScores) { model.classify($0)?.fr }
+    }
+
+    /// « Forêt 5G · Bon », « 3 coins », ou l'invitation à en ajouter. Fonction pure, testée.
+    nonisolated static func summary(coins: [Coin], scores: [UUID: ScoredCoin], label: (Double) -> String?) -> String {
+        guard !coins.isEmpty else { return "Touchez la carte pour ajouter un coin" }
+        let best = coins
+            .compactMap { coin in scores[coin.id]?.score.map { (coin: coin, value: $0) } }
+            .max { $0.value < $1.value }
+        if let best, let text = label(best.value) {
+            return "\(best.coin.name) · \(text)"
+        }
+        return coins.count == 1 ? "1 coin" : "\(coins.count) coins"
     }
 
     private var coinsList: some View {

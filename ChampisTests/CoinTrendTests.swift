@@ -107,4 +107,20 @@ struct CoinTrendTests {
         #expect(CoinTrend.worthSpecies(old, min: 0.3) == [CoinSpeciesScore(id: "boletus_edulis", value: 0.4)])
         #expect(CoinTrend.worthSpecies(old, min: 0.5).isEmpty)
     }
+
+    @Test("Barre Mes coins : le meilleur coin du jour, sinon leur nombre, sinon l'invitation")
+    func panelSummary() {
+        let a = Coin(name: "Combe", lat: 47, lon: 6, target: "cepes", altClass: 450, t: ["boletus_edulis": 0.9])
+        let b = Coin(name: "Crête", lat: 47.1, lon: 6.1, target: "cepes", altClass: 750, t: ["boletus_edulis": 0.5])
+        func scored(_ coin: Coin, _ value: Double?) -> ScoredCoin {
+            ScoredCoin(id: coin.id, name: coin.name, score: value, leading: nil, bestDay: nil, best: nil, days: [])
+        }
+        let label = { (value: Double) -> String? in value >= 0.55 ? "Bon" : "Faible" }
+        let scores = [a.id: scored(a, 0.2), b.id: scored(b, 0.7)]
+        #expect(CoinsScreen.summary(coins: [a, b], scores: scores, label: label) == "Crête · Bon")
+        // pas de météo, ou palette pas encore chargée : le nombre de coins
+        #expect(CoinsScreen.summary(coins: [a, b], scores: [a.id: scored(a, nil)], label: label) == "2 coins")
+        #expect(CoinsScreen.summary(coins: [a], scores: scores, label: { _ in nil }) == "1 coin")
+        #expect(CoinsScreen.summary(coins: [], scores: [:], label: label) == "Touchez la carte pour ajouter un coin")
+    }
 }
