@@ -26,7 +26,8 @@ struct MapScreen: View {
     private static let controlGlyphSide: CGFloat = 22
 
     nonisolated enum Layout: Sendable {
-        /// iPhone : les fiches sont des feuilles.
+        /// iPhone : la carte en plein écran, Mes coins dans une feuille permanente (`CoinsPanel`)
+        /// qui porte aussi les fiches.
         case compact
         /// iPad et Mac : les fiches sont dans l'inspecteur, l'écran n'en présente pas.
         case split
@@ -35,12 +36,47 @@ struct MapScreen: View {
     /// Modèle partagé par les trois onglets, créé et démarré par `ContentView`.
     let model: MapModel
     var layout: Layout = .compact
+    /// En disposition compacte : la feuille Mes coins est présentée. Faux pendant la première
+    /// ouverture, qui se présente elle-même par-dessus la carte.
+    var showsPanel = true
     @State private var showLegend = false
-    @State private var quickFound: MapSelection?
+    @State private var showSettings = false
     /// Le réglage de l'adresse de l'API, pour y revenir depuis le bandeau de lecture seule.
     @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
 
     var body: some View {
+        Group {
+            if layout == .compact {
+                // iPhone (19 nov. 2026) : plus d'onglets. Mes coins est une feuille permanente, en
+                // barre au repos, que l'on tire ; elle présente les fiches, la légende, les réglages
+                // et les alertes de la carte, qu'une vue déjà couverte ne pourrait pas présenter.
+                mapStack
+                    .sheet(isPresented: panelBinding) {
+                        CoinsPanel(model: model, router: AppRouter.shared, showLegend: $showLegend, showSettings: $showSettings)
+                    }
+            } else {
+                mapStack
+                    .modifier(MapPresentations(model: model, layout: layout, showLegend: $showLegend, showSettings: $showSettings))
+            }
+        }
+        .onChange(of: model.field.undoable.isEmpty) { _, empty in
+            if !empty {
+                AccessibilityNotification.Announcement("Noté : rien trouvé. Annuler possible pendant cinq secondes.").post()
+            }
+        }
+    }
+
+    private var panelBinding: Binding<Bool> {
+        Binding(get: { showsPanel }, set: { _ in })
+    }
+
+    /// La feuille Mes coins au repos couvre le bas de la carte : les commandes et la mention de
+    /// Plans restent au-dessus.
+    private var panelInset: CGFloat {
+        layout == .compact && showsPanel ? CoinsPanel.barHeight : 0
+    }
+
+    private var mapStack: some View {
         NavigationStack {
             ZStack {
                 // la carte occupe tout l'écran, sous la barre d'état, la barre d'outils et la barre
@@ -74,6 +110,9 @@ struct MapScreen: View {
                 .animation(.default, value: model.hasNotice)
                 .animation(.default, value: model.customAPIHost)
             }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                Color.clear.frame(height: panelInset)
+            }
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
@@ -89,56 +128,23 @@ struct MapScreen: View {
                         ProgressView().controlSize(.small)
                     }
                 }
+                // légende et réglages dans un menu « … » (19 nov. 2026)
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showLegend = true
+                    Menu {
+                        Button {
+                            showLegend = true
+                        } label: {
+                            Label("Infos", systemImage: "info.circle")
+                        }
+                        Button {
+                            showSettings = true
+                        } label: {
+                            Label("Réglages", systemImage: "slider.horizontal.3")
+                        }
                     } label: {
-                        Label("Légende", systemImage: "info")
+                        Label("Plus", systemImage: "ellipsis")
                     }
                 }
-            }
-        }
-        .sheet(item: pointBinding) { info in
-            PointSheet(info: info, model: model)
-        }
-        .sheet(isPresented: $showLegend) {
-            LegendSheet(model: model)
-        }
-        .sheet(item: $quickFound) { point in
-            QuickFoundSheet(model: model, point: point, initialSpecies: nil)
-        }
-        .confirmationDialog(
-            "À cet endroit", isPresented: longPressBinding, titleVisibility: .visible, presenting: model.longPressPoint
-        ) { point in
-            Button("Trouvé ici") {
-                quickFound = point
-            }
-            Button("Rien trouvé ici") {
-                let field = model.field
-                let species = model.layerSpecies
-                Task { await field.recordNotFound(species: species, latitude: point.latitude, longitude: point.longitude) }
-            }
-            .disabled(model.layerSpecies.isEmpty)
-            Button("Ajouter à mes coins") {
-                model.requestCoin(latitude: point.latitude, longitude: point.longitude)
-            }
-        } message: { _ in
-            Text(model.selectedLayer.map { "Pour \($0.title)." } ?? "")
-        }
-        .alert(
-            offlineTitle, isPresented: offlineBinding, presenting: model.offlineSuggestion
-        ) { _ in
-            Button("Embarquer") { model.acceptOfflineSuggestion() }
-            Button("Non merci", role: .cancel) { model.declineOfflineSuggestion() }
-        } message: { choice in
-            Text(
-                "\(Self.sizeText(choice)) : la carte et la météo de toutes les espèces se liront sans réseau. " +
-                "Modifiable plus tard dans les réglages."
-            )
-        }
-        .onChange(of: model.field.undoable.isEmpty) { _, empty in
-            if !empty {
-                AccessibilityNotification.Announcement("Noté : rien trouvé. Annuler possible pendant cinq secondes.").post()
             }
         }
     }
@@ -276,34 +282,12 @@ struct MapScreen: View {
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
-    private var offlineTitle: String {
-        guard let choice = model.offlineSuggestion else { return "" }
-        return "Embarquer \(choice.name ?? "le département \(choice.code)") pour la forêt ?"
-    }
-
     static func sizeText(_ choice: DownloadableDepartment) -> String {
         choice.bytes(for: choice.species).formatted(.byteCount(style: .file))
     }
 
-    private var longPressBinding: Binding<Bool> {
-        Binding(get: { model.longPressPoint != nil }, set: { if !$0 { model.clearLongPress() } })
-    }
-
-    private var offlineBinding: Binding<Bool> {
-        Binding(get: { model.offlineSuggestion != nil }, set: { if !$0, model.offlineSuggestion != nil { model.declineOfflineSuggestion() } })
-    }
-
     private var basemapBinding: Binding<Basemap> {
         Binding(get: { model.basemap }, set: { model.basemap = $0 })
-    }
-
-    /// En disposition partagée, l'inspecteur montre la fiche : la feuille ne se présente jamais.
-    private var pointBinding: Binding<PointInfo?> {
-        // une fiche ouverte depuis Mes coins se présente sur sa liste (`CoinsScreen`), pas ici
-        Binding(
-            get: { layout == .compact && model.pointOrigin == .map ? model.pointInfo : nil },
-            set: { if $0 == nil { model.clearSelection() } }
-        )
     }
 
     /// Adresse de l'API d'après le réglage : https exigé (`ChampisAPI.isAcceptable`), sinon
@@ -314,6 +298,92 @@ struct MapScreen: View {
             return url
         }
         return URL(string: defaultAPIBaseURL)!
+    }
+}
+
+/// Ce que la carte présente par-dessus elle : la fiche d'un point, la légende, les réglages, la
+/// saisie « Trouvé ici », le menu de l'appui long et la proposition d'embarquer un département.
+/// Sur iPhone, c'est la feuille Mes coins (`CoinsPanel`) qui les porte, puisqu'elle couvre déjà la
+/// carte ; sur iPad et Mac, la carte elle-même, sans la fiche (elle est dans l'inspecteur).
+struct MapPresentations: ViewModifier {
+    let model: MapModel
+    let layout: MapScreen.Layout
+    @Binding var showLegend: Bool
+    @Binding var showSettings: Bool
+    @State private var quickFound: MapSelection?
+    @State private var showLegalNotice = false
+    @AppStorage("apiBaseURL") private var apiBaseURL = MapScreen.defaultAPIBaseURL
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: pointBinding) { info in
+                PointSheet(info: info, model: model)
+            }
+            .sheet(isPresented: $showLegend) {
+                LegendSheet(model: model)
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView(model: model, apiBaseURL: $apiBaseURL, showLegalNotice: $showLegalNotice)
+            }
+            .sheet(item: $quickFound) { point in
+                QuickFoundSheet(model: model, point: point, initialSpecies: nil)
+            }
+            .confirmationDialog(
+                "À cet endroit", isPresented: longPressBinding, titleVisibility: .visible, presenting: model.longPressPoint
+            ) { point in
+                Button("Trouvé ici") {
+                    quickFound = point
+                }
+                Button("Rien trouvé ici") {
+                    let field = model.field
+                    let species = model.layerSpecies
+                    Task { await field.recordNotFound(species: species, latitude: point.latitude, longitude: point.longitude) }
+                }
+                .disabled(model.layerSpecies.isEmpty)
+                Button("Ajouter à mes coins") {
+                    model.requestCoin(latitude: point.latitude, longitude: point.longitude)
+                }
+            } message: { _ in
+                Text(model.selectedLayer.map { "Pour \($0.title)." } ?? "")
+            }
+            .alert(
+                offlineTitle, isPresented: offlineBinding, presenting: model.offlineSuggestion
+            ) { _ in
+                Button("Embarquer") { model.acceptOfflineSuggestion() }
+                Button("Non merci", role: .cancel) { model.declineOfflineSuggestion() }
+            } message: { choice in
+                Text(
+                    "\(MapScreen.sizeText(choice)) : la carte et la météo de toutes les espèces se liront sans réseau. " +
+                    "Modifiable plus tard dans les réglages."
+                )
+            }
+            .alert(LegalNotice.title, isPresented: $showLegalNotice) {
+                Button("OK") {}
+            } message: {
+                Text(LegalNotice.text)
+            }
+    }
+
+    private var offlineTitle: String {
+        guard let choice = model.offlineSuggestion else { return "" }
+        return "Embarquer \(choice.name ?? "le département \(choice.code)") pour la forêt ?"
+    }
+
+    private var longPressBinding: Binding<Bool> {
+        Binding(get: { model.longPressPoint != nil }, set: { if !$0 { model.clearLongPress() } })
+    }
+
+    private var offlineBinding: Binding<Bool> {
+        Binding(get: { model.offlineSuggestion != nil }, set: { if !$0, model.offlineSuggestion != nil { model.declineOfflineSuggestion() } })
+    }
+
+    /// La fiche d'un point en feuille, sur iPhone seulement ; une fiche ouverte depuis la liste des
+    /// coins est poussée dans sa pile (`CoinPointView`), pas présentée ici.
+    private var pointBinding: Binding<PointInfo?> {
+        Binding(
+            get: { layout == .compact && model.pointOrigin == .map ? model.pointInfo : nil },
+            set: { if $0 == nil { model.clearSelection() } }
+        )
     }
 }
 

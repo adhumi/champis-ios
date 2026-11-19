@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Racine de l'app : deux onglets depuis le 19 nov. 2026, dans cet ordre, Carte (où ?) et Mes coins
-/// (quand ?, avec le Guide sous les coins : pourquoi ?) ; l'onglet Guide du lot 1 de la refonte UX est retiré.
+/// Racine de l'app. Sur iPhone, plus de barre d'onglets depuis le 19 nov. 2026 : la carte (où ?)
+/// en plein écran, et Mes coins (quand ?, avec le Guide dessous : pourquoi ?) dans une feuille
+/// permanente que l'on tire depuis une barre en bas de l'écran (`CoinsPanel`) ; l'onglet Guide du lot 1 de la refonte UX est retiré.
 /// L'app s'ouvre toujours sur la carte (décision du
 /// 1er nov. 2026) ; une notification bascule sur Mes coins et ouvre le coin concerné. Lot 3 : sur
 /// iPad en largeur régulière et sur Mac, barre latérale et inspecteur (`SplitContentView`).
@@ -22,7 +23,9 @@ struct ContentView: View {
             if isSplit {
                 SplitContentView(model: model, router: router)
             } else {
-                tabs
+                // iPhone : la carte, et Mes coins en feuille permanente par-dessus (`CoinsPanel`) ;
+                // la feuille attend la fin de la première ouverture, qui se présente d'abord
+                MapScreen(model: model, showsPanel: onboardingDone)
             }
         }
         .task {
@@ -51,23 +54,8 @@ struct ContentView: View {
         #endif
     }
 
-    private var tabs: some View {
-        TabView(selection: tabBinding) {
-            Tab("Carte", systemImage: "map", value: AppRouter.Tab.map) {
-                MapScreen(model: model)
-            }
-            Tab("Mes coins", systemImage: "star", value: AppRouter.Tab.coins) {
-                CoinsScreen(model: model, router: router)
-            }
-        }
-    }
-
     private var onboardingBinding: Binding<Bool> {
         Binding(get: { !onboardingDone }, set: { if !$0 { onboardingDone = true } })
-    }
-
-    private var tabBinding: Binding<AppRouter.Tab> {
-        Binding(get: { router.tab }, set: { router.tab = $0 })
     }
 }
 
