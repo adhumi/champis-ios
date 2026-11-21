@@ -13,6 +13,9 @@ import SwiftUI
 struct CoinsScreen: View {
     let model: MapModel
     let router: AppRouter
+    /// La feuille qui porte la liste est repliée en barre (`CoinsPanel`) : seul le titre se voit,
+    /// le contenu est masqué pour ne pas dépasser sous la barre, même après un défilement.
+    var collapsed = false
     @State private var path = NavigationPath()
     /// Les quatre entrées du Guide, sous les coins (19 nov. 2026 : l'onglet Guide est retiré).
     @State private var guide = GuideCards.cards(from: Texts.index())
@@ -22,14 +25,22 @@ struct CoinsScreen: View {
     var body: some View {
         NavigationStack(path: $path) {
             coinsList
+            .opacity(collapsed ? 0 : 1)
             .navigationTitle("Mes coins")
+            #if os(iOS)
+            // le titre du système, en ligne : il tient dans la barre quand la feuille est repliée
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .navigationDestination(for: Article.self) { article in
                 ArticleView(article: article, model: model)
+                    .opacity(collapsed ? 0 : 1)
             }
             // la même fiche que par l'épingle du coin sur la carte, poussée dans la pile (18 nov. 2026)
             .navigationDestination(for: UUID.self) { id in
                 CoinPointView(coinID: id, model: model)
+                    .opacity(collapsed ? 0 : 1)
             }
+            .animation(.default, value: collapsed)
             // la feuille est là dès le lancement : la liste se charge quand le catalogue est arrivé
             .task(id: model.layers.isEmpty) {
                 await field.refreshCoinScores()
