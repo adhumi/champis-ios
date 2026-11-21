@@ -81,7 +81,7 @@ struct MapScreen: View {
             ZStack {
                 // la carte occupe tout l'écran, sous la barre d'état, la barre d'outils et la barre
                 // d'onglets ; les commandes restent dans la zone sûre
-                MapContainer(model: model)
+                MapContainer(model: model, bottomInset: panelInset)
                     .accessibilityLabel("Carte des champignons")
                     .ignoresSafeArea()
                 VStack(spacing: 8) {

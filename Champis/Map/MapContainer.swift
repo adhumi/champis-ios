@@ -19,6 +19,9 @@ private typealias PlatformColor = UIColor
 /// Vue France et indice par département, 4 nov. 2026).
 struct MapContainer: PlatformRepresentable {
     let model: MapModel
+    /// Hauteur couverte en bas par la feuille Mes coins au repos : la mention de Plans et le
+    /// centrage de la carte passent au-dessus (22 nov. 2026).
+    var bottomInset: CGFloat = 0
 
     func makeCoordinator() -> Coordinator {
         Coordinator(model: model)
@@ -38,6 +41,11 @@ struct MapContainer: PlatformRepresentable {
     }
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
+        // la carte ignore la zone sûre : sa marge basse porte la hauteur de la barre
+        let bottom = bottomInset + 8
+        if mapView.layoutMargins.bottom != bottom {
+            mapView.layoutMargins.bottom = bottom
+        }
         context.coordinator.update(mapView)
     }
     #endif
