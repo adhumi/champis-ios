@@ -13,8 +13,9 @@ import SwiftUI
 struct CoinsScreen: View {
     let model: MapModel
     let router: AppRouter
-    /// La feuille qui porte la liste est repliée en barre (`CoinsPanel`) : seul le titre se voit,
-    /// le contenu est masqué pour ne pas dépasser sous la barre, même après un défilement.
+    /// La feuille qui porte la liste est repliée en barre (`CoinsPanel`, qui y écrit son libellé) :
+    /// le contenu et la barre de navigation sont masqués, rien ne dépasse sous la barre, même
+    /// après un défilement.
     var collapsed = false
     @State private var path = NavigationPath()
     /// Les quatre entrées du Guide, sous les coins (19 nov. 2026 : l'onglet Guide est retiré).
@@ -28,17 +29,23 @@ struct CoinsScreen: View {
             .opacity(collapsed ? 0 : 1)
             .navigationTitle("Mes coins")
             #if os(iOS)
-            // le titre du système, en ligne : il tient dans la barre quand la feuille est repliée
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarVisibility(collapsed ? .hidden : .automatic, for: .navigationBar)
             #endif
             .navigationDestination(for: Article.self) { article in
                 ArticleView(article: article, model: model)
                     .opacity(collapsed ? 0 : 1)
+                    #if os(iOS)
+                    .toolbarVisibility(collapsed ? .hidden : .automatic, for: .navigationBar)
+                    #endif
             }
             // la même fiche que par l'épingle du coin sur la carte, poussée dans la pile (18 nov. 2026)
             .navigationDestination(for: UUID.self) { id in
                 CoinPointView(coinID: id, model: model)
                     .opacity(collapsed ? 0 : 1)
+                    #if os(iOS)
+                    .toolbarVisibility(collapsed ? .hidden : .automatic, for: .navigationBar)
+                    #endif
             }
             .animation(.default, value: collapsed)
             // la feuille est là dès le lancement : la liste se charge quand le catalogue est arrivé
